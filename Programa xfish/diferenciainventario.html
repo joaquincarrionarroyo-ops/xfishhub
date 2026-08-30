@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cruce de Stock: Inventario Viejo vs Inventario Nuevo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        /* Tipografía y Base */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8; 
+        }
+        
+        /* Glassmorphism */
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05);
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            box-shadow: 0 4px 16px 0 rgba(0, 0, 0, 0.02);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .glass-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px 0 rgba(0, 0, 0, 0.05);
+        }
+
+        /* Blobs Decorativos */
+        .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
+
+        /* Estilos de Inputs y Tablas */
+        .custom-select {
+            width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px;
+            background-color: rgba(255, 255, 255, 0.8); outline: none; transition: all 0.2s; font-weight: 500;
+        }
+        .custom-select:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); background-color: #fff; }
+        
+        /* Toggle Switch iOS Style */
+        .toggle-checkbox:checked { right: 0; border-color: #3b82f6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #3b82f6; }
+        
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Clases condicionales de tabla */
+        .faltante { color: #dc2626; font-weight: 600; background-color: #fef2f2; } 
+        .sobrante { color: #16a34a; font-weight: 600; background-color: #f0fdf4; } 
+        .error-celda { color: #ea580c; font-weight: 600; background-color: #fff7ed; }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-800 selection:bg-blue-500 selection:text-white pb-10">
+
+    <!-- Blobs de Fondo -->
+    <div class="blob bg-blue-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-50"></div>
+    <div class="blob bg-sky-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-60" style="animation-delay: -2s;"></div>
+    <div class="blob bg-amber-100 w-[300px] h-[300px] top-[40%] left-[50%] opacity-40" style="animation-delay: -4s;"></div>
+
+    <!-- Header -->
+    <header class="glass-panel sticky top-0 z-50 px-8 py-4 mb-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-sky-500 shadow-lg shadow-blue-500/30 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                Cruce de Inventarios
+            </h1>
+            <a href="index.html" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Hub</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-6 space-y-6 relative z-10">
+        
+        <!-- 1. Carga de Archivos -->
+        <div class="glass-panel rounded-3xl p-8">
+            <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Archivos de Stock</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <!-- Inventario Viejo -->
+                <div class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-sky-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
+                    <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">📘 Excel Inventario Viejo</label>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Inventario base o descarga del sistema.</p>
+                        <input type="file" id="file1" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer transition-colors"/>
+                    </div>
+                </div>
+                <!-- Inventario Nuevo -->
+                <div class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-sky-400 to-indigo-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
+                    <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">📗 Excel Inventario Nuevo</label>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Resultados del recuento o stock actualizado.</p>
+                        <input type="file" id="file2" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-sky-100 file:text-sky-700 hover:file:bg-sky-200 cursor-pointer transition-colors"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. Configuración Dinámica -->
+        <div id="mapping-section" class="hidden glass-panel rounded-3xl p-8 transition-all duration-500">
+            <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">2. Configurar Columnas</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
+                <!-- Columnas Inventario Viejo -->
+                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100/50">
+                    <h3 class="text-sm font-bold text-blue-800 mb-4">Columnas del Inventario Viejo</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Código</label><select id="col-cod-1" class="custom-select"></select></div>
+                        <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Descripción</label><select id="col-desc-1" class="custom-select"></select></div>
+                        <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Precio U.</label><select id="col-precio-1" class="custom-select"></select></div>
+                        <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Cantidad</label><select id="col-cant-1" class="custom-select"></select></div>
+                        <div class="col-span-2"><label class="text-xs font-semibold text-slate-600 mb-1 block">Valor Total</label><select id="col-val-1" class="custom-select"></select></div>
+                    </div>
+                </div>
+
+                <!-- Columnas Inventario Nuevo -->
+                <div class="bg-sky-50/50 p-5 rounded-2xl border border-sky-100/50">
+                    <h3 class="text-sm font-bold text-sky-800 mb-4">Columnas del Inventario Nuevo</h3>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Código</label><select id="col-cod-2" class="custom-select"></select></div>
+                        <div class="opacity-50 pointer-events-none"><label class="text-xs font-semibold text-slate-600 mb-1 block">Descripción (No requerida)</label><select disabled class="custom-select"><option>N/A</option></select></div>
+                        <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Precio U.</label><select id="col-precio-2" class="custom-select"></select></div>
+                        <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Cantidad</label><select id="col-cant-2" class="custom-select"></select></div>
+                        <div class="col-span-2"><label class="text-xs font-semibold text-slate-600 mb-1 block">Valor Total</label><select id="col-val-2" class="custom-select"></select></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Toggle de Precios -->
+            <div class="flex items-center justify-between bg-white/60 p-4 rounded-xl border border-slate-200/50 mb-6 shadow-sm">
+                <div>
+                    <h4 class="text-sm font-bold text-slate-800">Actualizar precios del Sistema</h4>
+                    <p class="text-xs text-slate-500 font-medium mt-0.5">Si se activa, el balance financiero se calculará cruzando el stock contra el precio unitario del Inventario Nuevo.</p>
+                </div>
+                <!-- Toggle -->
+                <div class="relative inline-block w-12 mr-2 align-middle select-none transition duration-200 ease-in">
+                    <input type="checkbox" name="toggle" id="chk-precios" class="toggle-checkbox absolute block w-6 h-6 rounded-full bg-white border-4 border-slate-300 appearance-none cursor-pointer transition-transform duration-200 ease-in-out"/>
+                    <label for="chk-precios" class="toggle-label block overflow-hidden h-6 rounded-full bg-slate-300 cursor-pointer transition-colors duration-200 ease-in-out"></label>
+                </div>
+            </div>
+
+            <button id="btn-procesar" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-blue-500/30 transform transition-all duration-200 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
+                🚀 Procesar y Comparar Datos
+            </button>
+        </div>
+
+        <!-- 3. Dashboard Resultados -->
+        <div id="results-section" class="hidden space-y-6">
+            
+            <!-- Barra de Herramientas Superior -->
+            <div class="glass-panel p-4 rounded-2xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <label class="text-sm font-bold text-slate-700">Ver en tabla:</label>
+                    <select id="filtroTabla" class="custom-select w-48 text-sm" onchange="aplicarFiltro()">
+                        <option value="todos">Todos los artículos</option>
+                        <option value="diferencias">Solo con Diferencias</option>
+                        <option value="errores">Solo con Errores</option>
+                    </select>
+                </div>
+                <button id="btn-descargar" onclick="descargarExcel()" class="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white text-sm font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-green-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Descargar Reporte Excel
+                </button>
+            </div>
+
+            <!-- Panel 1: Cantidades -->
+            <div class="glass-panel rounded-3xl p-6">
+                <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">1. Resumen de Unidades Físicas</h3>
+                <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                    <div class="glass-card p-4 rounded-xl border-l-4 border-l-blue-500">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Códigos Únicos</p>
+                        <p class="text-2xl font-extrabold text-slate-800 mt-1" id="resCodigos">0</p>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Unid. Inv. Viejo</p>
+                        <p class="text-2xl font-bold text-slate-700 mt-1" id="resCantViejo">0</p>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Unid. Inv. Nuevo</p>
+                        <p class="text-2xl font-bold text-slate-700 mt-1" id="resCantNuevo">0</p>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl border-l-4 border-l-red-500">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Faltantes</p>
+                        <p class="text-2xl font-extrabold text-red-600 mt-1" id="resUnidadesPerdidas">0</p>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl border-l-4 border-l-green-500">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sobrantes</p>
+                        <p class="text-2xl font-extrabold text-green-600 mt-1" id="resUnidadesSobrantes">0</p>
+                    </div>
+                    <div class="glass-card p-4 rounded-xl border-l-4 border-l-slate-400" id="cardDifCant">
+                        <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Balance Unid.</p>
+                        <p class="text-2xl font-extrabold text-slate-800 mt-1" id="resDifCant">0</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Grid Inferior (Precios y Final) -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <!-- Panel 2: Precios -->
+                <div class="glass-panel rounded-3xl p-6">
+                    <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">2. Impacto Cambio de Precios</h3>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                        <div class="glass-card p-4 rounded-xl">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Val. Viejo (Orig)</p>
+                            <p class="text-lg font-bold text-slate-700 mt-1 truncate" id="resValViejo">$0</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-purple-500">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Val. Viejo (Nuevo)</p>
+                            <p class="text-lg font-bold text-slate-700 mt-1 truncate" id="resValViejoNuevo">$0</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-slate-400" id="cardPlataBajada">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Dif. (Plata Bajada)</p>
+                            <p class="text-lg font-extrabold text-slate-800 mt-1 truncate" id="resPlataBajada">$0</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panel 3: Final -->
+                <div class="glass-panel rounded-3xl p-6">
+                    <h3 class="text-xs font-extrabold text-slate-400 uppercase tracking-widest mb-4">3. Balance Monetario Cruzado</h3>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-red-500">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Pérdidas</p>
+                            <p class="text-base font-bold text-red-600 mt-1 truncate" id="resPerdidasVal">$0</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-green-500">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Sobrantes</p>
+                            <p class="text-base font-bold text-green-600 mt-1 truncate" id="resSobrantesVal">$0</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-amber-500">
+                            <p class="text-[10px] font-bold text-slate-500 uppercase tracking-wide">Filas c/ Error</p>
+                            <p class="text-xl font-extrabold text-amber-600 mt-1" id="resErrores">0</p>
+                        </div>
+                        <div class="glass-card p-4 rounded-xl border-l-4 border-l-slate-800 bg-slate-100/50" id="cardDiferencia">
+                            <p class="text-[10px] font-extrabold text-slate-700 uppercase tracking-wide">Balance Neto</p>
+                            <p class="text-lg font-extrabold text-slate-900 mt-1 truncate" id="resDifTotal">$0</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tabla de Datos -->
+            <div class="glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200/60">
+                <div class="overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-left border-collapse whitespace-nowrap text-xs">
+                        <thead class="bg-slate-100/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-200">
+                            <tr>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Código</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Descripción</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">P. Viejo</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">P. Nuevo</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Dif. Precio</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">C. Viejo</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">C. Nuevo</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Dif. Cant</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">V. Viejo (Orig)</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">V. Viejo (Nuevo)</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Plata Bajada</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">V. Nuevo (Real)</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Dif. Cruce</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Estado</th>
+                                <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Obs.</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="divide-y divide-slate-100 bg-white/40">
+                            <!-- JS inyecta filas acá -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+    <script>
+        let df1 = [], df2 = [];
+        let headers1 = [], headers2 = [];
+        let reporteData = []; 
+
+        const mappingSection = document.getElementById('mapping-section');
+        const resultsSection = document.getElementById('results-section');
+
+        async function leerExcel(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = new Uint8Array(e.target.result);
+                        const workbook = XLSX.read(data, { type: 'array' });
+                        const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                        // Usar encabezados reales de la fila 1
+                        const json = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                        const headers = XLSX.utils.sheet_to_json(worksheet, { header: 1 })[0] || [];
+                        resolve({ json, headers });
+                    } catch(err) { reject(err); }
+                };
+                reader.onerror = reject;
+                reader.readAsArrayBuffer(file);
+            });
+        }
+
+        function populateSelect(id, options) {
+            const select = document.getElementById(id);
+            select.innerHTML = "<option value=''>-- Seleccionar --</option>";
+            options.forEach(opt => {
+                if(opt && String(opt).trim() !== "") {
+                    const el = document.createElement("option");
+                    el.value = String(opt); el.textContent = String(opt); select.appendChild(el);
+                }
+            });
+        }
+
+        document.getElementById('file1').addEventListener('change', async (e) => {
+            if(e.target.files.length) {
+                const res = await leerExcel(e.target.files[0]);
+                df1 = res.json; headers1 = res.headers;
+                ['col-cod-1', 'col-desc-1', 'col-precio-1', 'col-cant-1', 'col-val-1'].forEach(id => populateSelect(id, headers1));
+                checkFiles();
+            }
+        });
+
+        document.getElementById('file2').addEventListener('change', async (e) => {
+            if(e.target.files.length) {
+                const res = await leerExcel(e.target.files[0]);
+                df2 = res.json; headers2 = res.headers;
+                ['col-cod-2', 'col-precio-2', 'col-cant-2', 'col-val-2'].forEach(id => populateSelect(id, headers2));
+                checkFiles();
+            }
+        });
+
+        function checkFiles() {
+            if (df1.length > 0 && df2.length > 0) {
+                mappingSection.classList.remove('hidden');
+            }
+        }
+
+        function limpiarNumero(valor) {
+            if (valor === undefined || valor === null || valor === "") return { num: 0, error: false };
+            if (typeof valor === "number") return { num: valor, error: false };
+            
+            let texto = String(valor).trim().replace(/\$/g, '');
+            texto = texto.replace(/\s/g, ''); 
+            if (texto.startsWith('#')) return { num: 0, error: true, crudo: valor };
+            
+            let lastComma = texto.lastIndexOf(',');
+            let lastPeriod = texto.lastIndexOf('.');
+            
+            if (lastComma > lastPeriod) {
+                texto = texto.replace(/\./g, '');
+                texto = texto.replace(',', '.');
+            } else if (lastPeriod > lastComma) {
+                texto = texto.replace(/,/g, '');
+            } else if (lastComma !== -1) {
+                texto = texto.replace(',', '.');
+            }
+
+            let numero = parseFloat(texto);
+            if (isNaN(numero)) return { num: 0, error: true, crudo: valor };
+            return { num: numero, error: false };
+        }
+
+        document.getElementById('btn-procesar').addEventListener('click', () => {
+            // Config de mapeo
+            const c1 = {
+                cod: document.getElementById('col-cod-1').value,
+                desc: document.getElementById('col-desc-1').value,
+                precio: document.getElementById('col-precio-1').value,
+                cant: document.getElementById('col-cant-1').value,
+                val: document.getElementById('col-val-1').value
+            };
+            const c2 = {
+                cod: document.getElementById('col-cod-2').value,
+                precio: document.getElementById('col-precio-2').value,
+                cant: document.getElementById('col-cant-2').value,
+                val: document.getElementById('col-val-2').value
+            };
+
+            if(!c1.cod || !c2.cod) { alert("Es obligatorio seleccionar al menos la columna de Códigos en ambos archivos."); return; }
+
+            // Lógica del Toggle de Precios
+            const checkActualizarPrecios = document.getElementById('chk-precios').checked;
+
+            let mapaCodigos = {};
+
+            function procesarFila(fila, origen, numFila) {
+                let archNombre = origen === 1 ? "Inv. Viejo" : "Inv. Nuevo";
+                let cols = origen === 1 ? c1 : c2;
+
+                let rawCodigo = fila[cols.cod];
+                let rawDesc = origen === 1 ? fila[cols.desc] : ""; 
+                let rawPrecio = fila[cols.precio]; 
+                let rawCant = fila[cols.cant];
+                let rawVal = fila[cols.val];
+
+                let codigoStr = String(rawCodigo || "").trim();
+                let codigoVacio = (codigoStr === "");
+
+                // Si todo está vacío saltar
+                if (codigoVacio && !rawPrecio && !rawCant && !rawVal) return;
+
+                let codigoFinal = codigoVacio ? `SIN_CODIGO_${archNombre}_F_${numFila}` : codigoStr;
+
+                let parseP = limpiarNumero(rawPrecio);
+                let parseC = limpiarNumero(rawCant);
+                let parseV = limpiarNumero(rawVal);
+
+                if (!mapaCodigos[codigoFinal]) {
+                    mapaCodigos[codigoFinal] = { 
+                        descripcion: "", precioViejo: 0, precioNuevo: 0,
+                        cantViejo: 0, cantNuevo: 0, valViejo: 0, valNuevo: 0, 
+                        estado: 'OK', observaciones: [] 
+                    };
+                }
+
+                if (origen === 1 && rawDesc && mapaCodigos[codigoFinal].descripcion === "") {
+                    mapaCodigos[codigoFinal].descripcion = String(rawDesc).trim();
+                }
+
+                if (codigoVacio) {
+                    mapaCodigos[codigoFinal].estado = 'ERROR';
+                    mapaCodigos[codigoFinal].observaciones.push(`F${numFila}(${archNombre}): Falta código.`);
+                }
+                if (parseP.error) {
+                    mapaCodigos[codigoFinal].estado = 'ERROR';
+                    mapaCodigos[codigoFinal].observaciones.push(`F${numFila}(${archNombre}): Precio U. inválido.`);
+                }
+                if (parseC.error) {
+                    mapaCodigos[codigoFinal].estado = 'ERROR';
+                    mapaCodigos[codigoFinal].observaciones.push(`F${numFila}(${archNombre}): Cantidad inválida.`);
+                }
+                if (parseV.error) {
+                    mapaCodigos[codigoFinal].estado = 'ERROR';
+                    mapaCodigos[codigoFinal].observaciones.push(`F${numFila}(${archNombre}): Valor inválido.`);
+                }
+
+                if (origen === 1) { 
+                    if (parseP.num !== 0 && mapaCodigos[codigoFinal].precioViejo === 0) mapaCodigos[codigoFinal].precioViejo = parseP.num;
+                    mapaCodigos[codigoFinal].cantViejo += parseC.num;
+                    mapaCodigos[codigoFinal].valViejo += parseV.num;
+                } else { 
+                    if (parseP.num !== 0 && mapaCodigos[codigoFinal].precioNuevo === 0) mapaCodigos[codigoFinal].precioNuevo = parseP.num;
+                    mapaCodigos[codigoFinal].cantNuevo += parseC.num;
+                    mapaCodigos[codigoFinal].valNuevo += parseV.num;
+                }
+            }
+
+            // Procesar (sumamos 2 al índice para compensar header y base 0 para logs humanos)
+            df1.forEach((row, i) => procesarFila(row, 1, i + 2));
+            df2.forEach((row, i) => procesarFila(row, 2, i + 2));
+
+            // Generar Reporte Final aplicando la lógica del Toggle
+            reporteData = Object.keys(mapaCodigos).map(codigo => {
+                let d = mapaCodigos[codigo];
+                
+                // EVALUACIÓN DE PRECIOS CONDICIONAL
+                let difPrecio = 0;
+                let valViejoCalculado = d.valViejo; // Toma valor literal del Excel si el switch está apagado
+                let plataBajada = 0;
+                let difValorizadoFinal = d.valNuevo - d.valViejo; // Cruce directo de Excel contra Excel si apagado
+                
+                // Si el botón está activado, hacemos matemática cruzada
+                if (checkActualizarPrecios && d.precioNuevo > 0) {
+                    difPrecio = d.precioNuevo - d.precioViejo;
+                    valViejoCalculado = d.cantViejo * d.precioNuevo;
+                    plataBajada = valViejoCalculado - d.valViejo;
+                    difValorizadoFinal = d.valNuevo - valViejoCalculado;
+                }
+
+                return {
+                    "Código": codigo,
+                    "Descripción": d.descripcion || "No especificada",
+                    "Precio U. Inv. Viejo": d.precioViejo,
+                    "Precio U. Inv. Nuevo": d.precioNuevo,
+                    "Dif. Precio U.": difPrecio,
+                    "Cant. Inv. Viejo": d.cantViejo,
+                    "Cant. Inv. Nuevo": d.cantNuevo,
+                    "Dif. Cantidad": d.cantNuevo - d.cantViejo,
+                    "Val. Inv. Viejo (Orig)": d.valViejo,
+                    "Val. Inv. Viejo (Nuevo)": valViejoCalculado,
+                    "Plata Bajada": plataBajada,
+                    "Val. Inv. Nuevo (Real)": d.valNuevo,
+                    "Dif. Valorizado": difValorizadoFinal,
+                    "Estado": d.estado,
+                    "Observaciones": d.observaciones.join(" | ")
+                };
+            });
+
+            actualizarResumen(reporteData);
+            document.getElementById('filtroTabla').value = "todos"; 
+            aplicarFiltro(); 
+            
+            resultsSection.classList.remove('hidden');
+        });
+
+        function actualizarResumen(data) {
+            let tCantViejo = 0, tCantNuevo = 0, tDifCant = 0, tPerdidasU = 0, tSobrantesU = 0;
+            let tValViejo = 0, tValViejoNuevo = 0, tValNuevo = 0, tPlataBajada = 0;
+            let tDifVal = 0, tPerdidasVal = 0, tSobrantesVal = 0, tErrores = 0;
+
+            data.forEach(i => {
+                tCantViejo += i['Cant. Inv. Viejo'];
+                tCantNuevo += i['Cant. Inv. Nuevo'];
+                tDifCant += i['Dif. Cantidad'];
+                if (i['Dif. Cantidad'] < 0) tPerdidasU += Math.abs(i['Dif. Cantidad']);
+                if (i['Dif. Cantidad'] > 0) tSobrantesU += i['Dif. Cantidad'];
+
+                tValViejo += i['Val. Inv. Viejo (Orig)'];
+                tValViejoNuevo += i['Val. Inv. Viejo (Nuevo)'];
+                tPlataBajada += i['Plata Bajada'];
+                tValNuevo += i['Val. Inv. Nuevo (Real)'];
+                
+                tDifVal += i['Dif. Valorizado'];
+                if (i['Dif. Valorizado'] < 0) tPerdidasVal += i['Dif. Valorizado'];
+                if (i['Dif. Valorizado'] > 0) tSobrantesVal += i['Dif. Valorizado'];
+
+                if (i['Estado'] === 'ERROR') tErrores++;
+            });
+
+            const fmtPlata = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+
+            // Panel 1
+            document.getElementById('resCodigos').innerText = data.length;
+            document.getElementById('resCantViejo').innerText = tCantViejo;
+            document.getElementById('resCantNuevo').innerText = tCantNuevo;
+            document.getElementById('resUnidadesPerdidas').innerText = tPerdidasU;
+            document.getElementById('resUnidadesSobrantes').innerText = tSobrantesU;
+            document.getElementById('resDifCant').innerText = tDifCant;
+            
+            const cdifc = document.getElementById('cardDifCant');
+            cdifc.classList.remove('border-l-red-500', 'border-l-green-500', 'border-l-slate-400');
+            cdifc.classList.add(tDifCant < 0 ? 'border-l-red-500' : (tDifCant > 0 ? 'border-l-green-500' : 'border-l-slate-400'));
+
+            // Panel 2
+            document.getElementById('resValViejo').innerText = fmtPlata.format(tValViejo);
+            document.getElementById('resValViejoNuevo').innerText = fmtPlata.format(tValViejoNuevo);
+            document.getElementById('resPlataBajada').innerText = fmtPlata.format(tPlataBajada);
+            
+            const cplata = document.getElementById('cardPlataBajada');
+            cplata.classList.remove('border-l-red-500', 'border-l-green-500', 'border-l-slate-400');
+            cplata.classList.add(tPlataBajada < 0 ? 'border-l-red-500' : (tPlataBajada > 0 ? 'border-l-green-500' : 'border-l-slate-400'));
+
+            // Panel 3
+            document.getElementById('resPerdidasVal').innerText = fmtPlata.format(tPerdidasVal);
+            document.getElementById('resSobrantesVal').innerText = fmtPlata.format(tSobrantesVal);
+            document.getElementById('resDifTotal').innerText = fmtPlata.format(tDifVal);
+            document.getElementById('resErrores').innerText = tErrores;
+            
+            const cdift = document.getElementById('cardDiferencia');
+            cdift.classList.remove('border-l-red-500', 'border-l-green-500', 'border-l-slate-800');
+            cdift.classList.add(tDifVal < 0 ? 'border-l-red-500' : (tDifVal > 0 ? 'border-l-green-500' : 'border-l-slate-800'));
+        }
+
+        function aplicarFiltro() {
+            let filtro = document.getElementById('filtroTabla').value;
+            let df = reporteData;
+            if (filtro === "diferencias") df = reporteData.filter(i => i['Dif. Cantidad'] !== 0 || i['Dif. Valorizado'] !== 0 || i['Dif. Precio U.'] !== 0);
+            else if (filtro === "errores") df = reporteData.filter(i => i['Estado'] === 'ERROR');
+            mostrarTabla(df);
+        }
+
+        function mostrarTabla(data) {
+            const tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            const fmt = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+
+            data.forEach(fila => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-100/50 transition-colors";
+                
+                let cCant = fila['Dif. Cantidad'] < 0 ? "faltante" : (fila['Dif. Cantidad'] > 0 ? "sobrante" : "");
+                let cVal = fila['Dif. Valorizado'] < 0 ? "faltante" : (fila['Dif. Valorizado'] > 0 ? "sobrante" : "");
+                let cPre = fila['Dif. Precio U.'] < 0 ? "faltante" : (fila['Dif. Precio U.'] > 0 ? "sobrante" : "");
+                let cPla = fila['Plata Bajada'] < 0 ? "faltante" : (fila['Plata Bajada'] > 0 ? "sobrante" : "");
+                let cEst = fila['Estado'] === 'ERROR' ? "error-celda" : "";
+
+                tr.innerHTML = `
+                    <td class="px-4 py-2 font-bold">${fila.Código}</td>
+                    <td class="px-4 py-2 max-w-[200px] truncate" title="${fila['Descripción']}">${fila['Descripción']}</td>
+                    <td class="px-4 py-2">${fmt.format(fila['Precio U. Inv. Viejo'])}</td>
+                    <td class="px-4 py-2">${fmt.format(fila['Precio U. Inv. Nuevo'])}</td>
+                    <td class="px-4 py-2 ${cPre}">${fmt.format(fila['Dif. Precio U.'])}</td>
+                    <td class="px-4 py-2">${fila['Cant. Inv. Viejo']}</td>
+                    <td class="px-4 py-2">${fila['Cant. Inv. Nuevo']}</td>
+                    <td class="px-4 py-2 ${cCant}">${fila['Dif. Cantidad']}</td>
+                    <td class="px-4 py-2">${fmt.format(fila['Val. Inv. Viejo (Orig)'])}</td>
+                    <td class="px-4 py-2">${fmt.format(fila['Val. Inv. Viejo (Nuevo)'])}</td>
+                    <td class="px-4 py-2 ${cPla}">${fmt.format(fila['Plata Bajada'])}</td>
+                    <td class="px-4 py-2 font-bold">${fmt.format(fila['Val. Inv. Nuevo (Real)'])}</td>
+                    <td class="px-4 py-2 ${cVal}">${fmt.format(fila['Dif. Valorizado'])}</td>
+                    <td class="px-4 py-2 ${cEst}">${fila.Estado}</td>
+                    <td class="px-4 py-2 text-[10px] text-slate-400 max-w-[150px] truncate" title="${fila.Observaciones}">${fila.Observaciones}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function descargarExcel() {
+            if (reporteData.length === 0) return;
+            const worksheet = XLSX.utils.json_to_sheet(reporteData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Auditoria");
+            XLSX.writeFile(workbook, "Auditoria_Stock_XFish.xlsx");
+        }
+    </script>
+</body>
+</html>

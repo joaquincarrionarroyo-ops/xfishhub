@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generador de Altas X-Fish | Odoo</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8; 
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.75);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05);
+        }
+        .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
+        .custom-select, .custom-input {
+            width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px;
+            background-color: rgba(255, 255, 255, 0.8); outline: none; transition: all 0.2s; font-weight: 600; color: #334155;
+        }
+        .custom-select:focus, .custom-input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.2); background-color: #fff; }
+        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        .tab-btn { padding: 12px 20px; font-size: 13px; cursor: pointer; transition: all 0.2s; border-bottom: 2px solid transparent; }
+        .tab-active { border-bottom-color: #3b82f6; color: #1d4ed8; font-weight: 700; background-color: rgba(239, 246, 255, 0.5); }
+        .tab-inactive { color: #64748b; font-weight: 500; }
+        .tab-inactive:hover { color: #334155; background-color: rgba(248, 250, 252, 0.5); }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-800 selection:bg-blue-500 selection:text-white pb-10">
+
+    <div class="blob bg-blue-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-50"></div>
+    <div class="blob bg-sky-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-60" style="animation-delay: -2s;"></div>
+    <div class="blob bg-amber-100 w-[300px] h-[300px] top-[40%] left-[50%] opacity-40" style="animation-delay: -4s;"></div>
+
+    <header class="glass-panel sticky top-0 z-50 px-8 py-4 mb-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-blue-500 to-sky-500 shadow-lg shadow-blue-500/30 flex items-center justify-center">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </div>
+                Generador de Altas Odoo
+            </h1>
+            <a href="index.html" class="text-sm font-semibold text-blue-600 hover:text-blue-800 transition-colors">← Volver al Hub</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-6 space-y-6 relative z-10">
+        
+        <div class="glass-panel rounded-3xl p-8">
+            <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Archivos</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-blue-400 to-sky-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
+                    <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">📘 Inventario Original (Odoo Actual)</label>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Base actual para detectar qué falta crear o qué base ya existe.</p>
+                        <input type="file" id="file-orig" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-blue-100 file:text-blue-700 hover:file:bg-blue-200 cursor-pointer transition-colors"/>
+                    </div>
+                </div>
+                <div class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-sky-400 to-indigo-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
+                    <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
+                        <label class="block text-sm font-bold text-slate-700 mb-1">📗 Excel de Alta (Nuevos Proveedores)</label>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Archivo con los productos a incorporar.</p>
+                        <input type="file" id="file-alta" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-sky-100 file:text-sky-700 hover:file:bg-sky-200 cursor-pointer transition-colors"/>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="mapping-section" class="hidden glass-panel rounded-3xl p-8 transition-all duration-500">
+            <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">2. Configurar Columnas y Agrupación</h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-6 mb-6">
+                <div class="col-span-1"><label class="text-xs font-semibold text-slate-600 mb-1 block">Código (Original)</label><select id="col-cod-orig" class="custom-select"></select></div>
+                <div class="col-span-1"><label class="text-xs font-semibold text-slate-600 mb-1 block">Código (Alta)</label><select id="col-cod-alta" class="custom-select"></select></div>
+                <div class="col-span-1"><label class="text-xs font-semibold text-slate-600 mb-1 block">Nombre (Alta)</label><select id="col-nom-alta" class="custom-select"></select></div>
+                <div class="col-span-1"><label class="text-xs font-semibold text-slate-600 mb-1 block">Precio (Alta)</label><select id="col-precio-alta" class="custom-select"></select></div>
+                <div class="col-span-1"><label class="text-xs font-semibold text-slate-600 mb-1 block">Unid. x Bulto (Alta)</label><select id="col-bulto-alta" class="custom-select"></select></div>
+                
+                <div class="bg-blue-50/50 p-5 rounded-2xl border border-blue-100/50 col-span-1 md:col-span-5 grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                        <label class="block text-sm font-bold text-blue-800 mb-1">Corte p/ Cañas, Reels e Hilos (Nº Caract.)</label>
+                        <p class="text-xs text-blue-600/80 mb-2">Cantidad de letras para deducir el código base.</p>
+                        <input type="number" id="base-code-length" value="5" min="1" class="custom-input bg-white/80">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-bold text-blue-800 mb-1">Forzar Agrupación (Palabras Clave)</label>
+                        <p class="text-xs text-blue-600/80 mb-2">Para modelos que no dicen la categoría en su nombre (Ej: COMMANDO). Separá con comas.</p>
+                        <input type="text" id="extra-keywords-canas" placeholder="Ej: COMMANDO, TORNADO" class="custom-input bg-white/80">
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-blue-600 to-sky-500 hover:from-blue-700 hover:to-sky-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-blue-500/30 transform transition-all duration-200 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
+                🔍 Buscar Faltantes y Procesar
+            </button>
+        </div>
+
+        <div id="results-section" class="hidden space-y-6">
+            
+            <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500">
+                <div class="flex items-center gap-4">
+                    <div>
+                        <h3 class="text-lg font-bold text-slate-800" id="results-text"></h3>
+                        <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext"></p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-3 mt-4 md:mt-0">
+                    <button id="btn-rebuild" class="hidden bg-amber-500 hover:bg-amber-600 text-white text-xs font-bold py-2.5 px-4 rounded-xl shadow-lg shadow-amber-500/30 transition-transform hover:-translate-y-0.5">
+                        🔄 Aplicar Cambios
+                    </button>
+                    <button id="btn-dl-odoo" class="bg-gradient-to-r from-emerald-500 to-green-500 hover:from-emerald-600 hover:to-green-600 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-green-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        Bajar Nuevas Bases Odoo
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex border-b border-slate-200/60 pl-4 overflow-x-auto">
+                <button id="tab-odoo" class="tab-btn tab-active focus:outline-none flex gap-2 items-center">
+                    🎯 Bases Nuevas (Odoo) <span id="badge-odoo" class="bg-blue-100 text-blue-700 py-0.5 px-2 rounded-full text-[10px]">0</span>
+                </button>
+                <button id="tab-variantes" class="tab-btn tab-inactive focus:outline-none flex gap-2 items-center">
+                    ⚠️ Solo Agregar Variantes <span id="badge-variantes" class="bg-amber-100 text-amber-700 py-0.5 px-2 rounded-full text-[10px]">0</span>
+                </button>
+                <button id="tab-nuevos" class="tab-btn tab-inactive focus:outline-none flex gap-2 items-center">
+                    📋 Modificar Categorías / Faltantes
+                </button>
+            </div>
+
+            <div class="glass-panel rounded-2xl overflow-hidden shadow-sm border border-slate-200/60">
+                <div class="overflow-x-auto max-h-[600px]">
+                    <div id="preview-container" class="text-sm text-slate-500 text-center py-10 font-medium">Cargando...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        let dfOrig = [], dfAlta = [];
+        let nuevosData = [], odooData = [], existentesData = [];
+        let conf = {};
+        let setOriginalCodes = new Set(); // Guardamos los códigos originales acá
+        let arrOriginalCodes = []; 
+
+        const mappingSection = document.getElementById('mapping-section');
+        const resultsSection = document.getElementById('results-section');
+        const previewContainer = document.getElementById('preview-container');
+        const btnRebuild = document.getElementById('btn-rebuild');
+
+        const LISTA_CATEGORIAS = [
+            "Airsoft / Accesorios", "Airsoft / Rifles, Escopetas, Pistolas",
+            "Indumentaria / Wader y Trajes para lluvia", "Indumentaria / Remera, Pantalones, Camisas y Cuello",
+            "Indumentaria / Sombrero y Guantes", "Camping / Ilumincación", "Camping / Muebles de Camping",
+            "Camping / Cocina y Parrila", "Camping / Otros", "Reels", "Cañas / Spinning", "Cañas / Bait",
+            "Cañas / Casting", "Cañas / Mosca", "Cañas / Telescópicas", "Cañas",
+            "Señuelos / Spinner Baits y Buzzers", "Señuelos / Cucharas", "Señuelos / Señuelos",
+            "Accesorio de Pesca / Anzuelos", "Accesorio de Pesca / Boyas", "Accesorio de Pesca / Hilos",
+            "Accesorio de Pesca / Para Armar", "Accesorio de Pesca / Bolsos y Cajas",
+            "Accesorio de Pesca / Redes y Baldes", "Cuchilleria / Navajas", "Cuchilleria",
+            "Accesorio de Pesca / Herramientas", "Accesorio de Pesca / Pasahilos , Punteras",
+            "Accesorio de Pesca", "Náutica / Motores", "Náutica / Seguridad", "OTROS / REVISAR"
+        ];
+
+        function checkHasVariants(cat) {
+            let c = String(cat).toUpperCase();
+            return c.includes("CAÑA") || c.includes("CANA") || c.includes("REEL") || c.includes("HILO");
+        }
+
+        function calcWebCat(odooCat) {
+            let c = String(odooCat).toUpperCase();
+            if (c.includes("AIRSOFT")) return "Airsoft";
+            if (c.includes("CAMPING")) return "Camping";
+            if (c.includes("INDUMENTARIA")) return "Indumentaria";
+            if (c.includes("REEL")) return "Reels";
+            if (c.includes("CAÑA") || c.includes("CANA") || c.includes("CANIA")) return "Cañas";
+            if (c.includes("SEÑUELO") || c.includes("SENUELO")) return "Señuelos";
+            if (c.includes("CUCHILLERIA")) return "Cuchilleria";
+            if (c.includes("NÁUTICA") || c.includes("NAUTICA")) return "Náutica";
+            if (c.includes("PESCA")) return "Accesorio de Pesca";
+            return "OTROS / REVISAR";
+        }
+
+        function generarCategorias(nombreProd, extraKeywords) {
+            const n = (String(nombreProd || "")).toUpperCase();
+            const extras = (extraKeywords || "").split(',').map(k => k.trim().toUpperCase()).filter(k => k);
+            const isExtraCana = extras.length > 0 && extras.some(k => n.includes(k));
+
+            let cat = "OTROS / REVISAR";
+            
+            if (n.includes("RIFLE") && (n.includes("FUNDA") || n.includes("CORREA") || n.includes("SOPORTE"))) cat = "Airsoft / Accesorios";
+            else if (n.includes("PISTOLA") && (n.includes("FUNDA") || n.includes("HOLSTER"))) cat = "Airsoft / Accesorios";
+            else if (n.includes("RIFLE") || n.includes("PISTOLA") || n.includes("ESCOPETA")) cat = "Airsoft / Rifles, Escopetas, Pistolas";
+            else if (n.includes("BALIN")) cat = "Airsoft / Accesorios";
+            else if (n.includes("MIRA") || n.includes(" GAS ") || n.includes("CO2") || n.includes("BLANCO") || n.includes("CARGADOR")) cat = "Airsoft / Accesorios";
+            else if (n.includes("WADER")) cat = "Indumentaria / Wader y Trajes para lluvia";
+            else if (n.includes("REMERA") || n.includes("CAMISA") || n.includes("PANTALON") || n.includes("BUZO") || n.includes("CAMPERA") || n.includes("CHALECO")) cat = "Indumentaria / Remera, Pantalones, Camisas y Cuello";
+            else if (n.includes("GORR") || n.includes("SOMBRERO") || n.includes("GUANTE") || n.includes("CUELLO") || n.includes("DEDAL")) cat = "Indumentaria / Sombrero y Guantes";
+            else if (n.includes("TRAJE") || n.includes("PONCHO") || n.includes("PILOTIN")) cat = "Indumentaria / Wader y Trajes para lluvia";
+            else if (n.includes("LINTERNA") || n.includes("REFLECTOR") || n.includes("FAROL") || n.includes("LAMPARA") || n.includes("LUZ")) cat = "Camping / Ilumincación";
+            else if (n.includes("REPOSERA") || n.includes("SILLA") || n.includes("MESA") || n.includes("BANCO") || n.includes("CATRE")) cat = "Camping / Muebles de Camping";
+            else if (n.includes("COCINA") || n.includes("PARRILLA") || n.includes("TERMO") || n.includes("ANAFE") || n.includes("MATE") || n.includes("MARMITA") || n.includes("OLLA") || n.includes("SARTEN") || n.includes("SET DE COCINA")) cat = "Camping / Cocina y Parrila";
+            else if (n.includes("CARPA") || n.includes("GAZEBO") || n.includes("SOMBRILLA") || n.includes("COLCHON") || n.includes("INFLADOR") || n.includes("AISLANTE") || n.includes("CONSERVADORA") || n.includes("HELADERA")) cat = "Camping / Otros";
+            else if (n.includes("REEL")) cat = "Reels";
+            else if (isExtraCana || n.includes("SPINNING") || n.includes("BAIT") || n.includes("CASTING") || n.includes("MOSCA") || n.includes("TELE") || n.includes("PEJERREY") || n.includes("CAÑA") || n.includes("CANIA") || n.includes("CANA") || n.includes("CA#A") || n.includes("CAï¿½A")) cat = "Cañas";
+            else if (n.includes("SPINNER")) cat = "Señuelos / Spinner Baits y Buzzers";
+            else if (n.includes("CUCHARA")) cat = "Señuelos / Cucharas";
+            else if (n.includes("SEÑUELO") || n.includes("SENUELO") || n.includes("RANA") || n.includes("CRANK") || n.includes("POPPER")) cat = "Señuelos / Señuelos";
+            else if (n.includes("ANZUELO")) cat = "Accesorio de Pesca / Anzuelos";
+            else if (n.includes("BOYA")) cat = "Accesorio de Pesca / Boyas";
+            else if (n.includes("NYLO") || n.includes("MULTI") || n.includes("HILO") || n.includes("TANZA") || n.includes("BRAID") || n.includes("FLUORO")) cat = "Accesorio de Pesca / Hilos";
+            else if (n.includes("PLOM") || n.includes("ROTOR") || n.includes("ESMERILLON") || n.includes("MOSQUETON") || n.includes("LIDER") || n.includes("PERLA") || n.includes("CHICOTE") || n.includes("LINEA") || n.includes("RESORTE") || n.includes("CEBADOR") || n.includes("RULERO") || n.includes("PORTA") || n.includes("TABLA")) cat = "Accesorio de Pesca / Para Armar";
+            else if (n.includes("BOLSO") || n.includes("CAJA") || n.includes("MOCHILA") || n.includes("GAVETERO") || n.includes("FUNDA") || n.includes("ORGANIZADOR") || n.includes("MORRAL") || n.includes("RIÑONERA")) cat = "Accesorio de Pesca / Bolsos y Cajas";
+            else if (n.includes("RED") || n.includes("MEDIO MUNDO") || n.includes("BALDE") || n.includes("VIVERO") || n.includes("ATARRAYA") || n.includes("COPO")) cat = "Accesorio de Pesca / Redes y Baldes";
+            else if (n.includes("NAVAJA")) cat = "Cuchilleria / Navajas";
+            else if (n.includes("CUCHILLO") || n.includes("MACHETE") || n.includes("HACHA")) cat = "Cuchilleria";
+            else if (n.includes("ALICATE") || n.includes("PINZA") || n.includes("BOGA") || n.includes("BALANZA") || n.includes("GRIP") || n.includes("MULTIFUNCION") || n.includes("TIJERA") || n.includes("AFILADOR")) cat = "Accesorio de Pesca / Herramientas";
+            else if (n.includes("PASAHILO") || n.includes("PUNTER")) cat = "Accesorio de Pesca / Pasahilos , Punteras";
+            else if (n.includes("ATADO") || n.includes("ACCESORIO") || n.includes("MANIJA") || n.includes("SOPORTE") || n.includes("POSA") || n.includes("CENCERRO") || n.includes("CAMPANA") || n.includes("ALARMA") || n.includes("CARNADA") || n.includes("MASA") || n.includes("HARINADO")) cat = "Accesorio de Pesca";
+            else if (n.includes("MOTOR")) cat = "Náutica / Motores";
+            else if (n.includes("SALVAVIDA")) cat = "Náutica / Seguridad";
+
+            return { odoo: cat, web: calcWebCat(cat) };
+        }
+
+        function readExcel(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
+                const headers = XLSX.utils.sheet_to_json(firstSheet, {header: 1})[0] || [];
+                callback(jsonData, headers);
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function populateSelect(id, options) {
+            const select = document.getElementById(id);
+            select.innerHTML = "<option value=''>-- Seleccionar --</option>";
+            options.forEach(opt => {
+                if(opt && String(opt).trim() !== "") {
+                    const el = document.createElement("option");
+                    el.value = String(opt); el.textContent = String(opt); select.appendChild(el);
+                }
+            });
+        }
+
+        document.getElementById('file-orig').addEventListener('change', (e) => {
+            if(e.target.files.length) readExcel(e.target.files[0], (d, h) => { dfOrig = d; populateSelect('col-cod-orig', h); checkFiles(); });
+        });
+        document.getElementById('file-alta').addEventListener('change', (e) => {
+            if(e.target.files.length) readExcel(e.target.files[0], (d, h) => { dfAlta = d; ['col-cod-alta', 'col-nom-alta', 'col-precio-alta', 'col-bulto-alta'].forEach(id => populateSelect(id, h)); checkFiles(); });
+        });
+
+        function checkFiles() {
+            if (document.getElementById('file-orig').files.length && document.getElementById('file-alta').files.length) {
+                mappingSection.classList.remove('hidden');
+            }
+        }
+
+        window.changeCatOdoo = function(idx, newCat) {
+            nuevosData[idx].catOdoo = newCat;
+            nuevosData[idx].catWeb = calcWebCat(newCat);
+            let nowHasVariants = checkHasVariants(newCat);
+            nuevosData[idx].hasVariants = nowHasVariants;
+
+            if (nowHasVariants) {
+                let baseActual = nuevosData[idx].codigoBase;
+                let codigoFull = nuevosData[idx].codigo;
+                if (baseActual === codigoFull) {
+                    let baseLen = parseInt(document.getElementById('base-code-length').value) || 5;
+                    let sugerencia = codigoFull.substring(0, baseLen);
+                    let userBase = prompt(`Al cambiar a "${newCat}", este artículo requiere un Código Base para unificar sus variantes.\n\nCódigo de la variante: ${codigoFull}\n\nIngresá el Código Base (Variante de cuál es):`, sugerencia);
+                    if(userBase !== null && userBase.trim() !== "") {
+                        nuevosData[idx].codigoBase = String(userBase).trim();
+                    }
+                }
+            } else {
+                nuevosData[idx].codigoBase = nuevosData[idx].codigo;
+            }
+            btnRebuild.classList.remove('hidden');
+            renderTable('nuevos');
+        };
+
+        window.changeCodigoBase = function(idx, val) {
+            nuevosData[idx].codigoBase = String(val).trim() || nuevosData[idx].codigo;
+            btnRebuild.classList.remove('hidden');
+        };
+
+        function buildOdooExport() {
+            let groupedData = {};
+            
+            nuevosData.forEach(row => {
+                let baseCode = row.codigoBase;
+                if (!groupedData[baseCode]) {
+                    groupedData[baseCode] = { 
+                        baseName: row.nombre, 
+                        precio: row.precio,
+                        bulto: row.bulto,
+                        catOdoo: row.catOdoo, 
+                        catWeb: row.catWeb,
+                        variants: [] 
+                    };
+                }
+                groupedData[baseCode].variants.push(row.codigo);
+            });
+
+            odooData = [];
+            existentesData = [];
+            const today = new Date().toLocaleDateString('es-AR');
+
+            for (let baseCode in groupedData) {
+                let group = groupedData[baseCode];
+                let hasVariants = group.variants.length > 1 || checkHasVariants(group.catOdoo);
+
+                // LÓGICA CLAVE: ¿La base ya existe en Odoo?
+                // Chequea si algún código de Odoo Original empieza con este baseCode (salvo que sea un producto sin variantes)
+                let baseExistsInOdoo = false;
+                if (hasVariants && baseCode !== group.variants[0]) {
+                    // Si el código original tiene al menos uno que empiece con la base (ej: "COMM" -> "COMM240")
+                    baseExistsInOdoo = arrOriginalCodes.some(origCode => origCode.startsWith(baseCode));
+                }
+
+                if (baseExistsInOdoo) {
+                    // SOLO AGREGAR VARIANTE A BASE EXISTENTE
+                    existentesData.push({
+                        "Base Existente en Odoo": baseCode,
+                        "Nombre Detectado": group.baseName,
+                        "Categoría": group.catOdoo,
+                        "Nuevas Variantes a Crear Manualmente": group.variants.join(" | ")
+                    });
+                } else {
+                    // BASE COMPLETAMENTE NUEVA PARA IMPORTAR
+                    odooData.push({
+                        "codigo": baseCode,
+                        "nombre del producto": group.baseName,
+                        "categoria del producto": group.catOdoo,
+                        "categoria del producto en sitio web": group.catWeb,
+                        "precio": group.precio,
+                        "etiqueta": today,
+                        "Secondary uom": "TRUE",
+                        "Secondary UOM": group.bulto,
+                        "Tracking": "TRUE",
+                        "seguimiento": "by lots",
+                        "¿Tiene Variantes?": hasVariants ? "SÍ" : "NO",
+                        "Códigos a crear manual": hasVariants ? group.variants.join(" | ") : "Es producto simple"
+                    });
+                }
+            }
+            
+            // Actualizar Badges y Textos
+            document.getElementById('badge-odoo').innerText = odooData.length;
+            document.getElementById('badge-variantes').innerText = existentesData.length;
+            
+            document.getElementById('results-text').textContent = `Resultados: ${odooData.length} Bases Nuevas | ${existentesData.length} Bases Existentes`;
+        }
+
+        function renderTable(type) {
+            let data = [];
+            if(type === 'odoo') data = odooData;
+            else if(type === 'variantes') data = existentesData;
+            else if(type === 'nuevos') data = nuevosData;
+            
+            if (!data.length) {
+                previewContainer.innerHTML = "<p class='py-10 text-slate-500 font-medium'>No hay datos en esta categoría.</p>";
+                return;
+            }
+
+            let html = '<table class="w-full text-left border-collapse whitespace-nowrap text-xs"><thead class="bg-slate-100/80 backdrop-blur-md sticky top-0 z-10 border-b border-slate-200"><tr>';
+            
+            if (type === 'odoo' || type === 'variantes') {
+                const keys = Object.keys(data[0]);
+                keys.forEach(k => html += `<th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">${k}</th>`);
+                html += '</tr></thead><tbody class="divide-y divide-slate-100 bg-white/40">';
+                
+                data.forEach((row) => {
+                    html += '<tr class="hover:bg-slate-100/50 transition-colors">';
+                    keys.forEach(k => {
+                        let val = row[k] !== undefined ? row[k] : "";
+                        if (k === '¿Tiene Variantes?') {
+                            html += `<td class="px-4 py-2">${val === 'SÍ' ? '<span class="bg-amber-100 text-amber-700 text-[10px] font-bold px-3 py-1 rounded-full border border-amber-200">SÍ</span>' : '<span class="bg-slate-100 text-slate-500 text-[10px] font-bold px-3 py-1 rounded-full border border-slate-200">NO</span>'}</td>`;
+                        } else if ((k === 'Códigos a crear manual' || k === 'Nuevas Variantes a Crear Manualmente') && val !== 'Es producto simple') {
+                            html += `<td class="px-4 py-2 text-sky-600 font-bold max-w-[250px] truncate" title="${String(val).replace(/"/g, '&quot;')}">${val}</td>`;
+                        } else {
+                            html += `<td class="px-4 py-2 text-slate-600 font-medium max-w-[200px] truncate" title="${String(val).replace(/"/g, '&quot;')}">${val}</td>`;
+                        }
+                    });
+                    html += '</tr>';
+                });
+            } else {
+                html += `
+                    <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Cód. Original (Alta)</th>
+                    <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Nombre</th>
+                    <th class="px-4 py-3 font-extrabold text-blue-600 uppercase tracking-wider bg-blue-50/50">Categoría Odoo (Editable)</th>
+                    <th class="px-4 py-3 font-extrabold text-slate-600 uppercase tracking-wider">Cat. Web</th>
+                    <th class="px-4 py-3 font-extrabold text-amber-600 uppercase tracking-wider bg-amber-50/50">Cód. Base / Unificación (Editable)</th>
+                </tr></thead><tbody class="divide-y divide-slate-100 bg-white/40">`;
+                
+                data.forEach((row, idx) => {
+                    html += `<tr class="hover:bg-slate-100/50 transition-colors">`;
+                    html += `<td class="px-4 py-2 text-slate-600 font-bold">${row.codigo}</td>`;
+                    html += `<td class="px-4 py-2 text-slate-600 max-w-[200px] truncate" title="${row.nombre.replace(/"/g, '&quot;')}">${row.nombre}</td>`;
+                    
+                    html += `<td class="px-4 py-2 bg-blue-50/20"><select class="custom-input border-blue-200 focus:border-blue-500" onchange="changeCatOdoo(${idx}, this.value)">`;
+                    LISTA_CATEGORIAS.forEach(c => {
+                        let sel = (c === row.catOdoo) ? "selected" : "";
+                        html += `<option value="${c}" ${sel}>${c}</option>`;
+                    });
+                    if(!LISTA_CATEGORIAS.includes(row.catOdoo)) html += `<option value="${row.catOdoo}" selected>${row.catOdoo}</option>`;
+                    html += `</select></td>`;
+                    
+                    html += `<td class="px-4 py-2 text-slate-500 font-medium">${row.catWeb}</td>`;
+                    
+                    let inputClass = row.hasVariants ? "border-amber-400 text-amber-700 bg-amber-50/30" : "border-slate-200 text-slate-500";
+                    html += `<td class="px-4 py-2 bg-amber-50/20"><input type="text" class="custom-input font-bold ${inputClass}" value="${row.codigoBase.replace(/"/g, '&quot;')}" onchange="changeCodigoBase(${idx}, this.value)"></td>`;
+                    html += `</tr>`;
+                });
+            }
+
+            html += '</tbody></table>';
+            previewContainer.innerHTML = html;
+        }
+
+        // Cambio de Pestañas Visual
+        function setActiveTab(activeId) {
+            ['tab-odoo', 'tab-variantes', 'tab-nuevos'].forEach(id => {
+                document.getElementById(id).className = `tab-btn flex gap-2 items-center focus:outline-none ${id === activeId ? 'tab-active' : 'tab-inactive'}`;
+            });
+        }
+
+        document.getElementById('tab-odoo').addEventListener('click', () => { setActiveTab('tab-odoo'); renderTable('odoo'); });
+        document.getElementById('tab-variantes').addEventListener('click', () => { setActiveTab('tab-variantes'); renderTable('variantes'); });
+        document.getElementById('tab-nuevos').addEventListener('click', () => { setActiveTab('tab-nuevos'); renderTable('nuevos'); });
+
+        document.getElementById('btn-process').addEventListener('click', () => {
+            conf.colCodOrig = document.getElementById('col-cod-orig').value;
+            conf.colCodAlta = document.getElementById('col-cod-alta').value;
+            conf.colNomAlta = document.getElementById('col-nom-alta').value;
+            conf.colPrecioAlta = document.getElementById('col-precio-alta').value;
+            conf.colBultoAlta = document.getElementById('col-bulto-alta').value;
+
+            if(!conf.colCodOrig || !conf.colCodAlta) {
+                alert("Seleccioná la columna de Códigos para ambos Excels."); return;
+            }
+
+            // Guardamos los códigos originales en el Set y en Array
+            arrOriginalCodes = dfOrig.map(row => String(row[conf.colCodOrig] || "").trim()).filter(c => c !== "");
+            setOriginalCodes = new Set(arrOriginalCodes);
+            
+            const baseLen = parseInt(document.getElementById('base-code-length').value) || 0;
+            const extraKeywords = document.getElementById('extra-keywords-canas').value;
+            
+            let diffRows = dfAlta.filter(row => {
+                let c = String(row[conf.colCodAlta] || "").trim();
+                return c !== "" && !setOriginalCodes.has(c);
+            });
+
+            if (!diffRows.length) {
+                alert("Todo el stock del Excel de Altas ya existe en el Original.");
+                return;
+            }
+
+            nuevosData = diffRows.map(row => {
+                let fullCode = String(row[conf.colCodAlta]).trim();
+                let baseName = String(row[conf.colNomAlta]).trim();
+                let cats = generarCategorias(baseName, extraKeywords);
+                
+                let hasVars = checkHasVariants(cats.odoo);
+                let baseCode = fullCode;
+                if(hasVars && baseLen > 0 && fullCode.length >= baseLen) {
+                    baseCode = fullCode.substring(0, baseLen);
+                }
+
+                return {
+                    codigo: fullCode,
+                    nombre: baseName,
+                    precio: row[conf.colPrecioAlta],
+                    bulto: row[conf.colBultoAlta],
+                    catOdoo: cats.odoo,
+                    catWeb: cats.web,
+                    codigoBase: baseCode,
+                    hasVariants: hasVars
+                };
+            });
+
+            buildOdooExport();
+            
+            document.getElementById('results-subtext').textContent = `Se detectaron ${nuevosData.length} faltantes totales.`;
+            resultsSection.classList.remove('hidden');
+            btnRebuild.classList.add('hidden');
+            
+            document.getElementById('tab-odoo').click();
+        });
+
+        btnRebuild.addEventListener('click', () => {
+            buildOdooExport();
+            btnRebuild.classList.add('hidden');
+            document.getElementById('tab-odoo').click();
+        });
+
+        document.getElementById('btn-dl-odoo').addEventListener('click', () => {
+            if(!odooData.length) { alert("No hay bases nuevas para exportar a Odoo."); return; }
+            const worksheet = XLSX.utils.json_to_sheet(odooData);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Odoo_Import_Nuevos");
+            XLSX.writeFile(workbook, "Importacion_Odoo_Nuevos.xlsx");
+        });
+    </script>
+</body>
+</html>
