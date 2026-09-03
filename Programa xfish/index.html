@@ -54,17 +54,16 @@
                 Hub de Inventario
             </h1>
             <p class="text-lg text-slate-500 font-medium max-w-xl mx-auto">
-                Selecciona la herramienta que deseas utilizar hoy para gestionar el stock y las altas.
+                Selecciona la herramienta que deseas utilizar hoy para gestionar el stock, altas, diseño o procedimientos.
             </p>
         </div>
 
-        <!-- Grid de Tarjetas de Menú -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+        <!-- Grid de Tarjetas de Menú (Ajustado para 5 tarjetas) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
 
-            <!-- Tarjeta 1: Altas Odoo -->
+            <!-- Tarjeta 1: Generador de Altas -->
             <a href="altas.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-blue-900/10 cursor-pointer text-decoration-none">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg shadow-blue-500/30 mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <!-- Icono -->
                     <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 </div>
                 <h2 class="text-2xl font-bold text-slate-800 mb-2">Generador de Altas</h2>
@@ -76,21 +75,49 @@
                 </div>
             </a>
 
-            <!-- Tarjeta 2: Diferencia Inventario -->
-            <a href="diferenciainventario.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-indigo-900/10 cursor-pointer text-decoration-none">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-700 to-slate-900 flex items-center justify-center shadow-lg shadow-slate-500/30 mb-6 group-hover:scale-110 transition-transform duration-300">
-                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+            <!-- Tarjeta 2: Detector Nuevos -->
+            <a href="nuevos.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-sky-900/10 cursor-pointer text-decoration-none">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center shadow-lg shadow-sky-500/30 mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                 </div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Diferencia General</h2>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Detector Nuevos</h2>
                 <p class="text-sm text-slate-500 font-medium flex-grow mb-6">
-                    Auditoría de inventario. Contrasta el stock del sistema contra el conteo físico para detectar desvíos.
+                    Analiza listas de artículos para encontrar rápidamente cuáles son incorporaciones recientes al catálogo.
                 </p>
-                <div class="flex items-center text-slate-700 font-semibold text-sm group-hover:text-amber-500 transition-colors">
+                <div class="flex items-center text-sky-600 font-semibold text-sm group-hover:text-amber-500 transition-colors">
                     Abrir herramienta <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
                 </div>
             </a>
 
-            <!-- Tarjeta 3: Manuales -->
+            <!-- Tarjeta 3: Diferencia Inventario -->
+            <a href="diferenciainventario.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-slate-900/10 cursor-pointer text-decoration-none">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-lg shadow-slate-500/30 mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Diferencia General</h2>
+                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">
+                    Auditoría financiera. Contrasta el stock del sistema contra el conteo físico para detectar desvíos.
+                </p>
+                <div class="flex items-center text-slate-600 font-semibold text-sm group-hover:text-amber-500 transition-colors">
+                    Abrir herramienta <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                </div>
+            </a>
+
+            <!-- Tarjeta 4: Estampador Banners (NUEVO) -->
+            <a href="editor-imagenes.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-pink-900/10 cursor-pointer text-decoration-none">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg shadow-pink-500/30 mb-6 group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Estampador Banners</h2>
+                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">
+                    Automatiza el diseño de tus imágenes. Agrega un margen con texto y precio sin tapar los productos.
+                </p>
+                <div class="flex items-center text-pink-600 font-semibold text-sm group-hover:text-amber-500 transition-colors">
+                    Abrir estampador <span class="ml-2 transition-transform group-hover:translate-x-1">→</span>
+                </div>
+            </a>
+
+            <!-- Tarjeta 5: Manuales -->
             <a href="manuales.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-900/10 cursor-pointer text-decoration-none">
                 <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg shadow-purple-500/30 mb-6 group-hover:scale-110 transition-transform duration-300">
                     <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
