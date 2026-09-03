@@ -81,7 +81,7 @@
 
             <!-- Mapeo de Columnas -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
-                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (Formato Cuadrado + Multilínea)</h3>
+                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (Formato Cuadrado + Multilínea Inteligente)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label>
@@ -197,7 +197,7 @@
             return lines;
         }
 
-        // Función Core: Lógica de CUADRADO PERFECTO con Multilínea
+        // Función Core: Lógica de CUADRADO PERFECTO con Multilínea para Título y Subtítulo
         function processSingleImage(file, textTop, textSub, textBottom) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -205,69 +205,90 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    // Tomamos el lado más grande de la foto original para que no se deforme
+                    // Tomamos el lado más grande de la foto original
                     const maxImgDim = Math.max(img.width, img.height);
                     
-                    // Agrandamos un poco el margen (22%) para que entren cómodas varias líneas de texto
+                    // Agrandamos un poco el margen (22%) para asegurar lugar
                     const margin = Math.max(maxImgDim * 0.22, 120); 
                     
-                    // El tamaño total del lienzo (CUADRADO PERFECTO)
                     const canvasSize = maxImgDim + (margin * 2);
 
                     canvas.width = canvasSize;
                     canvas.height = canvasSize;
 
-                    // 1. Fondo blanco completo
+                    // 1. Fondo blanco
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-                    // 2. Dibujar foto original centrada
+                    // 2. Dibujar foto
                     const xPos = (canvasSize - img.width) / 2;
                     const yPos = (canvasSize - img.height) / 2;
                     ctx.drawImage(img, xPos, yPos, img.width, img.height);
 
-                    // 3. Tipografía: Berlin Sans FB o similares (sin negrita forzada)
+                    // 3. Tipografías base
                     ctx.fillStyle = '#000000';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
-                    
                     const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-                    // IMPRIMIR TEXTO ARRIBA (TÍTULO + SUBTÍTULO)
+                    // Variables para el bloque de arriba (Título + Subtítulo)
+                    let titleLines = [];
+                    let subLines = [];
+                    let fontSizeTop = margin * 0.35;
+                    let fontSizeSub = fontSizeTop * 0.7; // El subtítulo es 30% más chico
+                    let titleLineSpacing = fontSizeTop * 1.2;
+                    let subLineSpacing = fontSizeSub * 1.2;
+
+                    // Si hay título, lo dividimos en líneas
                     if (textTop && String(textTop).trim() !== "") {
-                        let fontSizeTop = margin * 0.35; // Tamaño base del título
                         ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
-                        
-                        // Dividimos el texto en renglones si es más ancho que el 85% de la imagen
-                        let lines = getLines(ctx, textTop, canvasSize * 0.85);
-                        
-                        // Calculamos la altura total que ocupa el texto para centrarlo verticalmente en el margen
-                        let lineSpacing = fontSizeTop * 1.2;
-                        let totalBlockHeight = lines.length * lineSpacing;
-                        if (textSub) totalBlockHeight += (fontSizeTop * 0.7 * 1.2); // Sumar altura del subtítulo si existe
-                        
-                        // Y inicial
-                        let startY = (margin - totalBlockHeight) / 2 + (fontSizeTop / 2);
+                        titleLines = getLines(ctx, textTop, canvasSize * 0.85);
+                    }
 
-                        // Imprimir cada renglón del título
-                        lines.forEach((line, index) => {
-                            ctx.fillText(line, canvasSize / 2, startY + (index * lineSpacing));
+                    // Si hay subtítulo, TAMBIÉN lo dividimos en líneas
+                    if (textSub && String(textSub).trim() !== "") {
+                        ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
+                        subLines = getLines(ctx, textSub, canvasSize * 0.85);
+                    }
+
+                    // Calculamos la altura total del bloque de texto de arriba para centrarlo verticalmente
+                    let totalBlockHeight = (titleLines.length * titleLineSpacing) + (subLines.length * subLineSpacing);
+                    
+                    // Si existen ambos, agregamos un pequeño espacio entre ellos
+                    if (titleLines.length > 0 && subLines.length > 0) {
+                        totalBlockHeight += (fontSizeTop * 0.2); 
+                    }
+
+                    // Calculamos donde empieza a dibujarse el bloque desde arriba
+                    let currentY = (margin - totalBlockHeight) / 2;
+
+                    // Dibujar Título
+                    if (titleLines.length > 0) {
+                        ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
+                        titleLines.forEach((line) => {
+                            ctx.fillText(line, canvasSize / 2, currentY + (titleLineSpacing / 2));
+                            currentY += titleLineSpacing;
                         });
-
-                        // Imprimir Subtítulo (Medidas/Variantes)
-                        if (textSub && String(textSub).trim() !== "") {
-                            ctx.font = `normal ${fontSizeTop * 0.7}px ${fontFamily}`; // Subtítulo 30% más chico
-                            let subY = startY + (lines.length * lineSpacing) - (fontSizeTop * 0.1); // Posición justo abajo
-                            ctx.fillText(textSub, canvasSize / 2, subY);
+                        // Agregamos el pequeño espacio antes del subtítulo
+                        if (subLines.length > 0) {
+                            currentY += (fontSizeTop * 0.2);
                         }
                     }
 
-                    // IMPRIMIR TEXTO ABAJO
+                    // Dibujar Subtítulo (con su propio ajuste multilínea)
+                    if (subLines.length > 0) {
+                        ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
+                        subLines.forEach((line) => {
+                            ctx.fillText(line, canvasSize / 2, currentY + (subLineSpacing / 2));
+                            currentY += subLineSpacing;
+                        });
+                    }
+
+                    // IMPRIMIR TEXTO ABAJO (Código/Precio)
                     if (textBottom && String(textBottom).trim() !== "") {
                         let fontSizeBot = margin * 0.45;
                         ctx.font = `normal ${fontSizeBot}px ${fontFamily}`;
                         
-                        // Si el código/precio es muy largo, lo achicamos
                         let textWidth = ctx.measureText(textBottom).width;
                         if (textWidth > canvasSize * 0.9) {
                             fontSizeBot = fontSizeBot * ((canvasSize * 0.9) / textWidth);
@@ -300,7 +321,7 @@
                 alert("Seleccioná al menos una imagen para procesar."); return;
             }
 
-            // Crear diccionario limpio
+            // Crear diccionario
             const dictExcel = {};
             excelData.forEach(row => {
                 let cod = String(row[colCod] || "").trim().toUpperCase();
