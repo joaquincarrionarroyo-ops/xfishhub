@@ -35,7 +35,7 @@
 </head>
 <body class="relative min-h-screen text-slate-800 selection:bg-pink-500 selection:text-white pb-10">
 
-    <!-- Blobs Decorativos (Tonos Rosados/Morados para diseño) -->
+    <!-- Blobs Decorativos -->
     <div class="blob bg-pink-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
     <div class="blob bg-indigo-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
     <div class="blob bg-purple-200 w-[300px] h-[300px] top-[40%] left-[50%] opacity-40" style="animation-delay: -4s;"></div>
@@ -47,7 +47,7 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
-                Estampador de Banners Automático
+                Estampador de Banners
             </h1>
             <a href="index.html" class="text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver al Hub</a>
         </div>
@@ -65,7 +65,7 @@
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                         <label class="block text-sm font-bold text-slate-700 mb-1">📊 Excel con Textos</label>
-                        <p class="text-xs text-slate-500 mb-3 font-medium">Archivo con los códigos y el texto que querés estampar (nombre o precio).</p>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Archivo con los códigos, descripciones y precios.</p>
                         <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer transition-colors"/>
                     </div>
                 </div>
@@ -75,8 +75,7 @@
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                         <label class="block text-sm font-bold text-slate-700 mb-1">📸 Carpeta de Imágenes</label>
-                        <p class="text-xs text-slate-500 mb-3 font-medium">Seleccioná todas las fotos juntas. El nombre del archivo debe ser el código.</p>
-                        <!-- multiple para seleccionar muchas fotos a la vez -->
+                        <p class="text-xs text-slate-500 mb-3 font-medium">El nombre del archivo (ej: COMM240.png) debe coincidir con el código.</p>
                         <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer transition-colors"/>
                     </div>
                 </div>
@@ -84,15 +83,19 @@
 
             <!-- Mapeo de Columnas (Oculto hasta subir Excel) -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
-                <h3 class="text-sm font-bold text-pink-800 mb-4">Mapeo del Excel</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Banner</h3>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Columna del Código (para buscar la foto)</label>
+                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código (Nombre Foto)</label>
                         <select id="col-cod" class="custom-select"></select>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Columna del Texto (Lo que se va a imprimir)</label>
-                        <select id="col-texto" class="custom-select"></select>
+                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ARRIBA (Ej: Nombre)</label>
+                        <select id="col-texto-arriba" class="custom-select"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ABAJO (Ej: Código/Precio)</label>
+                        <select id="col-texto-abajo" class="custom-select"></select>
                     </div>
                 </div>
             </div>
@@ -108,7 +111,7 @@
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800" id="results-text">¡Imágenes procesadas!</h3>
-                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Se agregó el banner inferior automáticamente.</p>
+                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Diseño generado correctamente.</p>
                 </div>
                 <button id="btn-dl-zip" class="mt-4 md:mt-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -129,7 +132,7 @@
         let excelData = [];
         let excelHeaders = [];
         let imageFiles = [];
-        let processedImages = []; // Guardará objetos { name: "codigo.jpg", dataUrl: "base64..." }
+        let processedImages = []; 
 
         const mappingSection = document.getElementById('mapping-section');
         const resultsSection = document.getElementById('results-section');
@@ -147,7 +150,8 @@
                     excelHeaders = XLSX.utils.sheet_to_json(firstSheet, {header: 1})[0] || [];
                     
                     populateSelect('col-cod', excelHeaders);
-                    populateSelect('col-texto', excelHeaders);
+                    populateSelect('col-texto-arriba', excelHeaders);
+                    populateSelect('col-texto-abajo', excelHeaders);
                     mappingSection.classList.remove('hidden');
                 };
                 reader.readAsArrayBuffer(e.target.files[0]);
@@ -161,7 +165,7 @@
 
         function populateSelect(id, options) {
             const select = document.getElementById(id);
-            select.innerHTML = "<option value=''>-- Seleccionar --</option>";
+            select.innerHTML = "<option value=''>-- Vacío / No imprimir --</option>";
             options.forEach(opt => {
                 if(opt && String(opt).trim() !== "") {
                     const el = document.createElement("option");
@@ -170,8 +174,8 @@
             });
         }
 
-        // Función core: Dibuja el Canvas y le pega el texto
-        function processSingleImage(file, textToPrint) {
+        // Función Core: Dibuja el fondo, foto al centro y textos (Estilo Imagen Referencia)
+        function processSingleImage(file, textTop, textBottom) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
@@ -181,68 +185,83 @@
                     const width = img.width;
                     const height = img.height;
                     
-                    // El banner de texto abajo ocupará un 15% del alto de la foto (o un mínimo de 100px)
-                    const bannerHeight = Math.max(height * 0.15, 100); 
+                    // Calculamos un margen proporcional (15% de la foto para arriba y 15% para abajo)
+                    const marginHeight = Math.max(height * 0.15, 100); 
                     
-                    // Configuramos el tamaño del nuevo lienzo (Foto + Espacio en blanco)
+                    // Tamaño total del lienzo
                     canvas.width = width;
-                    canvas.height = height + bannerHeight;
+                    canvas.height = height + (marginHeight * 2);
 
-                    // 1. Dibujar fondo blanco en todo el lienzo (por si la imagen es transparente)
+                    // 1. Fondo blanco limpio
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-                    // 2. Dibujar la foto original arriba
-                    ctx.drawImage(img, 0, 0, width, height);
+                    // 2. Dibujar foto original en el medio
+                    ctx.drawImage(img, 0, marginHeight, width, height);
 
-                    // 3. Escribir el texto centrado en el banner de abajo
-                    ctx.fillStyle = '#1e293b'; // Color del texto (gris oscuro casi negro)
-                    
-                    // Autocalcular tamaño de fuente para que encaje
-                    let fontSize = bannerHeight * 0.45;
-                    ctx.font = `bold ${fontSize}px sans-serif`;
+                    // 3. Configuración del Texto (Berlin Sans FB con fallbacks de seguridad)
+                    ctx.fillStyle = '#000000'; // Negro sólido
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     
-                    // Achicar letra si el texto es muy largo
-                    let textWidth = ctx.measureText(textToPrint).width;
-                    const maxWidth = width * 0.9; // 10% de margen a los costados
-                    if (textWidth > maxWidth) {
-                        fontSize = fontSize * (maxWidth / textWidth);
-                        ctx.font = `bold ${fontSize}px sans-serif`;
-                    }
+                    const printText = (text, yPos) => {
+                        if (!text || String(text).trim() === "") return; // Si no hay texto, no imprime nada
+                        
+                        let fontSize = marginHeight * 0.45;
+                        ctx.font = `bold ${fontSize}px "Berlin Sans FB", "Trebuchet MS", sans-serif`;
+                        
+                        // Si el texto es más ancho que la imagen, achicar letra
+                        let textWidth = ctx.measureText(text).width;
+                        const maxWidth = width * 0.9; // Margen de respiro
+                        if (textWidth > maxWidth) {
+                            fontSize = fontSize * (maxWidth / textWidth);
+                            ctx.font = `bold ${fontSize}px "Berlin Sans FB", "Trebuchet MS", sans-serif`;
+                        }
+                        ctx.fillText(text, width / 2, yPos);
+                    };
+
+                    // Imprimir Arriba (Centro del margen superior)
+                    printText(textTop, marginHeight / 2);
                     
-                    // Estampar el texto en el medio del banner inferior
-                    const textY = height + (bannerHeight / 2);
-                    ctx.fillText(textToPrint, width / 2, textY);
+                    // Imprimir Abajo (Centro del margen inferior)
+                    printText(textBottom, marginHeight + height + (marginHeight / 2));
 
                     resolve({
                         name: file.name,
-                        dataUrl: canvas.toDataURL('image/jpeg', 0.95)
+                        dataUrl: canvas.toDataURL('image/jpeg', 0.98)
                     });
                 };
                 img.src = URL.createObjectURL(file);
             });
         }
 
-        // Botón principal
+        // Botón procesar
         document.getElementById('btn-process').addEventListener('click', async () => {
             const colCod = document.getElementById('col-cod').value;
-            const colText = document.getElementById('col-texto').value;
+            const colTop = document.getElementById('col-texto-arriba').value;
+            const colBottom = document.getElementById('col-texto-abajo').value;
 
-            if(!colCod || !colText) {
-                alert("Seleccioná las columnas del Excel primero."); return;
+            if(!colCod) {
+                alert("Debes seleccionar obligatoriamente la Columna del Código para buscar la foto."); return;
             }
             if(imageFiles.length === 0) {
                 alert("Seleccioná al menos una imagen para procesar."); return;
             }
 
-            // Crear un diccionario rápido: { "CODIGO123": "COMBO PEJERREY $45.000" }
+            // Crear diccionario limpio
             const dictExcel = {};
             excelData.forEach(row => {
                 let cod = String(row[colCod] || "").trim().toUpperCase();
-                let txt = String(row[colText] || "").trim();
-                if(cod) dictExcel[cod] = txt;
+                let txtTop = colTop ? String(row[colTop] || "").trim() : "";
+                let txtBot = colBottom ? String(row[colBottom] || "").trim() : "";
+                
+                // Agregamos un prefijo de COD: si el campo de abajo es el código explícito como pediste (opcional)
+                // Si preferís que ponga solo lo que dice el excel, borrá la lógica de agregar "COD: " en la fila de abajo.
+                if (txtBot && colBottom === colCod && !txtBot.includes("COD")) {
+                     txtBot = "COD: " + txtBot;
+                }
+
+                if(cod) dictExcel[cod] = { top: txtTop, bottom: txtBot };
             });
 
             processedImages = [];
@@ -251,15 +270,15 @@
 
             let matchCount = 0;
 
-            // Procesar cada imagen
             for (let file of imageFiles) {
-                // Obtener el nombre del archivo sin extensión (ej: "REEL01.jpg" -> "REEL01")
-                let fileNameWithoutExt = file.name.split('.').slice(0, -1).join('.').toUpperCase();
+                // FILTRO ROBUSTO: Saca la extensión y borra espacios ocultos del nombre del archivo
+                let lastDotIndex = file.name.lastIndexOf('.');
+                let fileNameWithoutExt = lastDotIndex !== -1 ? file.name.substring(0, lastDotIndex) : file.name;
+                fileNameWithoutExt = String(fileNameWithoutExt).trim().toUpperCase();
                 
-                // Buscar si existe ese código en el Excel
                 if (dictExcel[fileNameWithoutExt]) {
-                    let textToPrint = dictExcel[fileNameWithoutExt];
-                    let result = await processSingleImage(file, textToPrint);
+                    let data = dictExcel[fileNameWithoutExt];
+                    let result = await processSingleImage(file, data.top, data.bottom);
                     processedImages.push(result);
                     matchCount++;
                 }
@@ -267,7 +286,6 @@
 
             document.getElementById('results-subtext').textContent = `Se estamparon ${matchCount} imágenes con éxito (de ${imageFiles.length} subidas).`;
 
-            // Dibujar grilla
             previewGrid.innerHTML = '';
             processedImages.forEach(imgData => {
                 previewGrid.innerHTML += `
@@ -281,9 +299,12 @@
                     </div>
                 `;
             });
+
+            if(matchCount === 0) {
+                previewGrid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold">No se encontró coincidencia entre los nombres de las fotos y el Excel. Verificá que se llamen igual (Ej: NK-1003LL.png).</p>';
+            }
         });
 
-        // Descargar el ZIP con todas las imágenes
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (processedImages.length === 0) return;
             
@@ -291,14 +312,12 @@
             const folder = zip.folder("Imagenes_Banners");
 
             processedImages.forEach(img => {
-                // Extraer el base64 sin el prefijo "data:image/jpeg;base64,"
                 const base64Data = img.dataUrl.split(',')[1];
                 folder.file(img.name, base64Data, {base64: true});
             });
 
             const content = await zip.generateAsync({type:"blob"});
             
-            // Forzar descarga del ZIP
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
             link.download = "Banners_XFish.zip";
