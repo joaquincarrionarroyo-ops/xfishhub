@@ -47,7 +47,7 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
-                Estampador de Banners
+                Estampador de Banners Cuadrados
             </h1>
             <a href="index.html" class="text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver al Hub</a>
         </div>
@@ -81,9 +81,9 @@
                 </div>
             </div>
 
-            <!-- Mapeo de Columnas (Oculto hasta subir Excel) -->
+            <!-- Mapeo de Columnas -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
-                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Banner</h3>
+                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (Formato Cuadrado)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código (Nombre Foto)</label>
@@ -111,7 +111,7 @@
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800" id="results-text">¡Imágenes procesadas!</h3>
-                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Diseño generado correctamente.</p>
+                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Diseño cuadrado generado correctamente.</p>
                 </div>
                 <button id="btn-dl-zip" class="mt-4 md:mt-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -158,7 +158,7 @@
             }
         });
 
-        // Cargar Imágenes a la memoria
+        // Cargar Imágenes
         document.getElementById('file-images').addEventListener('change', (e) => {
             imageFiles = Array.from(e.target.files);
         });
@@ -174,7 +174,7 @@
             });
         }
 
-        // Función Core: Dibuja el fondo, foto al centro y textos (Estilo Imagen Referencia)
+        // Función Core: Lógica de CUADRADO PERFECTO
         function processSingleImage(file, textTop, textBottom) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -182,49 +182,54 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    const width = img.width;
-                    const height = img.height;
+                    // Tomamos el lado más grande de la foto original para que no se deforme
+                    const maxImgDim = Math.max(img.width, img.height);
                     
-                    // Calculamos un margen proporcional (15% de la foto para arriba y 15% para abajo)
-                    const marginHeight = Math.max(height * 0.15, 100); 
+                    // El margen de texto arriba y abajo será un 15% del tamaño máximo
+                    const margin = maxImgDim * 0.15; 
                     
-                    // Tamaño total del lienzo
-                    canvas.width = width;
-                    canvas.height = height + (marginHeight * 2);
+                    // El tamaño total del lienzo será el tamaño de la foto + los dos márgenes
+                    // Al obligar a que ancho y alto sean iguales, creamos un CUADRADO PERFECTO.
+                    const canvasSize = maxImgDim + (margin * 2);
 
-                    // 1. Fondo blanco limpio
+                    canvas.width = canvasSize;
+                    canvas.height = canvasSize;
+
+                    // 1. Fondo blanco completo
                     ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                    ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-                    // 2. Dibujar foto original en el medio
-                    ctx.drawImage(img, 0, marginHeight, width, height);
+                    // 2. Dibujar foto original centrada exactamente en el medio
+                    const xPos = (canvasSize - img.width) / 2;
+                    const yPos = (canvasSize - img.height) / 2;
+                    ctx.drawImage(img, xPos, yPos, img.width, img.height);
 
-                    // 3. Configuración del Texto (Berlin Sans FB con fallbacks de seguridad)
-                    ctx.fillStyle = '#000000'; // Negro sólido
+                    // 3. Tipografía: Berlin Sans FB o similares geométricas redondas (sin negrita forzada)
+                    ctx.fillStyle = '#000000';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     
-                    const printText = (text, yPos) => {
-                        if (!text || String(text).trim() === "") return; // Si no hay texto, no imprime nada
+                    const printText = (text, yPosText) => {
+                        if (!text || String(text).trim() === "") return;
                         
-                        let fontSize = marginHeight * 0.45;
-                        ctx.font = `bold ${fontSize}px "Berlin Sans FB", "Trebuchet MS", sans-serif`;
+                        let fontSize = margin * 0.5; // Tamaño de letra base
+                        ctx.font = `normal ${fontSize}px "Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif`;
                         
-                        // Si el texto es más ancho que la imagen, achicar letra
+                        // Si el texto es muy ancho, lo achicamos para que no toque los bordes
                         let textWidth = ctx.measureText(text).width;
-                        const maxWidth = width * 0.9; // Margen de respiro
+                        const maxWidth = canvasSize * 0.9; 
                         if (textWidth > maxWidth) {
                             fontSize = fontSize * (maxWidth / textWidth);
-                            ctx.font = `bold ${fontSize}px "Berlin Sans FB", "Trebuchet MS", sans-serif`;
+                            ctx.font = `normal ${fontSize}px "Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif`;
                         }
-                        ctx.fillText(text, width / 2, yPos);
+                        ctx.fillText(text, canvasSize / 2, yPosText);
                     };
 
-                    // Imprimir Arriba (Centro del margen superior)
-                    printText(textTop, marginHeight / 2);
+                    // Imprimir Arriba (En el centro del margen superior)
+                    printText(textTop, margin / 2);
                     
-                    // Imprimir Abajo (Centro del margen inferior)
-                    printText(textBottom, marginHeight + height + (marginHeight / 2));
+                    // Imprimir Abajo (En el centro del margen inferior)
+                    printText(textBottom, canvasSize - (margin / 2));
 
                     resolve({
                         name: file.name,
@@ -255,8 +260,7 @@
                 let txtTop = colTop ? String(row[colTop] || "").trim() : "";
                 let txtBot = colBottom ? String(row[colBottom] || "").trim() : "";
                 
-                // Agregamos un prefijo de COD: si el campo de abajo es el código explícito como pediste (opcional)
-                // Si preferís que ponga solo lo que dice el excel, borrá la lógica de agregar "COD: " en la fila de abajo.
+                // Si seleccionaste el código en la fila de abajo y no dice "COD", se lo agregamos automáticamente
                 if (txtBot && colBottom === colCod && !txtBot.includes("COD")) {
                      txtBot = "COD: " + txtBot;
                 }
@@ -271,7 +275,7 @@
             let matchCount = 0;
 
             for (let file of imageFiles) {
-                // FILTRO ROBUSTO: Saca la extensión y borra espacios ocultos del nombre del archivo
+                // Sacar extensión y limpiar espacios vacíos para matchear con el Excel a la perfección
                 let lastDotIndex = file.name.lastIndexOf('.');
                 let fileNameWithoutExt = lastDotIndex !== -1 ? file.name.substring(0, lastDotIndex) : file.name;
                 fileNameWithoutExt = String(fileNameWithoutExt).trim().toUpperCase();
@@ -320,7 +324,7 @@
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
-            link.download = "Banners_XFish.zip";
+            link.download = "Banners_XFish_Cuadrados.zip";
             link.click();
         });
     </script>
