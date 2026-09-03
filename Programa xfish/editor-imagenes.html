@@ -60,17 +60,15 @@
             <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                <!-- Excel -->
                 <div class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                         <label class="block text-sm font-bold text-slate-700 mb-1">📊 Excel con Textos</label>
-                        <p class="text-xs text-slate-500 mb-3 font-medium">Archivo con los códigos, descripciones y precios.</p>
+                        <p class="text-xs text-slate-500 mb-3 font-medium">Archivo con los códigos, nombres y medidas.</p>
                         <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer transition-colors"/>
                     </div>
                 </div>
 
-                <!-- Imágenes -->
                 <div class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
@@ -83,18 +81,22 @@
 
             <!-- Mapeo de Columnas -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
-                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (Formato Cuadrado)</h3>
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (Formato Cuadrado + Multilínea)</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código (Nombre Foto)</label>
+                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label>
                         <select id="col-cod" class="custom-select"></select>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ARRIBA (Ej: Nombre)</label>
+                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Título ARRIBA</label>
                         <select id="col-texto-arriba" class="custom-select"></select>
                     </div>
                     <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ABAJO (Ej: Código/Precio)</label>
+                        <label class="text-xs font-semibold text-amber-600 mb-1 block">Subtítulo ARRIBA (Ej: Medidas)</label>
+                        <select id="col-texto-sub" class="custom-select border-amber-300 bg-amber-50/30"></select>
+                    </div>
+                    <div>
+                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ABAJO (Código/Precio)</label>
                         <select id="col-texto-abajo" class="custom-select"></select>
                     </div>
                 </div>
@@ -151,6 +153,7 @@
                     
                     populateSelect('col-cod', excelHeaders);
                     populateSelect('col-texto-arriba', excelHeaders);
+                    populateSelect('col-texto-sub', excelHeaders);
                     populateSelect('col-texto-abajo', excelHeaders);
                     mappingSection.classList.remove('hidden');
                 };
@@ -174,8 +177,28 @@
             });
         }
 
-        // Función Core: Lógica de CUADRADO PERFECTO
-        function processSingleImage(file, textTop, textBottom) {
+        // Helper: Corta el texto en renglones si es muy largo
+        function getLines(ctx, text, maxWidth) {
+            let words = text.split(" ");
+            let lines = [];
+            let currentLine = words[0];
+
+            for (let i = 1; i < words.length; i++) {
+                let word = words[i];
+                let width = ctx.measureText(currentLine + " " + word).width;
+                if (width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+            return lines;
+        }
+
+        // Función Core: Lógica de CUADRADO PERFECTO con Multilínea
+        function processSingleImage(file, textTop, textSub, textBottom) {
             return new Promise((resolve) => {
                 const img = new Image();
                 img.onload = () => {
@@ -185,11 +208,10 @@
                     // Tomamos el lado más grande de la foto original para que no se deforme
                     const maxImgDim = Math.max(img.width, img.height);
                     
-                    // El margen de texto arriba y abajo será un 15% del tamaño máximo
-                    const margin = maxImgDim * 0.15; 
+                    // Agrandamos un poco el margen (22%) para que entren cómodas varias líneas de texto
+                    const margin = Math.max(maxImgDim * 0.22, 120); 
                     
-                    // El tamaño total del lienzo será el tamaño de la foto + los dos márgenes
-                    // Al obligar a que ancho y alto sean iguales, creamos un CUADRADO PERFECTO.
+                    // El tamaño total del lienzo (CUADRADO PERFECTO)
                     const canvasSize = maxImgDim + (margin * 2);
 
                     canvas.width = canvasSize;
@@ -199,37 +221,61 @@
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(0, 0, canvasSize, canvasSize);
 
-                    // 2. Dibujar foto original centrada exactamente en el medio
+                    // 2. Dibujar foto original centrada
                     const xPos = (canvasSize - img.width) / 2;
                     const yPos = (canvasSize - img.height) / 2;
                     ctx.drawImage(img, xPos, yPos, img.width, img.height);
 
-                    // 3. Tipografía: Berlin Sans FB o similares geométricas redondas (sin negrita forzada)
+                    // 3. Tipografía: Berlin Sans FB o similares (sin negrita forzada)
                     ctx.fillStyle = '#000000';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     
-                    const printText = (text, yPosText) => {
-                        if (!text || String(text).trim() === "") return;
-                        
-                        let fontSize = margin * 0.5; // Tamaño de letra base
-                        ctx.font = `normal ${fontSize}px "Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif`;
-                        
-                        // Si el texto es muy ancho, lo achicamos para que no toque los bordes
-                        let textWidth = ctx.measureText(text).width;
-                        const maxWidth = canvasSize * 0.9; 
-                        if (textWidth > maxWidth) {
-                            fontSize = fontSize * (maxWidth / textWidth);
-                            ctx.font = `normal ${fontSize}px "Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif`;
-                        }
-                        ctx.fillText(text, canvasSize / 2, yPosText);
-                    };
+                    const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-                    // Imprimir Arriba (En el centro del margen superior)
-                    printText(textTop, margin / 2);
-                    
-                    // Imprimir Abajo (En el centro del margen inferior)
-                    printText(textBottom, canvasSize - (margin / 2));
+                    // IMPRIMIR TEXTO ARRIBA (TÍTULO + SUBTÍTULO)
+                    if (textTop && String(textTop).trim() !== "") {
+                        let fontSizeTop = margin * 0.35; // Tamaño base del título
+                        ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
+                        
+                        // Dividimos el texto en renglones si es más ancho que el 85% de la imagen
+                        let lines = getLines(ctx, textTop, canvasSize * 0.85);
+                        
+                        // Calculamos la altura total que ocupa el texto para centrarlo verticalmente en el margen
+                        let lineSpacing = fontSizeTop * 1.2;
+                        let totalBlockHeight = lines.length * lineSpacing;
+                        if (textSub) totalBlockHeight += (fontSizeTop * 0.7 * 1.2); // Sumar altura del subtítulo si existe
+                        
+                        // Y inicial
+                        let startY = (margin - totalBlockHeight) / 2 + (fontSizeTop / 2);
+
+                        // Imprimir cada renglón del título
+                        lines.forEach((line, index) => {
+                            ctx.fillText(line, canvasSize / 2, startY + (index * lineSpacing));
+                        });
+
+                        // Imprimir Subtítulo (Medidas/Variantes)
+                        if (textSub && String(textSub).trim() !== "") {
+                            ctx.font = `normal ${fontSizeTop * 0.7}px ${fontFamily}`; // Subtítulo 30% más chico
+                            let subY = startY + (lines.length * lineSpacing) - (fontSizeTop * 0.1); // Posición justo abajo
+                            ctx.fillText(textSub, canvasSize / 2, subY);
+                        }
+                    }
+
+                    // IMPRIMIR TEXTO ABAJO
+                    if (textBottom && String(textBottom).trim() !== "") {
+                        let fontSizeBot = margin * 0.45;
+                        ctx.font = `normal ${fontSizeBot}px ${fontFamily}`;
+                        
+                        // Si el código/precio es muy largo, lo achicamos
+                        let textWidth = ctx.measureText(textBottom).width;
+                        if (textWidth > canvasSize * 0.9) {
+                            fontSizeBot = fontSizeBot * ((canvasSize * 0.9) / textWidth);
+                            ctx.font = `normal ${fontSizeBot}px ${fontFamily}`;
+                        }
+                        
+                        ctx.fillText(textBottom, canvasSize / 2, canvasSize - (margin / 2));
+                    }
 
                     resolve({
                         name: file.name,
@@ -244,6 +290,7 @@
         document.getElementById('btn-process').addEventListener('click', async () => {
             const colCod = document.getElementById('col-cod').value;
             const colTop = document.getElementById('col-texto-arriba').value;
+            const colSub = document.getElementById('col-texto-sub').value;
             const colBottom = document.getElementById('col-texto-abajo').value;
 
             if(!colCod) {
@@ -258,14 +305,14 @@
             excelData.forEach(row => {
                 let cod = String(row[colCod] || "").trim().toUpperCase();
                 let txtTop = colTop ? String(row[colTop] || "").trim() : "";
+                let txtSub = colSub ? String(row[colSub] || "").trim() : "";
                 let txtBot = colBottom ? String(row[colBottom] || "").trim() : "";
                 
-                // Si seleccionaste el código en la fila de abajo y no dice "COD", se lo agregamos automáticamente
                 if (txtBot && colBottom === colCod && !txtBot.includes("COD")) {
                      txtBot = "COD: " + txtBot;
                 }
 
-                if(cod) dictExcel[cod] = { top: txtTop, bottom: txtBot };
+                if(cod) dictExcel[cod] = { top: txtTop, sub: txtSub, bottom: txtBot };
             });
 
             processedImages = [];
@@ -275,14 +322,13 @@
             let matchCount = 0;
 
             for (let file of imageFiles) {
-                // Sacar extensión y limpiar espacios vacíos para matchear con el Excel a la perfección
                 let lastDotIndex = file.name.lastIndexOf('.');
                 let fileNameWithoutExt = lastDotIndex !== -1 ? file.name.substring(0, lastDotIndex) : file.name;
                 fileNameWithoutExt = String(fileNameWithoutExt).trim().toUpperCase();
                 
                 if (dictExcel[fileNameWithoutExt]) {
                     let data = dictExcel[fileNameWithoutExt];
-                    let result = await processSingleImage(file, data.top, data.bottom);
+                    let result = await processSingleImage(file, data.top, data.sub, data.bottom);
                     processedImages.push(result);
                     matchCount++;
                 }
@@ -305,7 +351,7 @@
             });
 
             if(matchCount === 0) {
-                previewGrid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold">No se encontró coincidencia entre los nombres de las fotos y el Excel. Verificá que se llamen igual (Ej: NK-1003LL.png).</p>';
+                previewGrid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold">No se encontró coincidencia entre los nombres de las fotos y el Excel.</p>';
             }
         });
 
