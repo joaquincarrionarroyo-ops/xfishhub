@@ -6,7 +6,6 @@
     <title>Estampador Masivo de Imágenes | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- JSZip para descargar todas las fotos juntas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
         body {
@@ -55,7 +54,6 @@
 
     <main class="max-w-7xl mx-auto w-full px-6 space-y-6 relative z-10">
         
-        <!-- Configuración de Archivos -->
         <div class="glass-panel rounded-3xl p-8">
             <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
@@ -81,7 +79,7 @@
 
             <!-- Mapeo de Columnas -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
-                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (Formato Cuadrado + Multilínea Inteligente)</h3>
+                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (Formato Cuadrado + AutoAjuste)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label>
@@ -107,7 +105,6 @@
             </button>
         </div>
 
-        <!-- Dashboard Resultados -->
         <div id="results-section" class="hidden space-y-6">
             
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500">
@@ -121,7 +118,6 @@
                 </button>
             </div>
 
-            <!-- Grilla de Previsualización -->
             <div class="glass-panel rounded-3xl p-6">
                 <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                     <!-- Las imágenes se inyectan acá por JS -->
@@ -140,7 +136,6 @@
         const resultsSection = document.getElementById('results-section');
         const previewGrid = document.getElementById('preview-grid');
 
-        // Leer Excel
         document.getElementById('file-excel').addEventListener('change', (e) => {
             if(e.target.files.length) {
                 const reader = new FileReader();
@@ -161,7 +156,6 @@
             }
         });
 
-        // Cargar Imágenes
         document.getElementById('file-images').addEventListener('change', (e) => {
             imageFiles = Array.from(e.target.files);
         });
@@ -177,7 +171,6 @@
             });
         }
 
-        // Helper: Corta el texto en renglones si es muy largo
         function getLines(ctx, text, maxWidth) {
             let words = text.split(" ");
             let lines = [];
@@ -197,7 +190,7 @@
             return lines;
         }
 
-        // Función Core: Lógica de CUADRADO PERFECTO con Multilínea para Título y Subtítulo
+        // Función Core con AUTO-AJUSTE DE ALTURA
         function processSingleImage(file, textTop, textSub, textBottom) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -205,86 +198,101 @@
                     const canvas = document.createElement('canvas');
                     const ctx = canvas.getContext('2d');
 
-                    // Tomamos el lado más grande de la foto original
                     const maxImgDim = Math.max(img.width, img.height);
-                    
-                    // Agrandamos un poco el margen (22%) para asegurar lugar
                     const margin = Math.max(maxImgDim * 0.22, 120); 
-                    
                     const canvasSize = maxImgDim + (margin * 2);
 
                     canvas.width = canvasSize;
                     canvas.height = canvasSize;
 
-                    // 1. Fondo blanco
+                    // Fondo y foto
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(0, 0, canvasSize, canvasSize);
-
-                    // 2. Dibujar foto
                     const xPos = (canvasSize - img.width) / 2;
                     const yPos = (canvasSize - img.height) / 2;
                     ctx.drawImage(img, xPos, yPos, img.width, img.height);
 
-                    // 3. Tipografías base
                     ctx.fillStyle = '#000000';
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
                     const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-                    // Variables para el bloque de arriba (Título + Subtítulo)
-                    let titleLines = [];
-                    let subLines = [];
+                    // AUTO-AJUSTE: Reducir letra si hay muchos renglones
                     let fontSizeTop = margin * 0.35;
-                    let fontSizeSub = fontSizeTop * 0.7; // El subtítulo es 30% más chico
-                    let titleLineSpacing = fontSizeTop * 1.2;
-                    let subLineSpacing = fontSizeSub * 1.2;
-
-                    // Si hay título, lo dividimos en líneas
-                    if (textTop && String(textTop).trim() !== "") {
-                        ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
-                        titleLines = getLines(ctx, textTop, canvasSize * 0.85);
-                    }
-
-                    // Si hay subtítulo, TAMBIÉN lo dividimos en líneas
-                    if (textSub && String(textSub).trim() !== "") {
-                        ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
-                        subLines = getLines(ctx, textSub, canvasSize * 0.85);
-                    }
-
-                    // Calculamos la altura total del bloque de texto de arriba para centrarlo verticalmente
-                    let totalBlockHeight = (titleLines.length * titleLineSpacing) + (subLines.length * subLineSpacing);
+                    let fontSizeSub, titleLineSpacing, subLineSpacing, titleLines, subLines, totalBlockHeight;
                     
-                    // Si existen ambos, agregamos un pequeño espacio entre ellos
-                    if (titleLines.length > 0 && subLines.length > 0) {
-                        totalBlockHeight += (fontSizeTop * 0.2); 
+                    while (true) {
+                        fontSizeSub = fontSizeTop * 0.7;
+                        titleLineSpacing = fontSizeTop * 1.2;
+                        subLineSpacing = fontSizeSub * 1.2;
+                        
+                        titleLines = [];
+                        subLines = [];
+                        
+                        if (textTop && String(textTop).trim() !== "") {
+                            ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
+                            titleLines = getLines(ctx, textTop, canvasSize * 0.85);
+                        }
+                        
+                        if (textSub && String(textSub).trim() !== "") {
+                            ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
+                            subLines = getLines(ctx, textSub, canvasSize * 0.85);
+                        }
+                        
+                        totalBlockHeight = (titleLines.length * titleLineSpacing) + (subLines.length * subLineSpacing);
+                        if (titleLines.length > 0 && subLines.length > 0) {
+                            totalBlockHeight += (fontSizeTop * 0.2); // Espacio extra entre título y subtítulo
+                        }
+                        
+                        // Si la altura del bloque entra dentro del 90% del margen superior, salimos del bucle.
+                        // También salimos si la letra ya se hizo exageradamente chica para evitar bucles infinitos.
+                        if (totalBlockHeight <= margin * 0.9 || fontSizeTop <= 12) {
+                            break;
+                        }
+                        
+                        fontSizeTop -= 2; // Achicamos la letra y volvemos a medir
                     }
 
-                    // Calculamos donde empieza a dibujarse el bloque desde arriba
+                    // DIBUJAR TEXTO ARRIBA
                     let currentY = (margin - totalBlockHeight) / 2;
 
-                    // Dibujar Título
                     if (titleLines.length > 0) {
                         ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
                         titleLines.forEach((line) => {
-                            ctx.fillText(line, canvasSize / 2, currentY + (titleLineSpacing / 2));
+                            // Ajuste final horizontal por si una palabra individual es larguísima
+                            let lineWidth = ctx.measureText(line).width;
+                            if (lineWidth > canvasSize * 0.9) {
+                                let localFont = fontSizeTop * ((canvasSize * 0.9) / lineWidth);
+                                ctx.font = `normal ${localFont}px ${fontFamily}`;
+                                ctx.fillText(line, canvasSize / 2, currentY + (titleLineSpacing / 2));
+                                ctx.font = `normal ${fontSizeTop}px ${fontFamily}`; // restaurar
+                            } else {
+                                ctx.fillText(line, canvasSize / 2, currentY + (titleLineSpacing / 2));
+                            }
                             currentY += titleLineSpacing;
                         });
-                        // Agregamos el pequeño espacio antes del subtítulo
                         if (subLines.length > 0) {
                             currentY += (fontSizeTop * 0.2);
                         }
                     }
 
-                    // Dibujar Subtítulo (con su propio ajuste multilínea)
                     if (subLines.length > 0) {
                         ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
                         subLines.forEach((line) => {
-                            ctx.fillText(line, canvasSize / 2, currentY + (subLineSpacing / 2));
+                            let lineWidth = ctx.measureText(line).width;
+                            if (lineWidth > canvasSize * 0.9) {
+                                let localFont = fontSizeSub * ((canvasSize * 0.9) / lineWidth);
+                                ctx.font = `normal ${localFont}px ${fontFamily}`;
+                                ctx.fillText(line, canvasSize / 2, currentY + (subLineSpacing / 2));
+                                ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
+                            } else {
+                                ctx.fillText(line, canvasSize / 2, currentY + (subLineSpacing / 2));
+                            }
                             currentY += subLineSpacing;
                         });
                     }
 
-                    // IMPRIMIR TEXTO ABAJO (Código/Precio)
+                    // DIBUJAR TEXTO ABAJO
                     if (textBottom && String(textBottom).trim() !== "") {
                         let fontSizeBot = margin * 0.45;
                         ctx.font = `normal ${fontSizeBot}px ${fontFamily}`;
@@ -307,7 +315,6 @@
             });
         }
 
-        // Botón procesar
         document.getElementById('btn-process').addEventListener('click', async () => {
             const colCod = document.getElementById('col-cod').value;
             const colTop = document.getElementById('col-texto-arriba').value;
@@ -321,7 +328,6 @@
                 alert("Seleccioná al menos una imagen para procesar."); return;
             }
 
-            // Crear diccionario
             const dictExcel = {};
             excelData.forEach(row => {
                 let cod = String(row[colCod] || "").trim().toUpperCase();
