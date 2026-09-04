@@ -7,8 +7,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     
-    <!-- LA SOLUCIÓN CLOUDFLARE: data-cfasync="false" evita que el Rocket Loader rompa la IA -->
-    <script data-cfasync="false" crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/browser/imglyRemoveBackground.umd.js"></script>
+    <!-- VOLVEMOS AL ENLACE ORIGINAL QUE SÍ FUNCIONÓ LA PRIMERA VEZ -->
+    <script src="https://unpkg.com/@imgly/background-removal@1.4.3/dist/browser/imglyRemoveBackground.umd.js"></script>
     
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
@@ -110,7 +110,7 @@
                     ✨ Iniciar Recorte Inteligente
                 </button>
                 <p id="status-text" class="text-sm font-bold text-slate-500 hidden animate-pulse">
-                    Iniciando Sistema...
+                    Iniciando IA...
                 </p>
             </div>
         </div>
@@ -136,7 +136,7 @@
     </main>
 
     <script>
-        // Interfaz de Sliders
+        // Actualizar valores de sliders en la interfaz
         ['shadow-blur', 'shadow-opacity', 'shadow-x', 'shadow-y'].forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
                 let suffix = id === 'shadow-opacity' ? '%' : 'px';
@@ -150,12 +150,6 @@
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
             if(files.length === 0) { alert("Seleccioná al menos una imagen."); return; }
-
-            // Verificación para asegurarnos de que la librería sí se cargó y Cloudflare no nos bloqueó
-            if (typeof imglyRemoveBackground === 'undefined') {
-                alert("La IA todavía se está cargando desde el servidor o Cloudflare la está bloqueando. Esperá unos segundos y volvé a intentar. Si persiste, actualizá la página.");
-                return;
-            }
 
             const statusText = document.getElementById('status-text');
             const previewGrid = document.getElementById('preview-grid');
@@ -180,9 +174,9 @@
             btnProcess.classList.add('opacity-50', 'cursor-not-allowed');
             processedImages = [];
 
-            // Usamos el servidor CDN hiper-estable oficial de Imgly
+            // El enlace exacto a los modelos de IA que funciona en unpkg
             const imglyConfig = { 
-                publicPath: "https://static.imgly.com/@imgly/background-removal/1.4.3/dist/" 
+                publicPath: "https://unpkg.com/@imgly/background-removal@1.4.3/dist/" 
             };
 
             for (let i = 0; i < files.length; i++) {
@@ -190,7 +184,7 @@
                 statusText.textContent = `Procesando IA: Foto ${i + 1} de ${files.length} (${file.name})...`;
 
                 try {
-                    // Cargar imagen
+                    // 1. Cargar imagen desde el input
                     const objectURL = URL.createObjectURL(file);
                     const img = new Image();
                     await new Promise((resolve, reject) => {
@@ -199,7 +193,7 @@
                         img.src = objectURL;
                     });
 
-                    // Extraer píxeles para evitar error CORS
+                    // 2. Extraer píxeles y achicar a 1200px para evitar fallos de memoria (El arreglo real)
                     const maxDim = 1200;
                     const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
                     const compCanvas = document.createElement('canvas');
@@ -211,7 +205,7 @@
                     const imageData = compCtx.getImageData(0, 0, compCanvas.width, compCanvas.height);
                     URL.revokeObjectURL(objectURL);
 
-                    // Pasarle los píxeles a la IA
+                    // 3. IA: Eliminar Fondo
                     let cutoutBlob = await imglyRemoveBackground(imageData, imglyConfig);
                     
                     const cutoutImg = new Image();
@@ -221,7 +215,7 @@
                         cutoutImg.src = cutoutUrl;
                     });
 
-                    // Lienzo de 2000x2000
+                    // 4. Crear Lienzo final 2000x2000
                     const canvas = document.createElement('canvas');
                     canvas.width = FINAL_CANVAS_SIZE;
                     canvas.height = FINAL_CANVAS_SIZE;
@@ -234,7 +228,7 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
                     }
 
-                    // Escalar al 80% (Para dejar margen del 20%)
+                    // 5. Escalar al 80% del lienzo
                     const SAFE_AREA = FINAL_CANVAS_SIZE * 0.80; 
                     const scaleFactor = Math.min(SAFE_AREA / cutoutImg.width, SAFE_AREA / cutoutImg.height);
                     const drawnWidth = cutoutImg.width * scaleFactor;
@@ -242,12 +236,16 @@
                     const xPos = (FINAL_CANVAS_SIZE - drawnWidth) / 2;
                     const yPos = (FINAL_CANVAS_SIZE - drawnHeight) / 2;
 
+                    // 6. Aplicar sombras
                     ctx.shadowColor = `rgba(0, 0, 0, ${sOpac})`;
                     ctx.shadowBlur = sBlur * 2; 
                     ctx.shadowOffsetX = sX * 2;
                     ctx.shadowOffsetY = sY * 2;
 
+                    // 7. Dibujar
                     ctx.drawImage(cutoutImg, xPos, yPos, drawnWidth, drawnHeight);
+                    
+                    // 8. Limpiar memoria RAM!
                     URL.revokeObjectURL(cutoutUrl);
 
                     const nameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
@@ -280,7 +278,8 @@
                     `;
                 }
                 
-                await new Promise(r => setTimeout(r, 1000)); // Respiro entre fotos
+                // Micro-pausa para dejar que el procesador respire
+                await new Promise(r => setTimeout(r, 1000));
             }
 
             statusText.textContent = `¡Proceso completado!`;
@@ -291,6 +290,7 @@
 
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (processedImages.length === 0) return;
+            
             const zip = new JSZip();
             const folder = zip.folder("Imagenes_2000x2000");
 
