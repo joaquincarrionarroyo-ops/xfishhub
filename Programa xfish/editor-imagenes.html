@@ -178,7 +178,7 @@
     <script>
         let excelData = [];
         let excelHeaders = [];
-        let imagesData = []; // Array principal que guarda la info y estado de cada foto
+        let imagesData = []; 
         let activeEditIndex = -1; 
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
@@ -217,7 +217,7 @@
             return lines;
         }
 
-        // CARGA LA IMAGEN EN MEMORIA (Para que la edición sea en vivo y ultra rápida)
+        // CARGA LA IMAGEN EN MEMORIA
         function loadImgObj(file) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -226,7 +226,7 @@
             });
         }
 
-        // RENDERIZADO CORE (Construye el canvas según la configuración de la foto)
+        // RENDERIZADO CORE
         function renderCanvasDataUrl(config) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
@@ -256,7 +256,9 @@
                     fontTop -= 2; 
                 }
 
-                let y = (margin - blockH) / 2;
+                // Acá aplicamos el margen por defecto (+30 px) para que baje un poco desde el borde
+                let y = ((margin - blockH) / 2) + 30; 
+                
                 if (tLines.length > 0) {
                     ctx.font = `normal ${fontTop}px ${fontFamily}`;
                     tLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhTop/2) + config.yTop); y += lhTop; });
@@ -288,7 +290,9 @@
                 tLines = config.top ? getLines(ctx, config.top, img.width * 0.9) : [];
                 sLines = config.sub ? getLines(ctx, config.sub, img.width * 0.9) : [];
 
-                let y = (img.height * 0.05); // Empieza 5% desde arriba
+                // Acá aplicamos el nuevo margen para texto superpuesto (12% desde arriba en vez de 5%)
+                let y = (img.height * 0.12); 
+                
                 if (tLines.length > 0) {
                     ctx.font = `normal ${fontTop}px ${fontFamily}`;
                     tLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.yTop); y += lhTop; });
@@ -388,7 +392,6 @@
             activeEditIndex = index;
             const config = imagesData[index];
             
-            // Llenar controles
             document.getElementById('edit-mode').value = config.mode;
             document.getElementById('edit-color').value = config.textColor;
             document.getElementById('edit-txt-top').value = config.top;
@@ -405,7 +408,6 @@
 
         window.closeModal = function() { modal.classList.add('hidden'); };
 
-        // Actualización en tiempo real al tocar cualquier control
         function updateModalPreview() {
             if(activeEditIndex === -1) return;
             const tempConfig = {
@@ -422,7 +424,6 @@
             previewImg.src = renderCanvasDataUrl(tempConfig);
         }
 
-        // Bindear eventos a los controles para actualización en vivo
         ['edit-mode', 'edit-color', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateModalPreview);
         });
@@ -430,7 +431,6 @@
         window.saveModalChanges = function() {
             if(activeEditIndex === -1) return;
             
-            // Guardar cambios en el objeto principal
             const config = imagesData[activeEditIndex];
             config.mode = document.getElementById('edit-mode').value;
             config.textColor = document.getElementById('edit-color').value;
@@ -441,10 +441,8 @@
             config.ySub = parseInt(document.getElementById('edit-y-sub').value);
             config.yBot = parseInt(document.getElementById('edit-y-bot').value);
             
-            // Re-generar DataUrl final
             config.dataUrl = renderCanvasDataUrl(config);
             
-            // Actualizar solo la imagen en la grilla
             document.getElementById(`grid-img-${activeEditIndex}`).src = config.dataUrl;
             
             closeModal();
