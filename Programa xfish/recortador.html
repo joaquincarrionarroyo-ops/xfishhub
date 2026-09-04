@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estudio de Recorte | X-Fish</title>
+    <title>Estudio Inteligente (IA) | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
@@ -32,7 +32,7 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-500 to-teal-600 shadow-lg shadow-emerald-500/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
                 </div>
-                Estudio de Centrado y Sombras | X-Fish
+                Estudio Inteligente (IA) - Salida 2000x2000
             </h1>
             <a href="index.html" class="text-sm font-semibold text-emerald-600 hover:text-emerald-800 transition-colors">← Volver al Hub</a>
         </div>
@@ -49,7 +49,7 @@
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                         <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                             <label class="block text-sm font-bold text-slate-700 mb-1">📸 Fotos Originales</label>
-                            <p class="text-xs text-slate-500 mb-3 font-medium">Seleccioná las fotos para procesar.</p>
+                            <p class="text-xs text-slate-500 mb-3 font-medium">Seleccioná las fotos para sacar fondo con IA.</p>
                             <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer transition-colors"/>
                         </div>
                     </div>
@@ -59,7 +59,7 @@
                         <select id="bg-color" class="custom-select">
                             <option value="white-jpg">JPG con Fondo Blanco</option>
                             <option value="white-png">PNG con Fondo Blanco</option>
-                            <option value="transparent-png">PNG sin Fondo (Recorte limpio)</option>
+                            <option value="transparent-png">PNG sin Fondo (Transparente)</option>
                         </select>
                     </div>
                 </div>
@@ -103,10 +103,10 @@
 
             <div class="mt-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
                 <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-emerald-500/30 transform transition-all duration-200 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
-                    ✨ Iniciar Procesamiento Rápido
+                    ✨ Iniciar Recorte Inteligente (IA)
                 </button>
                 <p id="status-text" class="text-sm font-bold text-slate-500 hidden animate-pulse">
-                    Procesando imágenes...
+                    Iniciando motor de IA...
                 </p>
             </div>
         </div>
@@ -115,7 +115,7 @@
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-emerald-500">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Recortes Finalizados (2000x2000px)</h3>
-                    <p class="text-sm text-slate-500 font-medium mt-1">Imágenes escaladas, centradas y con sombra profesional.</p>
+                    <p class="text-sm text-slate-500 font-medium mt-1">Fondo removido por IA, centradas y con sombra profesional.</p>
                 </div>
                 <button id="btn-dl-zip" class="mt-4 md:mt-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -131,7 +131,10 @@
         </div>
     </main>
 
-    <script>
+    <!-- Importación nativa ESM robusta para Cloudflare -->
+    <script type="module">
+        import imglyRemoveBackground from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/browser/browser.mjs';
+
         ['shadow-blur', 'shadow-opacity', 'shadow-x', 'shadow-y'].forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
                 let suffix = id === 'shadow-opacity' ? '%' : 'px';
@@ -141,6 +144,9 @@
 
         let processedImages = [];
         const FINAL_CANVAS_SIZE = 2000;
+        const imglyConfig = { 
+            publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/" 
+        };
 
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
@@ -171,9 +177,10 @@
 
             for (let i = 0; i < files.length; i++) {
                 let file = files[i];
-                statusText.textContent = `Procesando: Foto ${i + 1} de ${files.length} (${file.name})...`;
+                statusText.textContent = `IA Quitando Fondo: Foto ${i + 1} de ${files.length} (${file.name})...`;
 
                 try {
+                    // 1. Optimizar tamaño antes de pasar a la IA para evitar cuelgues de memoria
                     const objectURL = URL.createObjectURL(file);
                     const img = new Image();
                     await new Promise((resolve, reject) => {
@@ -181,15 +188,34 @@
                         img.onerror = reject;
                         img.src = objectURL;
                     });
+
+                    const maxDim = 1200;
+                    const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+                    const compCanvas = document.createElement('canvas');
+                    compCanvas.width = img.width * ratio;
+                    compCanvas.height = img.height * ratio;
+                    const compCtx = compCanvas.getContext('2d');
+                    compCtx.drawImage(img, 0, 0, compCanvas.width, compCanvas.height);
+                    
+                    const imageData = compCtx.getImageData(0, 0, compCanvas.width, compCanvas.height);
                     URL.revokeObjectURL(objectURL);
 
-                    // Crear lienzo definitivo de 2000x2000
+                    // 2. MAGIA DE IA: ACÁ ES DONDE QUITA EL FONDO REALMENTE
+                    let cutoutBlob = await imglyRemoveBackground(imageData, imglyConfig);
+                    
+                    const cutoutImg = new Image();
+                    const cutoutUrl = URL.createObjectURL(cutoutBlob);
+                    await new Promise((resolve) => {
+                        cutoutImg.onload = resolve;
+                        cutoutImg.src = cutoutUrl;
+                    });
+
+                    // 3. Crear lienzo cuadrado 2000x2000
                     const canvas = document.createElement('canvas');
                     canvas.width = FINAL_CANVAS_SIZE;
                     canvas.height = FINAL_CANVAS_SIZE;
                     const ctx = canvas.getContext('2d');
                     
-                    // Fondo
                     if (isWhiteBg) {
                         ctx.fillStyle = '#ffffff';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -197,25 +223,26 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
                     }
 
-                    // Escalar al 80% para dejar aire perfecto en los bordes
+                    // 4. Centrar y escalar al 80%
                     const SAFE_AREA = FINAL_CANVAS_SIZE * 0.80; 
-                    const scaleFactor = Math.min(SAFE_AREA / img.width, SAFE_AREA / img.height);
-                    const drawnWidth = img.width * scaleFactor;
-                    const drawnHeight = img.height * scaleFactor;
+                    const scaleFactor = Math.min(SAFE_AREA / cutoutImg.width, SAFE_AREA / cutoutImg.height);
+                    const drawnWidth = cutoutImg.width * scaleFactor;
+                    const drawnHeight = cutoutImg.height * scaleFactor;
                     const xPos = (FINAL_CANVAS_SIZE - drawnWidth) / 2;
                     const yPos = (FINAL_CANVAS_SIZE - drawnHeight) / 2;
 
-                    // Aplicar Sombra Proyectada
+                    // 5. Aplicar sombra proyectada al objeto recortado
                     ctx.shadowColor = `rgba(0, 0, 0, ${sOpac})`;
                     ctx.shadowBlur = sBlur * 2; 
                     ctx.shadowOffsetX = sX * 2;
                     ctx.shadowOffsetY = sY * 2;
 
-                    // Dibujar imagen centrada con sombra
-                    ctx.drawImage(img, xPos, yPos, drawnWidth, drawnHeight);
+                    // 6. Dibujar el resultado limpio
+                    ctx.drawImage(cutoutImg, xPos, yPos, drawnWidth, drawnHeight);
+                    URL.revokeObjectURL(cutoutUrl);
 
                     const nameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
-                    const finalName = nameNoExt + "_centrado" + outExt;
+                    const finalName = nameNoExt + "_ia_recorte" + outExt;
                     const dataUrl = canvas.toDataURL(outFormat, 0.95); 
 
                     processedImages.push({ name: finalName, dataUrl: dataUrl });
@@ -233,15 +260,18 @@
 
                 } catch (error) {
                     console.error("Error procesando:", file.name, error);
+                    let errorStr = error.message || String(error);
+                    
                     previewGrid.innerHTML += `
                         <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 overflow-hidden flex flex-col items-center justify-center p-4 text-center aspect-square">
                             <span class="text-3xl mb-2">⚠️</span>
                             <p class="text-[10px] font-bold text-red-700">Error en:<br>${file.name}</p>
+                            <p class="text-[9px] text-red-500 mt-2 italic">${errorStr}</p>
                         </div>
                     `;
                 }
                 
-                await new Promise(r => setTimeout(r, 200));
+                await new Promise(r => setTimeout(r, 1000));
             }
 
             statusText.textContent = `¡Proceso completado con éxito!`;
@@ -253,7 +283,7 @@
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (processedImages.length === 0) return;
             
-            const zip = new JSZip();
+            const zip = new window.JSZip();
             const folder = zip.folder("Imagenes_2000x2000");
 
             processedImages.forEach(img => {
@@ -264,7 +294,7 @@
             const content = await zip.generateAsync({type:"blob"});
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
-            link.download = "XFish_Centrados_2000px.zip";
+            link.download = "XFish_Recortes_IA_2000px.zip";
             link.click();
         });
     </script>
