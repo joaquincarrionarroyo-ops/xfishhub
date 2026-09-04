@@ -6,10 +6,6 @@
     <title>Estudio de Recorte e IA | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    
-    <!-- VOLVEMOS AL ENLACE ORIGINAL QUE SÍ FUNCIONÓ LA PRIMERA VEZ -->
-    <script src="https://unpkg.com/@imgly/background-removal@1.4.3/dist/browser/imglyRemoveBackground.umd.js"></script>
-    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
         .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
@@ -135,8 +131,9 @@
         </div>
     </main>
 
-    <script>
-        // Actualizar valores de sliders en la interfaz
+    <script type="module">
+        import imglyRemoveBackground from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/browser/browser.mjs';
+
         ['shadow-blur', 'shadow-opacity', 'shadow-x', 'shadow-y'].forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
                 let suffix = id === 'shadow-opacity' ? '%' : 'px';
@@ -146,6 +143,9 @@
 
         let processedImages = [];
         const FINAL_CANVAS_SIZE = 2000;
+        const imglyConfig = { 
+            publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/" 
+        };
 
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
@@ -174,17 +174,11 @@
             btnProcess.classList.add('opacity-50', 'cursor-not-allowed');
             processedImages = [];
 
-            // El enlace exacto a los modelos de IA que funciona en unpkg
-            const imglyConfig = { 
-                publicPath: "https://unpkg.com/@imgly/background-removal@1.4.3/dist/" 
-            };
-
             for (let i = 0; i < files.length; i++) {
                 let file = files[i];
                 statusText.textContent = `Procesando IA: Foto ${i + 1} de ${files.length} (${file.name})...`;
 
                 try {
-                    // 1. Cargar imagen desde el input
                     const objectURL = URL.createObjectURL(file);
                     const img = new Image();
                     await new Promise((resolve, reject) => {
@@ -193,7 +187,6 @@
                         img.src = objectURL;
                     });
 
-                    // 2. Extraer píxeles y achicar a 1200px para evitar fallos de memoria (El arreglo real)
                     const maxDim = 1200;
                     const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
                     const compCanvas = document.createElement('canvas');
@@ -205,7 +198,6 @@
                     const imageData = compCtx.getImageData(0, 0, compCanvas.width, compCanvas.height);
                     URL.revokeObjectURL(objectURL);
 
-                    // 3. IA: Eliminar Fondo
                     let cutoutBlob = await imglyRemoveBackground(imageData, imglyConfig);
                     
                     const cutoutImg = new Image();
@@ -215,7 +207,6 @@
                         cutoutImg.src = cutoutUrl;
                     });
 
-                    // 4. Crear Lienzo final 2000x2000
                     const canvas = document.createElement('canvas');
                     canvas.width = FINAL_CANVAS_SIZE;
                     canvas.height = FINAL_CANVAS_SIZE;
@@ -228,7 +219,6 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
                     }
 
-                    // 5. Escalar al 80% del lienzo
                     const SAFE_AREA = FINAL_CANVAS_SIZE * 0.80; 
                     const scaleFactor = Math.min(SAFE_AREA / cutoutImg.width, SAFE_AREA / cutoutImg.height);
                     const drawnWidth = cutoutImg.width * scaleFactor;
@@ -236,16 +226,12 @@
                     const xPos = (FINAL_CANVAS_SIZE - drawnWidth) / 2;
                     const yPos = (FINAL_CANVAS_SIZE - drawnHeight) / 2;
 
-                    // 6. Aplicar sombras
                     ctx.shadowColor = `rgba(0, 0, 0, ${sOpac})`;
                     ctx.shadowBlur = sBlur * 2; 
                     ctx.shadowOffsetX = sX * 2;
                     ctx.shadowOffsetY = sY * 2;
 
-                    // 7. Dibujar
                     ctx.drawImage(cutoutImg, xPos, yPos, drawnWidth, drawnHeight);
-                    
-                    // 8. Limpiar memoria RAM!
                     URL.revokeObjectURL(cutoutUrl);
 
                     const nameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
@@ -278,7 +264,6 @@
                     `;
                 }
                 
-                // Micro-pausa para dejar que el procesador respire
                 await new Promise(r => setTimeout(r, 1000));
             }
 
@@ -291,7 +276,7 @@
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (processedImages.length === 0) return;
             
-            const zip = new JSZip();
+            const zip = new window.JSZip();
             const folder = zip.folder("Imagenes_2000x2000");
 
             processedImages.forEach(img => {
