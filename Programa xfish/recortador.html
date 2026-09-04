@@ -6,6 +6,10 @@
     <title>Estudio de Recorte e IA | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- LA SOLUCIÓN CLOUDFLARE: data-cfasync="false" evita que el Rocket Loader rompa la IA -->
+    <script data-cfasync="false" crossorigin="anonymous" src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/browser/imglyRemoveBackground.umd.js"></script>
+    
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
         .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
@@ -131,8 +135,7 @@
         </div>
     </main>
 
-    <!-- Usamos type="module" para habilitar las importaciones nativas (Dynamic Imports) -->
-    <script type="module">
+    <script>
         // Interfaz de Sliders
         ['shadow-blur', 'shadow-opacity', 'shadow-x', 'shadow-y'].forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
@@ -147,6 +150,12 @@
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
             if(files.length === 0) { alert("Seleccioná al menos una imagen."); return; }
+
+            // Verificación para asegurarnos de que la librería sí se cargó y Cloudflare no nos bloqueó
+            if (typeof imglyRemoveBackground === 'undefined') {
+                alert("La IA todavía se está cargando desde el servidor o Cloudflare la está bloqueando. Esperá unos segundos y volvé a intentar. Si persiste, actualizá la página.");
+                return;
+            }
 
             const statusText = document.getElementById('status-text');
             const previewGrid = document.getElementById('preview-grid');
@@ -171,22 +180,7 @@
             btnProcess.classList.add('opacity-50', 'cursor-not-allowed');
             processedImages = [];
 
-            let imglyRemoveBackground;
-            try {
-                statusText.textContent = "Importando IA (Bypass de seguridad)...";
-                // IMPORTACIÓN NATIVA DE JAVASCRIPT: Esto cruza los bloqueos de HTML/CSP
-                const aiModule = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/browser/browser.mjs');
-                imglyRemoveBackground = aiModule.default;
-            } catch (error) {
-                alert("Error al importar la IA: " + error.message);
-                statusText.textContent = "Error de conexión.";
-                statusText.classList.remove('animate-pulse');
-                btnProcess.disabled = false;
-                btnProcess.classList.remove('opacity-50', 'cursor-not-allowed');
-                return;
-            }
-
-            // Usamos el servidor CDN hiper-estable oficial de Imgly para descargar los "modelos" neuronales
+            // Usamos el servidor CDN hiper-estable oficial de Imgly
             const imglyConfig = { 
                 publicPath: "https://static.imgly.com/@imgly/background-removal/1.4.3/dist/" 
             };
@@ -205,7 +199,7 @@
                         img.src = objectURL;
                     });
 
-                    // Extraer píxeles para aislar la foto
+                    // Extraer píxeles para evitar error CORS
                     const maxDim = 1200;
                     const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
                     const compCanvas = document.createElement('canvas');
@@ -297,8 +291,7 @@
 
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (processedImages.length === 0) return;
-            // Para usar JSZip desde type="module"
-            const zip = new window.JSZip();
+            const zip = new JSZip();
             const folder = zip.folder("Imagenes_2000x2000");
 
             processedImages.forEach(img => {
