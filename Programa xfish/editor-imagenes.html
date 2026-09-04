@@ -3,51 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Estampador Masivo de Imágenes | X-Fish</title>
+    <title>Estampador Dinámico de Banners | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <!-- JSZip para descargar todas las fotos juntas -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-            background-color: #f0f4f8; 
-        }
-        .glass-panel {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.9);
-            box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05);
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
+        .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
         .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
-        .custom-select, .custom-input {
-            width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px;
-            background-color: rgba(255, 255, 255, 0.8); outline: none; transition: all 0.2s; font-weight: 600; color: #334155;
-        }
+        .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background-color: rgba(255, 255, 255, 0.8); outline: none; transition: all 0.2s; font-weight: 600; color: #334155; }
         .custom-select:focus, .custom-input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.2); background-color: #fff; }
         ::-webkit-scrollbar { width: 8px; height: 8px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        
+        /* Modal Styles */
+        .modal-overlay { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 100; }
+        input[type=range] { width: 100%; accent-color: #ec4899; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 selection:bg-pink-500 selection:text-white pb-10">
 
-    <!-- Blobs Decorativos -->
     <div class="blob bg-pink-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
     <div class="blob bg-indigo-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
     <div class="blob bg-purple-200 w-[300px] h-[300px] top-[40%] left-[50%] opacity-40" style="animation-delay: -4s;"></div>
 
-    <!-- Header -->
     <header class="glass-panel sticky top-0 z-50 px-8 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
-                Estampador de Banners Cuadrados
+                Estampador Dinámico
             </h1>
             <a href="index.html" class="text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver al Hub</a>
         </div>
@@ -55,88 +44,143 @@
 
     <main class="max-w-7xl mx-auto w-full px-6 space-y-6 relative z-10">
         
-        <!-- Configuración de Archivos -->
         <div class="glass-panel rounded-3xl p-8">
             <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
                 <div class="relative group">
-                    <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                         <label class="block text-sm font-bold text-slate-700 mb-1">📊 Excel con Textos</label>
-                        <p class="text-xs text-slate-500 mb-3 font-medium">Archivo con los códigos, nombres y medidas.</p>
                         <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer transition-colors"/>
                     </div>
                 </div>
 
                 <div class="relative group">
-                    <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20 group-hover:opacity-40 transition duration-200"></div>
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                         <label class="block text-sm font-bold text-slate-700 mb-1">📸 Carpeta de Imágenes</label>
-                        <p class="text-xs text-slate-500 mb-3 font-medium">El nombre del archivo (ej: COMM240.png) debe coincidir con el código.</p>
                         <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer transition-colors"/>
                     </div>
                 </div>
             </div>
 
-            <!-- Mapeo de Columnas -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
-                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño (AutoAjuste Dinámico por Foto)</h3>
+                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño Inicial</h3>
+                
+                <div class="mb-5 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño por Defecto</label>
+                    <select id="global-mode" class="custom-select w-full md:w-1/2">
+                        <option value="margin">🖼️ Cuadrado con Márgenes Blancos (Ideal Catálogo)</option>
+                        <option value="overlay">📸 Texto Superpuesto a la Foto (Sin achicar la imagen)</option>
+                    </select>
+                </div>
+
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label>
-                        <select id="col-cod" class="custom-select"></select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Título ARRIBA</label>
-                        <select id="col-texto-arriba" class="custom-select"></select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-amber-600 mb-1 block">Subtítulo ARRIBA (Ej: Medidas)</label>
-                        <select id="col-texto-sub" class="custom-select border-amber-300 bg-amber-50/30"></select>
-                    </div>
-                    <div>
-                        <label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ABAJO (Código/Precio)</label>
-                        <select id="col-texto-abajo" class="custom-select"></select>
-                    </div>
+                    <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label><select id="col-cod" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Título ARRIBA</label><select id="col-texto-arriba" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-amber-600 mb-1 block">Subtítulo ARRIBA</label><select id="col-texto-sub" class="custom-select border-amber-300 bg-amber-50/30"></select></div>
+                    <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ABAJO</label><select id="col-texto-abajo" class="custom-select"></select></div>
                 </div>
             </div>
 
             <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/30 transform transition-all duration-200 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
-                🎨 Procesar Imágenes
+                🎨 Generar Borradores
             </button>
         </div>
 
         <div id="results-section" class="hidden space-y-6">
-            
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800" id="results-text">¡Imágenes procesadas!</h3>
-                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Diseño cuadrado generado correctamente.</p>
+                    <h3 class="text-lg font-bold text-slate-800" id="results-text">Borradores generados</h3>
+                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Revisá, editá y descargá tus imágenes.</p>
                 </div>
                 <button id="btn-dl-zip" class="mt-4 md:mt-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Descargar todas (.ZIP)
+                    Descargar ZIP Final
                 </button>
             </div>
 
             <div class="glass-panel rounded-3xl p-6">
                 <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                    <!-- Las imágenes se inyectan acá por JS -->
+                    <!-- Cards de imágenes -->
                 </div>
             </div>
         </div>
     </main>
 
+    <!-- MODAL EDITOR INDIVIDUAL -->
+    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden">
+            
+            <!-- Vista Previa en Vivo -->
+            <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 border-r border-slate-200">
+                <img id="modal-preview-img" class="max-w-full max-h-[40vh] md:max-h-[80vh] object-contain drop-shadow-md rounded bg-white" />
+            </div>
+
+            <!-- Panel de Controles -->
+            <div class="w-full md:w-1/2 p-6 flex flex-col h-full max-h-[50vh] md:max-h-[90vh] overflow-y-auto">
+                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Manual</h2>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                </div>
+
+                <div class="space-y-6 flex-grow">
+                    <!-- Config Global de la Foto -->
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="text-xs font-bold text-slate-700 uppercase mb-2 block">Estilo de Fondo</label>
+                        <select id="edit-mode" class="custom-select mb-4">
+                            <option value="margin">Con Márgenes (Lienzo Cuadrado Blanco)</option>
+                            <option value="overlay">Superpuesto (Foto Original)</option>
+                        </select>
+
+                        <label class="text-xs font-bold text-slate-700 uppercase mb-2 block">Color del Texto</label>
+                        <div class="flex items-center gap-3">
+                            <input type="color" id="edit-color" class="w-10 h-10 rounded cursor-pointer border-0">
+                            <span class="text-xs text-slate-500 font-medium">Cambialo si el fondo es oscuro</span>
+                        </div>
+                    </div>
+
+                    <!-- Título -->
+                    <div>
+                        <label class="text-xs font-bold text-blue-600 uppercase mb-1 block">Título</label>
+                        <input type="text" id="edit-txt-top" class="custom-input mb-2">
+                        <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
+                        <input type="range" id="edit-y-top" min="-500" max="500" value="0">
+                    </div>
+
+                    <!-- Subtítulo -->
+                    <div>
+                        <label class="text-xs font-bold text-amber-600 uppercase mb-1 block">Subtítulo</label>
+                        <input type="text" id="edit-txt-sub" class="custom-input mb-2">
+                        <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
+                        <input type="range" id="edit-y-sub" min="-500" max="500" value="0">
+                    </div>
+
+                    <!-- Abajo -->
+                    <div>
+                        <label class="text-xs font-bold text-emerald-600 uppercase mb-1 block">Texto Abajo</label>
+                        <input type="text" id="edit-txt-bot" class="custom-input mb-2">
+                        <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
+                        <input type="range" id="edit-y-bot" min="-500" max="500" value="0">
+                    </div>
+                </div>
+
+                <div class="mt-6 pt-4 border-t border-slate-200">
+                    <button onclick="saveModalChanges()" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors">
+                        ✅ Aplicar Cambios
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <script>
         let excelData = [];
         let excelHeaders = [];
-        let imageFiles = [];
-        let processedImages = []; 
-
-        const mappingSection = document.getElementById('mapping-section');
-        const resultsSection = document.getElementById('results-section');
-        const previewGrid = document.getElementById('preview-grid');
+        let imagesData = []; // Array principal que guarda la info y estado de cada foto
+        let activeEditIndex = -1; 
+        const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
         document.getElementById('file-excel').addEventListener('change', (e) => {
             if(e.target.files.length) {
@@ -144,270 +188,283 @@
                 reader.onload = function(evt) {
                     const data = new Uint8Array(evt.target.result);
                     const workbook = XLSX.read(data, {type: 'array'});
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    excelData = XLSX.utils.sheet_to_json(firstSheet, {defval: ""});
-                    excelHeaders = XLSX.utils.sheet_to_json(firstSheet, {header: 1})[0] || [];
+                    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                    excelData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
+                    excelHeaders = XLSX.utils.sheet_to_json(sheet, {header: 1})[0] || [];
                     
-                    populateSelect('col-cod', excelHeaders);
-                    populateSelect('col-texto-arriba', excelHeaders);
-                    populateSelect('col-texto-sub', excelHeaders);
-                    populateSelect('col-texto-abajo', excelHeaders);
-                    mappingSection.classList.remove('hidden');
+                    ['col-cod', 'col-texto-arriba', 'col-texto-sub', 'col-texto-abajo'].forEach(id => {
+                        const select = document.getElementById(id);
+                        select.innerHTML = id === 'col-cod' ? "" : "<option value=''>-- Vacío / No imprimir --</option>";
+                        excelHeaders.forEach(opt => {
+                            if(opt && String(opt).trim() !== "") select.innerHTML += `<option value='${opt}'>${opt}</option>`;
+                        });
+                    });
+                    document.getElementById('mapping-section').classList.remove('hidden');
                 };
                 reader.readAsArrayBuffer(e.target.files[0]);
             }
         });
 
-        document.getElementById('file-images').addEventListener('change', (e) => {
-            imageFiles = Array.from(e.target.files);
-        });
-
-        function populateSelect(id, options) {
-            const select = document.getElementById(id);
-            select.innerHTML = "<option value=''>-- Vacío / No imprimir --</option>";
-            options.forEach(opt => {
-                if(opt && String(opt).trim() !== "") {
-                    const el = document.createElement("option");
-                    el.value = String(opt); el.textContent = String(opt); select.appendChild(el);
-                }
-            });
-        }
-
+        // Funciones Helper
         function getLines(ctx, text, maxWidth) {
-            let words = text.split(" ");
-            let lines = [];
-            let currentLine = words[0];
-
+            let words = text.split(" "), lines = [], currentLine = words[0];
             for (let i = 1; i < words.length; i++) {
                 let word = words[i];
-                let width = ctx.measureText(currentLine + " " + word).width;
-                if (width < maxWidth) {
-                    currentLine += " " + word;
-                } else {
-                    lines.push(currentLine);
-                    currentLine = word;
-                }
+                if (ctx.measureText(currentLine + " " + word).width < maxWidth) currentLine += " " + word;
+                else { lines.push(currentLine); currentLine = word; }
             }
             lines.push(currentLine);
             return lines;
         }
 
-        // Función Core con AUTO-AJUSTE y LÓGICA DE SUBTÍTULOS DINÁMICA
-        function processSingleImage(file, textTop, textSub, textBottom) {
+        // CARGA LA IMAGEN EN MEMORIA (Para que la edición sea en vivo y ultra rápida)
+        function loadImgObj(file) {
             return new Promise((resolve) => {
                 const img = new Image();
-                img.onload = () => {
-                    const canvas = document.createElement('canvas');
-                    const ctx = canvas.getContext('2d');
-
-                    const maxImgDim = Math.max(img.width, img.height);
-                    const margin = Math.max(maxImgDim * 0.22, 120); 
-                    const canvasSize = maxImgDim + (margin * 2);
-
-                    canvas.width = canvasSize;
-                    canvas.height = canvasSize;
-
-                    // Fondo y foto
-                    ctx.fillStyle = '#ffffff';
-                    ctx.fillRect(0, 0, canvasSize, canvasSize);
-                    const xPos = (canvasSize - img.width) / 2;
-                    const yPos = (canvasSize - img.height) / 2;
-                    ctx.drawImage(img, xPos, yPos, img.width, img.height);
-
-                    ctx.fillStyle = '#000000';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
-
-                    // AUTO-AJUSTE: Reducir letra si hay muchos renglones
-                    let fontSizeTop = margin * 0.35;
-                    let fontSizeSub, titleLineSpacing, subLineSpacing, titleLines, subLines, totalBlockHeight;
-                    
-                    while (true) {
-                        fontSizeSub = fontSizeTop * 0.7;
-                        titleLineSpacing = fontSizeTop * 1.2;
-                        subLineSpacing = fontSizeSub * 1.2;
-                        
-                        titleLines = [];
-                        subLines = [];
-                        
-                        if (textTop && String(textTop).trim() !== "") {
-                            ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
-                            titleLines = getLines(ctx, textTop, canvasSize * 0.85);
-                        }
-                        
-                        // Si la foto actual tiene subtítulo, lo calculamos. Si no, lo ignora automáticamente.
-                        if (textSub && String(textSub).trim() !== "") {
-                            ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
-                            subLines = getLines(ctx, textSub, canvasSize * 0.85);
-                        }
-                        
-                        totalBlockHeight = (titleLines.length * titleLineSpacing) + (subLines.length * subLineSpacing);
-                        
-                        // Solo agrega espacio extra si EXISTEN ambos (Título y Subtítulo)
-                        if (titleLines.length > 0 && subLines.length > 0) {
-                            totalBlockHeight += (fontSizeTop * 0.2); 
-                        }
-                        
-                        if (totalBlockHeight <= margin * 0.9 || fontSizeTop <= 12) {
-                            break;
-                        }
-                        
-                        fontSizeTop -= 2; 
-                    }
-
-                    // DIBUJAR TEXTO ARRIBA (Centrado dinámico dependiento si tiene o no subtítulo)
-                    let currentY = (margin - totalBlockHeight) / 2;
-
-                    if (titleLines.length > 0) {
-                        ctx.font = `normal ${fontSizeTop}px ${fontFamily}`;
-                        titleLines.forEach((line) => {
-                            let lineWidth = ctx.measureText(line).width;
-                            if (lineWidth > canvasSize * 0.9) {
-                                let localFont = fontSizeTop * ((canvasSize * 0.9) / lineWidth);
-                                ctx.font = `normal ${localFont}px ${fontFamily}`;
-                                ctx.fillText(line, canvasSize / 2, currentY + (titleLineSpacing / 2));
-                                ctx.font = `normal ${fontSizeTop}px ${fontFamily}`; 
-                            } else {
-                                ctx.fillText(line, canvasSize / 2, currentY + (titleLineSpacing / 2));
-                            }
-                            currentY += titleLineSpacing;
-                        });
-                        
-                        if (subLines.length > 0) {
-                            currentY += (fontSizeTop * 0.2);
-                        }
-                    }
-
-                    if (subLines.length > 0) {
-                        ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
-                        subLines.forEach((line) => {
-                            let lineWidth = ctx.measureText(line).width;
-                            if (lineWidth > canvasSize * 0.9) {
-                                let localFont = fontSizeSub * ((canvasSize * 0.9) / lineWidth);
-                                ctx.font = `normal ${localFont}px ${fontFamily}`;
-                                ctx.fillText(line, canvasSize / 2, currentY + (subLineSpacing / 2));
-                                ctx.font = `normal ${fontSizeSub}px ${fontFamily}`;
-                            } else {
-                                ctx.fillText(line, canvasSize / 2, currentY + (subLineSpacing / 2));
-                            }
-                            currentY += subLineSpacing;
-                        });
-                    }
-
-                    // DIBUJAR TEXTO ABAJO
-                    if (textBottom && String(textBottom).trim() !== "") {
-                        let fontSizeBot = margin * 0.45;
-                        ctx.font = `normal ${fontSizeBot}px ${fontFamily}`;
-                        
-                        let textWidth = ctx.measureText(textBottom).width;
-                        if (textWidth > canvasSize * 0.9) {
-                            fontSizeBot = fontSizeBot * ((canvasSize * 0.9) / textWidth);
-                            ctx.font = `normal ${fontSizeBot}px ${fontFamily}`;
-                        }
-                        
-                        ctx.fillText(textBottom, canvasSize / 2, canvasSize - (margin / 2));
-                    }
-
-                    resolve({
-                        name: file.name,
-                        dataUrl: canvas.toDataURL('image/jpeg', 0.98)
-                    });
-                };
+                img.onload = () => resolve(img);
                 img.src = URL.createObjectURL(file);
             });
         }
 
+        // RENDERIZADO CORE (Construye el canvas según la configuración de la foto)
+        function renderCanvasDataUrl(config) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = config.imgObj;
+
+            if (config.mode === 'margin') {
+                // MODO CUADRADO CON MÁRGENES
+                const maxDim = Math.max(img.width, img.height);
+                const margin = Math.max(maxDim * 0.22, 120); 
+                const size = maxDim + (margin * 2);
+                canvas.width = size; canvas.height = size;
+
+                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
+                ctx.drawImage(img, (size - img.width) / 2, (size - img.height) / 2, img.width, img.height);
+
+                ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+                // Título y Sub
+                let fontTop = margin * 0.35, fontSub, lhTop, lhSub, tLines = [], sLines = [], blockH = 0;
+                while (true) {
+                    fontSub = fontTop * 0.7; lhTop = fontTop * 1.2; lhSub = fontSub * 1.2;
+                    tLines = config.top ? getLines(ctx, config.top, size * 0.85) : [];
+                    sLines = config.sub ? getLines(ctx, config.sub, size * 0.85) : [];
+                    blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
+                    if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
+                    if (blockH <= margin * 0.9 || fontTop <= 12) break;
+                    fontTop -= 2; 
+                }
+
+                let y = (margin - blockH) / 2;
+                if (tLines.length > 0) {
+                    ctx.font = `normal ${fontTop}px ${fontFamily}`;
+                    tLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhTop/2) + config.yTop); y += lhTop; });
+                    if (sLines.length > 0) y += (fontTop * 0.2);
+                }
+                if (sLines.length > 0) {
+                    ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                    sLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhSub/2) + config.ySub); y += lhSub; });
+                }
+
+                // Abajo
+                if (config.bot) {
+                    let fontBot = margin * 0.45; ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                    let w = ctx.measureText(config.bot).width;
+                    if (w > size * 0.9) { fontBot *= ((size * 0.9) / w); ctx.font = `normal ${fontBot}px ${fontFamily}`; }
+                    ctx.fillText(config.bot, size / 2, size - (margin / 2) + config.yBot);
+                }
+
+            } else {
+                // MODO SUPERPUESTO (FOTO ORIGINAL)
+                canvas.width = img.width; canvas.height = img.height;
+                ctx.drawImage(img, 0, 0, img.width, img.height);
+                ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+                // Título y Sub
+                let fontTop = img.height * 0.08, fontSub, lhTop, lhSub, tLines = [], sLines = [];
+                fontSub = fontTop * 0.7; lhTop = fontTop * 1.2; lhSub = fontSub * 1.2;
+                
+                tLines = config.top ? getLines(ctx, config.top, img.width * 0.9) : [];
+                sLines = config.sub ? getLines(ctx, config.sub, img.width * 0.9) : [];
+
+                let y = (img.height * 0.05); // Empieza 5% desde arriba
+                if (tLines.length > 0) {
+                    ctx.font = `normal ${fontTop}px ${fontFamily}`;
+                    tLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.yTop); y += lhTop; });
+                    if (sLines.length > 0) y += (fontTop * 0.2);
+                }
+                if (sLines.length > 0) {
+                    ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                    sLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.ySub); y += lhSub; });
+                }
+
+                // Abajo (Empieza 90% hacia abajo)
+                if (config.bot) {
+                    let fontBot = img.height * 0.08; ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                    let w = ctx.measureText(config.bot).width;
+                    if (w > img.width * 0.9) { fontBot *= ((img.width * 0.9) / w); ctx.font = `normal ${fontBot}px ${fontFamily}`; }
+                    ctx.fillText(config.bot, img.width / 2, (img.height * 0.92) + config.yBot);
+                }
+            }
+            return canvas.toDataURL('image/jpeg', 0.95);
+        }
+
+        // PROCESO PRINCIPAL
         document.getElementById('btn-process').addEventListener('click', async () => {
+            const files = document.getElementById('file-images').files;
+            if(!document.getElementById('col-cod').value || files.length === 0) { alert("Completá los pasos requeridos."); return; }
+
             const colCod = document.getElementById('col-cod').value;
             const colTop = document.getElementById('col-texto-arriba').value;
             const colSub = document.getElementById('col-texto-sub').value;
-            const colBottom = document.getElementById('col-texto-abajo').value;
-
-            if(!colCod) {
-                alert("Debes seleccionar obligatoriamente la Columna del Código para buscar la foto."); return;
-            }
-            if(imageFiles.length === 0) {
-                alert("Seleccioná al menos una imagen para procesar."); return;
-            }
+            const colBot = document.getElementById('col-texto-abajo').value;
+            const globalMode = document.getElementById('global-mode').value;
 
             const dictExcel = {};
             excelData.forEach(row => {
-                let cod = String(row[colCod] || "").trim().toUpperCase();
+                let cod = String(row[colCod]||"").trim().toUpperCase();
+                let txtTop = colTop ? String(row[colTop]||"").trim() : "";
+                let txtSub = colSub ? String(row[colSub]||"").trim() : "";
+                let txtBot = colBot ? String(row[colBot]||"").trim() : "";
                 
-                // Limpieza absoluta para evitar basura de Excel ("undefined", ceros, guiones)
-                let txtTop = colTop ? String(row[colTop] || "").trim() : "";
-                if(txtTop.toLowerCase() === "undefined" || txtTop === "-" || txtTop === "0") txtTop = "";
-                
-                let txtSub = colSub ? String(row[colSub] || "").trim() : "";
-                if(txtSub.toLowerCase() === "undefined" || txtSub === "-" || txtSub === "0") txtSub = "";
-                
-                let txtBot = colBottom ? String(row[colBottom] || "").trim() : "";
-                if(txtBot.toLowerCase() === "undefined" || txtBot === "-") txtBot = "";
-                
-                if (txtBot && colBottom === colCod && !txtBot.includes("COD")) {
-                     txtBot = "COD: " + txtBot;
-                }
-
-                if(cod) dictExcel[cod] = { top: txtTop, sub: txtSub, bottom: txtBot };
+                if (txtTop.toLowerCase() === "undefined" || txtTop === "-" || txtTop === "0") txtTop = "";
+                if (txtSub.toLowerCase() === "undefined" || txtSub === "-" || txtSub === "0") txtSub = "";
+                if (txtBot.toLowerCase() === "undefined" || txtBot === "-") txtBot = "";
+                if (txtBot && colBot === colCod && !txtBot.includes("COD")) txtBot = "COD: " + txtBot;
+                if(cod) dictExcel[cod] = { top: txtTop, sub: txtSub, bot: txtBot };
             });
 
-            processedImages = [];
-            previewGrid.innerHTML = '<p class="col-span-full text-center text-slate-500 font-bold animate-pulse">Procesando imágenes, por favor esperá...</p>';
-            resultsSection.classList.remove('hidden');
+            imagesData = [];
+            document.getElementById('preview-grid').innerHTML = '<p class="col-span-full text-center text-slate-500 font-bold animate-pulse">Generando borradores...</p>';
+            document.getElementById('results-section').classList.remove('hidden');
 
-            let matchCount = 0;
-
-            for (let file of imageFiles) {
-                let lastDotIndex = file.name.lastIndexOf('.');
-                let fileNameWithoutExt = lastDotIndex !== -1 ? file.name.substring(0, lastDotIndex) : file.name;
-                fileNameWithoutExt = String(fileNameWithoutExt).trim().toUpperCase();
+            for (let file of files) {
+                let nameNoExt = file.name.substring(0, file.name.lastIndexOf('.') !== -1 ? file.name.lastIndexOf('.') : file.name.length).trim().toUpperCase();
                 
-                if (dictExcel[fileNameWithoutExt]) {
-                    let data = dictExcel[fileNameWithoutExt];
-                    let result = await processSingleImage(file, data.top, data.sub, data.bottom);
-                    processedImages.push(result);
-                    matchCount++;
+                if (dictExcel[nameNoExt]) {
+                    const d = dictExcel[nameNoExt];
+                    const imgObj = await loadImgObj(file);
+                    
+                    const config = {
+                        file: file, name: file.name, imgObj: imgObj,
+                        top: d.top, sub: d.sub, bot: d.bot,
+                        mode: globalMode, textColor: '#000000',
+                        yTop: 0, ySub: 0, yBot: 0
+                    };
+                    
+                    config.dataUrl = renderCanvasDataUrl(config);
+                    imagesData.push(config);
                 }
             }
 
-            document.getElementById('results-subtext').textContent = `Se estamparon ${matchCount} imágenes con éxito (de ${imageFiles.length} subidas).`;
+            renderGrid();
+        });
 
-            previewGrid.innerHTML = '';
-            processedImages.forEach(imgData => {
-                previewGrid.innerHTML += `
-                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group">
-                        <div class="aspect-square bg-slate-100 flex items-center justify-center overflow-hidden">
-                            <img src="${imgData.dataUrl}" class="w-full h-full object-contain group-hover:scale-105 transition-transform duration-300" />
+        function renderGrid() {
+            const grid = document.getElementById('preview-grid');
+            grid.innerHTML = '';
+            imagesData.forEach((item, index) => {
+                grid.innerHTML += `
+                    <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group">
+                        <div class="aspect-square bg-slate-100 flex items-center justify-center p-2">
+                            <img id="grid-img-${index}" src="${item.dataUrl}" class="w-full h-full object-contain drop-shadow-sm" />
                         </div>
-                        <div class="p-3 bg-white">
-                            <p class="text-xs font-bold text-slate-700 truncate">${imgData.name}</p>
+                        <div class="p-3 bg-white flex justify-between items-center border-t border-slate-100">
+                            <p class="text-xs font-bold text-slate-700 truncate mr-2">${item.name}</p>
+                            <button onclick="openEditor(${index})" class="text-xs font-bold bg-pink-100 text-pink-600 hover:bg-pink-200 px-3 py-1.5 rounded-lg transition-colors">✏️ Editar</button>
                         </div>
                     </div>
                 `;
             });
+            document.getElementById('results-subtext').textContent = `Se armaron ${imagesData.length} imágenes. Editá o descargá.`;
+        }
 
-            if(matchCount === 0) {
-                previewGrid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold">No se encontró coincidencia entre los nombres de las fotos y el Excel.</p>';
-            }
+        // LÓGICA DEL EDITOR MODAL
+        const modal = document.getElementById('editor-modal');
+        const previewImg = document.getElementById('modal-preview-img');
+
+        window.openEditor = function(index) {
+            activeEditIndex = index;
+            const config = imagesData[index];
+            
+            // Llenar controles
+            document.getElementById('edit-mode').value = config.mode;
+            document.getElementById('edit-color').value = config.textColor;
+            document.getElementById('edit-txt-top').value = config.top;
+            document.getElementById('edit-txt-sub').value = config.sub;
+            document.getElementById('edit-txt-bot').value = config.bot;
+            
+            document.getElementById('edit-y-top').value = config.yTop;
+            document.getElementById('edit-y-sub').value = config.ySub;
+            document.getElementById('edit-y-bot').value = config.yBot;
+
+            updateModalPreview();
+            modal.classList.remove('hidden');
+        };
+
+        window.closeModal = function() { modal.classList.add('hidden'); };
+
+        // Actualización en tiempo real al tocar cualquier control
+        function updateModalPreview() {
+            if(activeEditIndex === -1) return;
+            const tempConfig = {
+                ...imagesData[activeEditIndex],
+                mode: document.getElementById('edit-mode').value,
+                textColor: document.getElementById('edit-color').value,
+                top: document.getElementById('edit-txt-top').value,
+                sub: document.getElementById('edit-txt-sub').value,
+                bot: document.getElementById('edit-txt-bot').value,
+                yTop: parseInt(document.getElementById('edit-y-top').value),
+                ySub: parseInt(document.getElementById('edit-y-sub').value),
+                yBot: parseInt(document.getElementById('edit-y-bot').value),
+            };
+            previewImg.src = renderCanvasDataUrl(tempConfig);
+        }
+
+        // Bindear eventos a los controles para actualización en vivo
+        ['edit-mode', 'edit-color', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateModalPreview);
         });
 
-        document.getElementById('btn-dl-zip').addEventListener('click', async () => {
-            if (processedImages.length === 0) return;
+        window.saveModalChanges = function() {
+            if(activeEditIndex === -1) return;
             
-            const zip = new JSZip();
-            const folder = zip.folder("Imagenes_Banners");
+            // Guardar cambios en el objeto principal
+            const config = imagesData[activeEditIndex];
+            config.mode = document.getElementById('edit-mode').value;
+            config.textColor = document.getElementById('edit-color').value;
+            config.top = document.getElementById('edit-txt-top').value;
+            config.sub = document.getElementById('edit-txt-sub').value;
+            config.bot = document.getElementById('edit-txt-bot').value;
+            config.yTop = parseInt(document.getElementById('edit-y-top').value);
+            config.ySub = parseInt(document.getElementById('edit-y-sub').value);
+            config.yBot = parseInt(document.getElementById('edit-y-bot').value);
+            
+            // Re-generar DataUrl final
+            config.dataUrl = renderCanvasDataUrl(config);
+            
+            // Actualizar solo la imagen en la grilla
+            document.getElementById(`grid-img-${activeEditIndex}`).src = config.dataUrl;
+            
+            closeModal();
+        };
 
-            processedImages.forEach(img => {
+        // Descarga
+        document.getElementById('btn-dl-zip').addEventListener('click', async () => {
+            if (imagesData.length === 0) return;
+            const zip = new JSZip();
+            const folder = zip.folder("Banners_Editados");
+
+            imagesData.forEach(img => {
                 const base64Data = img.dataUrl.split(',')[1];
                 folder.file(img.name, base64Data, {base64: true});
             });
 
             const content = await zip.generateAsync({type:"blob"});
-            
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
-            link.download = "Banners_XFish_Cuadrados.zip";
+            link.download = "XFish_Banners_Finales.zip";
             link.click();
         });
     </script>
