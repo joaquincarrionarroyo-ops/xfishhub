@@ -6,7 +6,6 @@
     <title>Estudio de Recorte e IA | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <!-- Quitamos el script de la cabecera para cargarlo dinámicamente y evitar bloqueos -->
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
         .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
@@ -132,7 +131,8 @@
         </div>
     </main>
 
-    <script>
+    <!-- Usamos type="module" para habilitar las importaciones nativas (Dynamic Imports) -->
+    <script type="module">
         // Interfaz de Sliders
         ['shadow-blur', 'shadow-opacity', 'shadow-x', 'shadow-y'].forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
@@ -143,22 +143,6 @@
 
         let processedImages = [];
         const FINAL_CANVAS_SIZE = 2000;
-
-        // INYECCIÓN SEGURA DE LA LIBRERÍA DE IA (Anti-Bloqueos)
-        function loadAILibrary() {
-            return new Promise((resolve, reject) => {
-                if (window.imglyRemoveBackground) {
-                    resolve(window.imglyRemoveBackground);
-                    return;
-                }
-                const script = document.createElement('script');
-                // Usamos jsDelivr que es el CDN más rápido y seguro para librerías en Vercel
-                script.src = "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/browser/imglyRemoveBackground.umd.js";
-                script.onload = () => resolve(window.imglyRemoveBackground);
-                script.onerror = () => reject(new Error("Tu navegador o red bloqueó la descarga de la IA."));
-                document.head.appendChild(script);
-            });
-        }
 
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
@@ -189,10 +173,12 @@
 
             let imglyRemoveBackground;
             try {
-                statusText.textContent = "Conectando con el motor de IA...";
-                imglyRemoveBackground = await loadAILibrary();
+                statusText.textContent = "Importando IA (Bypass de seguridad)...";
+                // IMPORTACIÓN NATIVA DE JAVASCRIPT: Esto cruza los bloqueos de HTML/CSP
+                const aiModule = await import('https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/browser/browser.mjs');
+                imglyRemoveBackground = aiModule.default;
             } catch (error) {
-                alert("Hubo un problema de conexión: " + error.message);
+                alert("Error al importar la IA: " + error.message);
                 statusText.textContent = "Error de conexión.";
                 statusText.classList.remove('animate-pulse');
                 btnProcess.disabled = false;
@@ -200,14 +186,14 @@
                 return;
             }
 
-            // Usamos el servidor interno seguro
+            // Usamos el servidor CDN hiper-estable oficial de Imgly para descargar los "modelos" neuronales
             const imglyConfig = { 
                 publicPath: "https://static.imgly.com/@imgly/background-removal/1.4.3/dist/" 
             };
 
             for (let i = 0; i < files.length; i++) {
                 let file = files[i];
-                statusText.textContent = `Procesando: Foto ${i + 1} de ${files.length} (${file.name})...`;
+                statusText.textContent = `Procesando IA: Foto ${i + 1} de ${files.length} (${file.name})...`;
 
                 try {
                     // Cargar imagen
@@ -219,7 +205,7 @@
                         img.src = objectURL;
                     });
 
-                    // Extraer píxeles para evitar error CORS
+                    // Extraer píxeles para aislar la foto
                     const maxDim = 1200;
                     const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
                     const compCanvas = document.createElement('canvas');
@@ -231,7 +217,7 @@
                     const imageData = compCtx.getImageData(0, 0, compCanvas.width, compCanvas.height);
                     URL.revokeObjectURL(objectURL);
 
-                    // Pasar a IA
+                    // Pasarle los píxeles a la IA
                     let cutoutBlob = await imglyRemoveBackground(imageData, imglyConfig);
                     
                     const cutoutImg = new Image();
@@ -241,7 +227,7 @@
                         cutoutImg.src = cutoutUrl;
                     });
 
-                    // Armar lienzo 2000x2000
+                    // Lienzo de 2000x2000
                     const canvas = document.createElement('canvas');
                     canvas.width = FINAL_CANVAS_SIZE;
                     canvas.height = FINAL_CANVAS_SIZE;
@@ -254,7 +240,8 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
                     }
 
-                    const SAFE_AREA = FINAL_CANVAS_SIZE * 0.85; 
+                    // Escalar al 80% (Para dejar margen del 20%)
+                    const SAFE_AREA = FINAL_CANVAS_SIZE * 0.80; 
                     const scaleFactor = Math.min(SAFE_AREA / cutoutImg.width, SAFE_AREA / cutoutImg.height);
                     const drawnWidth = cutoutImg.width * scaleFactor;
                     const drawnHeight = cutoutImg.height * scaleFactor;
@@ -310,7 +297,8 @@
 
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (processedImages.length === 0) return;
-            const zip = new JSZip();
+            // Para usar JSZip desde type="module"
+            const zip = new window.JSZip();
             const folder = zip.folder("Imagenes_2000x2000");
 
             processedImages.forEach(img => {
