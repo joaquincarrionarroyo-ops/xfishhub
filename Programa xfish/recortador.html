@@ -6,6 +6,10 @@
     <title>Estudio de Recorte e IA | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    
+    <!-- LIBRERÍA GLOBAL TRADICIONAL (A prueba de bloqueos de Cloudflare) -->
+    <script src="https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/browser/imglyRemoveBackground.umd.js"></script>
+
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
         .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
@@ -131,9 +135,8 @@
         </div>
     </main>
 
-    <script type="module">
-        import imglyRemoveBackground from 'https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/browser/browser.mjs';
-
+    <script>
+        // Actualizar valores de sliders en la interfaz
         ['shadow-blur', 'shadow-opacity', 'shadow-x', 'shadow-y'].forEach(id => {
             document.getElementById(id).addEventListener('input', (e) => {
                 let suffix = id === 'shadow-opacity' ? '%' : 'px';
@@ -143,13 +146,16 @@
 
         let processedImages = [];
         const FINAL_CANVAS_SIZE = 2000;
-        const imglyConfig = { 
-            publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.7.0/dist/" 
-        };
 
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
             if(files.length === 0) { alert("Seleccioná al menos una imagen."); return; }
+
+            // Validación de seguridad por si la IA no cargó
+            if (typeof imglyRemoveBackground === 'undefined') {
+                alert("El motor de IA está cargando desde el servidor. Esperá 5 segundos y volvé a tocar el botón.");
+                return;
+            }
 
             const statusText = document.getElementById('status-text');
             const previewGrid = document.getElementById('preview-grid');
@@ -174,6 +180,10 @@
             btnProcess.classList.add('opacity-50', 'cursor-not-allowed');
             processedImages = [];
 
+            const imglyConfig = { 
+                publicPath: "https://cdn.jsdelivr.net/npm/@imgly/background-removal@1.4.3/dist/" 
+            };
+
             for (let i = 0; i < files.length; i++) {
                 let file = files[i];
                 statusText.textContent = `Procesando IA: Foto ${i + 1} de ${files.length} (${file.name})...`;
@@ -187,6 +197,7 @@
                         img.src = objectURL;
                     });
 
+                    // Achicar a 1200px para proteger la memoria RAM
                     const maxDim = 1200;
                     const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
                     const compCanvas = document.createElement('canvas');
@@ -198,6 +209,7 @@
                     const imageData = compCtx.getImageData(0, 0, compCanvas.width, compCanvas.height);
                     URL.revokeObjectURL(objectURL);
 
+                    // Quitar fondo con IA global
                     let cutoutBlob = await imglyRemoveBackground(imageData, imglyConfig);
                     
                     const cutoutImg = new Image();
@@ -207,6 +219,7 @@
                         cutoutImg.src = cutoutUrl;
                     });
 
+                    // Lienzo 2000x2000
                     const canvas = document.createElement('canvas');
                     canvas.width = FINAL_CANVAS_SIZE;
                     canvas.height = FINAL_CANVAS_SIZE;
@@ -219,6 +232,7 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
                     }
 
+                    // Escalar al 80%
                     const SAFE_AREA = FINAL_CANVAS_SIZE * 0.80; 
                     const scaleFactor = Math.min(SAFE_AREA / cutoutImg.width, SAFE_AREA / cutoutImg.height);
                     const drawnWidth = cutoutImg.width * scaleFactor;
@@ -276,7 +290,7 @@
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (processedImages.length === 0) return;
             
-            const zip = new window.JSZip();
+            const zip = new JSZip();
             const folder = zip.folder("Imagenes_2000x2000");
 
             processedImages.forEach(img => {
