@@ -51,7 +51,7 @@
                         <div class="absolute -inset-0.5 bg-gradient-to-r from-emerald-400 to-teal-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                         <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                             <label class="block text-sm font-bold text-slate-700 mb-1">📸 Fotos Originales</label>
-                            <p class="text-xs text-slate-500 mb-3 font-medium">Podés seleccionar varias fotos a la vez.</p>
+                            <p class="text-xs text-slate-500 mb-3 font-medium">Seleccioná las fotos para sacar fondo.</p>
                             <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-emerald-100 file:text-emerald-700 hover:file:bg-emerald-200 cursor-pointer transition-colors"/>
                         </div>
                     </div>
@@ -142,38 +142,7 @@
         });
 
         let processedImages = [];
-        const FINAL_CANVAS_SIZE = 2000; // Constante de 2000x2000
-
-        function compressImageForAI(file, maxDim = 1200) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => {
-                    URL.revokeObjectURL(img.src); 
-                    if (img.width <= maxDim && img.height <= maxDim) {
-                        resolve(file); 
-                        return;
-                    }
-                    const canvas = document.createElement('canvas');
-                    let ratio = Math.min(maxDim / img.width, maxDim / img.height);
-                    canvas.width = img.width * ratio;
-                    canvas.height = img.height * ratio;
-                    const ctx = canvas.getContext('2d');
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                    canvas.toBlob((blob) => {
-                        resolve(new File([blob], file.name, { type: 'image/jpeg' }));
-                    }, 'image/jpeg', 0.85); 
-                };
-                img.src = URL.createObjectURL(file);
-            });
-        }
-
-        function blobToImage(blob) {
-            return new Promise((resolve) => {
-                const img = new Image();
-                img.onload = () => resolve(img);
-                img.src = URL.createObjectURL(blob);
-            });
-        }
+        const FINAL_CANVAS_SIZE = 2000;
 
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
@@ -190,7 +159,6 @@
             const sY = parseInt(document.getElementById('shadow-y').value);
             const bgConfig = document.getElementById('bg-color').value;
 
-            // Interpretar opciones de salida
             const isWhiteBg = bgConfig.includes('white');
             const isPng = bgConfig.includes('png');
             const outFormat = isPng ? 'image/png' : 'image/jpeg';
@@ -203,24 +171,54 @@
             btnProcess.classList.add('opacity-50', 'cursor-not-allowed');
             processedImages = [];
 
-            const imglyConfig = { publicPath: "https://unpkg.com/@imgly/background-removal@1.4.3/dist/" };
+            // MEJORA 1: Usamos el CDN Oficial de Imgly (Anti-Bloqueos)
+            const imglyConfig = { 
+                publicPath: "https://static.imgly.com/@imgly/background-removal/1.4.3/dist/" 
+            };
 
             for (let i = 0; i < files.length; i++) {
                 let file = files[i];
                 statusText.textContent = `Procesando IA: Foto ${i + 1} de ${files.length} (${file.name})...`;
 
                 try {
-                    let optimizedFile = await compressImageForAI(file);
-                    let cutoutBlob = await imglyRemoveBackground(optimizedFile, imglyConfig);
-                    let cutoutImg = await blobToImage(cutoutBlob);
+                    // Cargar imagen de forma segura
+                    const objectURL = URL.createObjectURL(file);
+                    const img = new Image();
+                    await new Promise((resolve, reject) => {
+                        img.onload = resolve;
+                        img.onerror = reject;
+                        img.src = objectURL;
+                    });
 
-                    // Crear lienzo EXACTO de 2000x2000
+                    // MEJORA 2: Extraer Píxeles (ImageData) para evitar problemas de CORS/Blobs
+                    const maxDim = 1200;
+                    const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
+                    const compCanvas = document.createElement('canvas');
+                    compCanvas.width = img.width * ratio;
+                    compCanvas.height = img.height * ratio;
+                    const compCtx = compCanvas.getContext('2d');
+                    compCtx.drawImage(img, 0, 0, compCanvas.width, compCanvas.height);
+                    
+                    const imageData = compCtx.getImageData(0, 0, compCanvas.width, compCanvas.height);
+                    URL.revokeObjectURL(objectURL);
+
+                    // IA recorta los píxeles directamente
+                    let cutoutBlob = await imglyRemoveBackground(imageData, imglyConfig);
+                    
+                    // Convertir el Blob recortado en Imagen final
+                    const cutoutImg = new Image();
+                    const cutoutUrl = URL.createObjectURL(cutoutBlob);
+                    await new Promise((resolve) => {
+                        cutoutImg.onload = resolve;
+                        cutoutImg.src = cutoutUrl;
+                    });
+
+                    // Lienzo 2000x2000
                     const canvas = document.createElement('canvas');
                     canvas.width = FINAL_CANVAS_SIZE;
                     canvas.height = FINAL_CANVAS_SIZE;
                     const ctx = canvas.getContext('2d');
                     
-                    // Fondo
                     if (isWhiteBg) {
                         ctx.fillStyle = '#ffffff';
                         ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -228,31 +226,24 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
                     }
 
-                    // Calcular escala para encajar la imagen recortada dejando un 15% de aire en los bordes
-                    const SAFE_AREA = FINAL_CANVAS_SIZE * 0.85; // 1700px
+                    const SAFE_AREA = FINAL_CANVAS_SIZE * 0.85; 
                     const scaleFactor = Math.min(SAFE_AREA / cutoutImg.width, SAFE_AREA / cutoutImg.height);
-                    
                     const drawnWidth = cutoutImg.width * scaleFactor;
                     const drawnHeight = cutoutImg.height * scaleFactor;
-
-                    // Centrar matemáticamente
                     const xPos = (FINAL_CANVAS_SIZE - drawnWidth) / 2;
                     const yPos = (FINAL_CANVAS_SIZE - drawnHeight) / 2;
 
-                    // Configurar Sombra (como la imagen es más grande ahora, amplificamos un poco la sombra)
                     ctx.shadowColor = `rgba(0, 0, 0, ${sOpac})`;
                     ctx.shadowBlur = sBlur * 2; 
                     ctx.shadowOffsetX = sX * 2;
                     ctx.shadowOffsetY = sY * 2;
 
-                    // Dibujar recorte escalado
                     ctx.drawImage(cutoutImg, xPos, yPos, drawnWidth, drawnHeight);
-
-                    URL.revokeObjectURL(cutoutImg.src);
+                    URL.revokeObjectURL(cutoutUrl);
 
                     const nameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
                     const finalName = nameNoExt + "_recorte" + outExt;
-                    const dataUrl = canvas.toDataURL(outFormat, 0.95); // 0.95 calidad JPEG, ignorado en PNG
+                    const dataUrl = canvas.toDataURL(outFormat, 0.95); 
 
                     processedImages.push({ name: finalName, dataUrl: dataUrl });
 
@@ -269,10 +260,17 @@
 
                 } catch (error) {
                     console.error("Error procesando:", file.name, error);
+                    // MEJORA 3: Mostrar el error real en la tarjeta roja
+                    let errorStr = error.message || String(error);
+                    if (errorStr.includes("fetch") || errorStr.includes("Network")) {
+                        errorStr = "Bloqueado por el Navegador (Abrí en Local/Vercel)";
+                    }
+                    
                     previewGrid.innerHTML += `
                         <div class="bg-red-50 rounded-xl shadow-sm border border-red-200 overflow-hidden flex flex-col items-center justify-center p-4 text-center aspect-square">
                             <span class="text-3xl mb-2">⚠️</span>
-                            <p class="text-[10px] font-bold text-red-600">Fallo de memoria en:<br>${file.name}</p>
+                            <p class="text-[10px] font-bold text-red-700">Error en:<br>${file.name}</p>
+                            <p class="text-[9px] text-red-500 mt-2 italic">${errorStr}</p>
                         </div>
                     `;
                 }
@@ -280,7 +278,7 @@
                 await new Promise(r => setTimeout(r, 1000));
             }
 
-            statusText.textContent = `¡Proceso completado con éxito!`;
+            statusText.textContent = `¡Proceso completado!`;
             statusText.classList.remove('animate-pulse');
             btnProcess.disabled = false;
             btnProcess.classList.remove('opacity-50', 'cursor-not-allowed');
