@@ -103,20 +103,22 @@
                     </div>
                 </div>
 
-                <!-- NUEVA SECCIÓN: TEXTO AVANZADO -->
+                <!-- NUEVA SECCIÓN: CARGA MANUAL DE TEXTOS -->
                 <div class="lg:col-span-3 bg-white/80 p-6 rounded-2xl border border-slate-200">
                     <h3 class="text-sm font-bold text-indigo-800 mb-4 flex items-center gap-2">
-                        <span>📝</span> Texto / Marca de Agua (Opcional)
+                        <span>📝</span> Carga Manual de Texto por Foto
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
-                        <div class="md:col-span-2">
-                            <label class="text-xs font-bold text-slate-600 mb-2 block">Texto a mostrar (Dejar vacío para omitir)</label>
-                            <input type="text" id="text-content" placeholder="Ej: Reel Shimano / $50.000" class="custom-input">
-                        </div>
-                        
+                    
+                    <!-- Lista Dinámica de Inputs (Se llena al seleccionar fotos) -->
+                    <div id="manual-text-list" class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 max-h-60 overflow-y-auto p-3 bg-slate-50 border border-slate-200 rounded-xl">
+                        <p class="text-xs text-slate-500 italic col-span-full">Seleccioná las fotos arriba para cargar el texto de cada una de manera manual.</p>
+                    </div>
+
+                    <!-- Estilos del texto aplicados a todas las fotos -->
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end border-t border-slate-200 pt-5">
                         <div>
                             <label class="text-xs font-bold text-slate-600 flex justify-between mb-2">
-                                <span>Tamaño</span>
+                                <span>Tamaño del texto</span>
                                 <span id="val-text-size" class="text-indigo-600">80px</span>
                             </label>
                             <input type="range" id="text-size" min="20" max="400" value="80">
@@ -179,7 +181,6 @@
             alert("⚠️ ERROR DE RED/CLOUDFLARE: No se pudo cargar el motor de IA:\n\n" + err.message);
         }
 
-        // Helper para actualizar los textos de los sliders
         const updateVal = (id, suffix) => {
             document.getElementById(id).addEventListener('input', (e) => {
                 document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
@@ -192,6 +193,31 @@
         updateVal('text-size', 'px');
         updateVal('text-y', 'px');
 
+        // LÓGICA DE LISTA DE TEXTOS MANUALES
+        const fileInput = document.getElementById('file-images');
+        const manualTextList = document.getElementById('manual-text-list');
+
+        fileInput.addEventListener('change', () => {
+            manualTextList.innerHTML = '';
+            const files = fileInput.files;
+            
+            if(files.length === 0) {
+                manualTextList.innerHTML = '<p class="text-xs text-slate-500 italic col-span-full">Seleccioná las fotos arriba para cargar el texto de cada una de manera manual.</p>';
+                return;
+            }
+
+            Array.from(files).forEach((file, index) => {
+                manualTextList.innerHTML += `
+                    <div class="flex items-center gap-3 bg-white p-2.5 rounded-lg border border-slate-200 shadow-sm">
+                        <span class="text-[11px] font-bold text-slate-600 w-1/3 truncate" title="${file.name}">
+                            <span class="text-indigo-500 mr-1">#${index + 1}</span> ${file.name}
+                        </span>
+                        <input type="text" id="txt-ind-${index}" placeholder="Texto para esta foto..." class="custom-input flex-1 py-1.5 text-xs">
+                    </div>
+                `;
+            });
+        });
+
         let processedImages = [];
         const FINAL_CANVAS_SIZE = 2000;
         const imglyConfig = { 
@@ -199,7 +225,7 @@
         };
 
         document.getElementById('btn-process').addEventListener('click', async () => {
-            const files = document.getElementById('file-images').files;
+            const files = fileInput.files;
             if(files.length === 0) { alert("Seleccioná al menos una imagen."); return; }
 
             if (!imglyRemoveBackground) {
@@ -219,8 +245,7 @@
             const sY = parseInt(document.getElementById('shadow-y').value);
             const bgConfig = document.getElementById('bg-color').value;
 
-            // Textos
-            const txtContent = document.getElementById('text-content').value.trim();
+            // Datos de estilo de texto
             const txtSize = parseInt(document.getElementById('text-size').value);
             const txtY = parseInt(document.getElementById('text-y').value);
             const txtColor = document.getElementById('text-color').value;
@@ -240,6 +265,10 @@
             for (let i = 0; i < files.length; i++) {
                 let file = files[i];
                 statusText.textContent = `IA Quitando Fondo: Foto ${i + 1} de ${files.length} (${file.name})...`;
+
+                // Capturar el texto ingresado manualmente para esta foto en particular
+                const indInput = document.getElementById(`txt-ind-${i}`);
+                const currentText = indInput ? indInput.value.trim() : "";
 
                 try {
                     const objectURL = URL.createObjectURL(file);
@@ -291,7 +320,7 @@
                     const drawnWidth = cutoutImg.width * scaleFactor;
                     const drawnHeight = cutoutImg.height * scaleFactor;
                     const xPos = (FINAL_CANVAS_SIZE - drawnWidth) / 2;
-                    const yOffset = txtContent ? -80 : 0; // Sube la imagen si hay texto
+                    const yOffset = currentText ? -80 : 0; 
                     const yPos = ((FINAL_CANVAS_SIZE - drawnHeight) / 2) + yOffset;
 
                     // Sombras
@@ -303,9 +332,9 @@
                     ctx.drawImage(cutoutImg, xPos, yPos, drawnWidth, drawnHeight);
                     URL.revokeObjectURL(cutoutUrl);
 
-                    // Escribir Texto
-                    if (txtContent !== "") {
-                        ctx.shadowColor = 'transparent'; // Desactiva la sombra para el texto
+                    // Escribir Texto Manual
+                    if (currentText !== "") {
+                        ctx.shadowColor = 'transparent'; 
                         ctx.shadowBlur = 0;
                         ctx.shadowOffsetX = 0;
                         ctx.shadowOffsetY = 0;
@@ -314,7 +343,7 @@
                         ctx.fillStyle = txtColor;
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
-                        ctx.fillText(txtContent, FINAL_CANVAS_SIZE / 2, txtY);
+                        ctx.fillText(currentText, FINAL_CANVAS_SIZE / 2, txtY);
                     }
 
                     const nameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
