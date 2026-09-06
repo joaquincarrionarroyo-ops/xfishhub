@@ -19,9 +19,10 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Modal Styles */
+        /* Modal Styles & Textareas */
         .modal-overlay { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 100; }
         input[type=range] { width: 100%; accent-color: #ec4899; }
+        textarea.custom-input { resize: vertical; min-height: 60px; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 selection:bg-pink-500 selection:text-white pb-10">
@@ -79,16 +80,25 @@
                 </div>
             </div>
 
-            <!-- MODO DE DISEÑO (Común para ambos modos) -->
-            <div class="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
-                <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño por Defecto</label>
-                <select id="global-mode" class="custom-select w-full md:w-1/2">
-                    <option value="margin">🖼️ Cuadrado con Márgenes Blancos (Ideal Catálogo)</option>
-                    <option value="overlay">📸 Texto Superpuesto a la Foto (Sin achicar la imagen)</option>
-                </select>
+            <!-- MODO DE DISEÑO (Común) -->
+            <div class="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño por Defecto</label>
+                    <select id="global-mode" class="custom-select w-full">
+                        <option value="margin">🖼️ Cuadrado con Márgenes Blancos (Ideal Catálogo)</option>
+                        <option value="overlay">📸 Texto Superpuesto a la Foto (Sin achicar la imagen)</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-xs font-semibold text-slate-600 flex justify-between mb-2">
+                        <span>Tamaño del Texto</span>
+                        <span id="val-global-scale" class="text-pink-600">100%</span>
+                    </label>
+                    <input type="range" id="global-scale" min="10" max="300" value="100">
+                </div>
             </div>
 
-            <!-- SECCIÓN MAPEO EXCEL (Solo visible en modo Excel) -->
+            <!-- SECCIÓN MAPEO EXCEL -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
                 <h3 class="text-sm font-bold text-pink-800 mb-4">Mapeo de Columnas (Excel)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -99,10 +109,10 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN CARGA MANUAL (Solo visible en modo Manual) -->
-            <div id="manual-input-section" class="hidden bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 mb-6 max-h-80 overflow-y-auto">
+            <!-- SECCIÓN CARGA MANUAL -->
+            <div id="manual-input-section" class="hidden bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 mb-6 max-h-[500px] overflow-y-auto">
                 <h3 class="text-sm font-bold text-indigo-800 mb-4">Textos Manuales por Foto</h3>
-                <div id="manual-text-list" class="space-y-3">
+                <div id="manual-text-list" class="space-y-4">
                     <p class="text-xs text-slate-500 italic">Seleccioná las imágenes para poder cargarles el texto a cada una.</p>
                 </div>
             </div>
@@ -157,17 +167,25 @@
                             <option value="overlay">Superpuesto (Foto Original)</option>
                         </select>
 
-                        <label class="text-xs font-bold text-slate-700 uppercase mb-2 block">Color del Texto</label>
-                        <div class="flex items-center gap-3">
-                            <input type="color" id="edit-color" class="w-10 h-10 rounded cursor-pointer border-0">
-                            <span class="text-xs text-slate-500 font-medium">Cambialo si el fondo es oscuro</span>
+                        <div class="flex justify-between gap-4">
+                            <div class="w-1/2">
+                                <label class="text-xs font-bold text-slate-700 uppercase mb-2 block">Color del Texto</label>
+                                <input type="color" id="edit-color" class="w-10 h-10 rounded cursor-pointer border-0">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="text-xs font-bold text-slate-700 uppercase flex justify-between mb-2">
+                                    <span>Tamaño</span>
+                                    <span id="val-edit-scale" class="text-pink-600">100%</span>
+                                </label>
+                                <input type="range" id="edit-scale" min="10" max="300" value="100">
+                            </div>
                         </div>
                     </div>
 
                     <!-- Título -->
                     <div>
                         <label class="text-xs font-bold text-blue-600 uppercase mb-1 block">Título</label>
-                        <input type="text" id="edit-txt-top" class="custom-input mb-2">
+                        <textarea id="edit-txt-top" class="custom-input mb-2" rows="2" placeholder="Podés usar Enter para renglones"></textarea>
                         <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
                         <input type="range" id="edit-y-top" min="-500" max="500" value="0">
                     </div>
@@ -175,7 +193,7 @@
                     <!-- Subtítulo -->
                     <div>
                         <label class="text-xs font-bold text-amber-600 uppercase mb-1 block">Subtítulo</label>
-                        <input type="text" id="edit-txt-sub" class="custom-input mb-2">
+                        <textarea id="edit-txt-sub" class="custom-input mb-2" rows="2" placeholder="Podés usar Enter para renglones"></textarea>
                         <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
                         <input type="range" id="edit-y-sub" min="-500" max="500" value="0">
                     </div>
@@ -183,7 +201,7 @@
                     <!-- Abajo -->
                     <div>
                         <label class="text-xs font-bold text-emerald-600 uppercase mb-1 block">Texto Abajo</label>
-                        <input type="text" id="edit-txt-bot" class="custom-input mb-2">
+                        <textarea id="edit-txt-bot" class="custom-input mb-2" rows="2" placeholder="Podés usar Enter para renglones"></textarea>
                         <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
                         <input type="range" id="edit-y-bot" min="-500" max="500" value="0">
                     </div>
@@ -205,6 +223,15 @@
         let activeEditIndex = -1; 
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
+        // Helper Slider Textos
+        const updateVal = (id, suffix) => {
+            document.getElementById(id).addEventListener('input', (e) => {
+                document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
+            });
+        };
+        updateVal('global-scale', '%');
+        updateVal('edit-scale', '%');
+
         // LÓGICA DE CAMBIO DE MODOS (Excel vs Manual)
         const modeRadios = document.getElementsByName('input-mode');
         const excelInputContainer = document.getElementById('excel-input-container');
@@ -221,11 +248,13 @@
             }
             Array.from(fileImages.files).forEach((file, index) => {
                 list.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
-                        <span class="text-xs font-bold text-slate-700 truncate" title="${file.name}"><span class="text-indigo-500">#${index+1}</span> ${file.name}</span>
-                        <input type="text" id="man-top-${index}" placeholder="Título ARRIBA" class="custom-input py-1.5 text-xs border-blue-200 focus:border-blue-500">
-                        <input type="text" id="man-sub-${index}" placeholder="Subtítulo ARRIBA" class="custom-input py-1.5 text-xs border-amber-200 focus:border-amber-500">
-                        <input type="text" id="man-bot-${index}" placeholder="Texto ABAJO" class="custom-input py-1.5 text-xs border-emerald-200 focus:border-emerald-500">
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3">
+                        <span class="text-sm font-bold text-slate-700 border-b border-slate-100 pb-2" title="${file.name}"><span class="text-indigo-500">#${index+1}</span> ${file.name}</span>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <textarea id="man-top-${index}" placeholder="Título ARRIBA" class="custom-input text-xs border-blue-200 focus:border-blue-500" rows="2"></textarea>
+                            <textarea id="man-sub-${index}" placeholder="Subtítulo ARRIBA" class="custom-input text-xs border-amber-200 focus:border-amber-500" rows="2"></textarea>
+                            <textarea id="man-bot-${index}" placeholder="Texto ABAJO" class="custom-input text-xs border-emerald-200 focus:border-emerald-500" rows="2"></textarea>
+                        </div>
                     </div>
                 `;
             });
@@ -279,19 +308,32 @@
             }
         });
 
-        // Funciones Helper
+        // Funciones Helper MULTILÍNEA
         function getLines(ctx, text, maxWidth) {
-            let words = text.split(" "), lines = [], currentLine = words[0];
-            for (let i = 1; i < words.length; i++) {
-                let word = words[i];
-                if (ctx.measureText(currentLine + " " + word).width < maxWidth) currentLine += " " + word;
-                else { lines.push(currentLine); currentLine = word; }
-            }
-            lines.push(currentLine);
+            if (!text) return [];
+            let lines = [];
+            // Separar primero por los "Enter" que hizo el usuario manual
+            let explicitLines = text.split('\n');
+            
+            explicitLines.forEach(explicitLine => {
+                let words = explicitLine.split(" ");
+                if(words.length === 0) return;
+                
+                let currentLine = words[0];
+                for (let i = 1; i < words.length; i++) {
+                    let word = words[i];
+                    if (ctx.measureText(currentLine + " " + word).width < maxWidth) {
+                        currentLine += " " + word;
+                    } else {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                lines.push(currentLine);
+            });
             return lines;
         }
 
-        // CARGA LA IMAGEN EN MEMORIA
         function loadImgObj(file) {
             return new Promise((resolve) => {
                 const img = new Image();
@@ -305,6 +347,9 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = config.imgObj;
+            
+            // Factor de escala de tamaño del usuario (ej: 1.5 es 150%)
+            const scaleFactor = (config.textScale || 100) / 100;
 
             if (config.mode === 'margin') {
                 const maxDim = Math.max(img.width, img.height);
@@ -317,16 +362,19 @@
 
                 ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-                let fontTop = margin * 0.35, fontSub, lhTop, lhSub, tLines = [], sLines = [], blockH = 0;
-                while (true) {
-                    fontSub = fontTop * 0.7; lhTop = fontTop * 1.2; lhSub = fontSub * 1.2;
-                    tLines = config.top ? getLines(ctx, config.top, size * 0.85) : [];
-                    sLines = config.sub ? getLines(ctx, config.sub, size * 0.85) : [];
-                    blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
-                    if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
-                    if (blockH <= margin * 0.9 || fontTop <= 12) break;
-                    fontTop -= 2; 
-                }
+                // Cálculo de fuentes con la escala aplicada
+                let fontTop = (margin * 0.35) * scaleFactor;
+                let fontSub = fontTop * 0.7;
+                let lhTop = fontTop * 1.2;
+                let lhSub = fontSub * 1.2;
+
+                ctx.font = `normal ${fontTop}px ${fontFamily}`;
+                let tLines = config.top ? getLines(ctx, config.top, size * 0.85) : [];
+                ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                let sLines = config.sub ? getLines(ctx, config.sub, size * 0.85) : [];
+
+                let blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
+                if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
 
                 let y = ((margin - blockH) / 2) + 30; 
                 
@@ -341,10 +389,14 @@
                 }
 
                 if (config.bot) {
-                    let fontBot = margin * 0.45; ctx.font = `normal ${fontBot}px ${fontFamily}`;
-                    let w = ctx.measureText(config.bot).width;
-                    if (w > size * 0.9) { fontBot *= ((size * 0.9) / w); ctx.font = `normal ${fontBot}px ${fontFamily}`; }
-                    ctx.fillText(config.bot, size / 2, size - (margin / 2) + config.yBot);
+                    let fontBot = (margin * 0.45) * scaleFactor; 
+                    ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                    let bLines = getLines(ctx, config.bot, size * 0.85);
+                    let lhBot = fontBot * 1.2;
+                    let botH = bLines.length * lhBot;
+                    
+                    let botY = size - (margin / 2) - (botH / 2) + (lhBot/2) + config.yBot;
+                    bLines.forEach(l => { ctx.fillText(l, size / 2, botY); botY += lhBot; });
                 }
 
             } else {
@@ -352,11 +404,16 @@
                 ctx.drawImage(img, 0, 0, img.width, img.height);
                 ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-                let fontTop = img.height * 0.08, fontSub, lhTop, lhSub, tLines = [], sLines = [];
-                fontSub = fontTop * 0.7; lhTop = fontTop * 1.2; lhSub = fontSub * 1.2;
+                // Cálculo de fuentes con la escala aplicada
+                let fontTop = (img.height * 0.08) * scaleFactor;
+                let fontSub = fontTop * 0.7;
+                let lhTop = fontTop * 1.2;
+                let lhSub = fontSub * 1.2;
                 
-                tLines = config.top ? getLines(ctx, config.top, img.width * 0.9) : [];
-                sLines = config.sub ? getLines(ctx, config.sub, img.width * 0.9) : [];
+                ctx.font = `normal ${fontTop}px ${fontFamily}`;
+                let tLines = config.top ? getLines(ctx, config.top, img.width * 0.9) : [];
+                ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                let sLines = config.sub ? getLines(ctx, config.sub, img.width * 0.9) : [];
 
                 let y = (img.height * 0.12); 
                 
@@ -371,10 +428,14 @@
                 }
 
                 if (config.bot) {
-                    let fontBot = img.height * 0.08; ctx.font = `normal ${fontBot}px ${fontFamily}`;
-                    let w = ctx.measureText(config.bot).width;
-                    if (w > img.width * 0.9) { fontBot *= ((img.width * 0.9) / w); ctx.font = `normal ${fontBot}px ${fontFamily}`; }
-                    ctx.fillText(config.bot, img.width / 2, (img.height * 0.92) + config.yBot);
+                    let fontBot = (img.height * 0.08) * scaleFactor; 
+                    ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                    let bLines = getLines(ctx, config.bot, img.width * 0.9);
+                    let lhBot = fontBot * 1.2;
+                    let botH = bLines.length * lhBot;
+
+                    let botY = (img.height * 0.92) - (botH / 2) + config.yBot;
+                    bLines.forEach(l => { ctx.fillText(l, img.width / 2, botY); botY += lhBot; });
                 }
             }
             return canvas.toDataURL('image/jpeg', 0.95);
@@ -385,6 +446,7 @@
             const files = fileImages.files;
             const mode = document.querySelector('input[name="input-mode"]:checked').value;
             const globalMode = document.getElementById('global-mode').value;
+            const globalScale = parseInt(document.getElementById('global-scale').value);
 
             if (files.length === 0) {
                 alert("Seleccioná al menos una imagen.");
@@ -430,10 +492,9 @@
                         txtSub = dictExcel[nameNoExt].sub;
                         txtBot = dictExcel[nameNoExt].bot;
                     } else {
-                        continue; // Si está en Excel y no encuentra el código, lo saltea
+                        continue; 
                     }
                 } else {
-                    // Modo Manual: Carga los valores de los inputs
                     txtTop = document.getElementById(`man-top-${i}`)?.value || "";
                     txtSub = document.getElementById(`man-sub-${i}`)?.value || "";
                     txtBot = document.getElementById(`man-bot-${i}`)?.value || "";
@@ -444,6 +505,7 @@
                     file: file, name: file.name, imgObj: imgObj,
                     top: txtTop, sub: txtSub, bot: txtBot,
                     mode: globalMode, textColor: '#000000',
+                    textScale: globalScale, 
                     yTop: 0, ySub: 0, yBot: 0
                 };
                 
@@ -503,6 +565,9 @@
             
             document.getElementById('edit-mode').value = config.mode;
             document.getElementById('edit-color').value = config.textColor;
+            document.getElementById('edit-scale').value = config.textScale;
+            document.getElementById('val-edit-scale').textContent = config.textScale + '%';
+
             document.getElementById('edit-txt-top').value = config.top;
             document.getElementById('edit-txt-sub').value = config.sub;
             document.getElementById('edit-txt-bot').value = config.bot;
@@ -523,6 +588,7 @@
                 ...imagesData[activeEditIndex],
                 mode: document.getElementById('edit-mode').value,
                 textColor: document.getElementById('edit-color').value,
+                textScale: parseInt(document.getElementById('edit-scale').value),
                 top: document.getElementById('edit-txt-top').value,
                 sub: document.getElementById('edit-txt-sub').value,
                 bot: document.getElementById('edit-txt-bot').value,
@@ -533,7 +599,7 @@
             previewImg.src = renderCanvasDataUrl(tempConfig);
         }
 
-        ['edit-mode', 'edit-color', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
+        ['edit-mode', 'edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateModalPreview);
         });
 
@@ -543,6 +609,7 @@
             const config = imagesData[activeEditIndex];
             config.mode = document.getElementById('edit-mode').value;
             config.textColor = document.getElementById('edit-color').value;
+            config.textScale = parseInt(document.getElementById('edit-scale').value);
             config.top = document.getElementById('edit-txt-top').value;
             config.sub = document.getElementById('edit-txt-sub').value;
             config.bot = document.getElementById('edit-txt-bot').value;
