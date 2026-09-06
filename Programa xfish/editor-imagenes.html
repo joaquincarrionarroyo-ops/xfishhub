@@ -47,8 +47,21 @@
         <div class="glass-panel rounded-3xl p-8">
             <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
+            <!-- SELECTOR DE MODO -->
+            <div class="mb-6 flex gap-6 border-b border-slate-100 pb-4">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors">
+                    <input type="radio" name="input-mode" value="excel" checked class="accent-pink-600 w-4 h-4">
+                    Usar Excel (Automático)
+                </label>
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors">
+                    <input type="radio" name="input-mode" value="manual" class="accent-pink-600 w-4 h-4">
+                    Carga Manual (Foto por foto)
+                </label>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                <div class="relative group">
+                <!-- CONTENEDOR EXCEL (Se oculta en modo manual) -->
+                <div id="excel-input-container" class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
                         <label class="block text-sm font-bold text-slate-700 mb-1">📊 Excel con Textos</label>
@@ -56,6 +69,7 @@
                     </div>
                 </div>
 
+                <!-- CONTENEDOR IMÁGENES -->
                 <div class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
@@ -65,22 +79,31 @@
                 </div>
             </div>
 
-            <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
-                <h3 class="text-sm font-bold text-pink-800 mb-4">Configuración del Diseño Inicial</h3>
-                
-                <div class="mb-5 bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                    <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño por Defecto</label>
-                    <select id="global-mode" class="custom-select w-full md:w-1/2">
-                        <option value="margin">🖼️ Cuadrado con Márgenes Blancos (Ideal Catálogo)</option>
-                        <option value="overlay">📸 Texto Superpuesto a la Foto (Sin achicar la imagen)</option>
-                    </select>
-                </div>
+            <!-- MODO DE DISEÑO (Común para ambos modos) -->
+            <div class="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño por Defecto</label>
+                <select id="global-mode" class="custom-select w-full md:w-1/2">
+                    <option value="margin">🖼️ Cuadrado con Márgenes Blancos (Ideal Catálogo)</option>
+                    <option value="overlay">📸 Texto Superpuesto a la Foto (Sin achicar la imagen)</option>
+                </select>
+            </div>
 
+            <!-- SECCIÓN MAPEO EXCEL (Solo visible en modo Excel) -->
+            <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
+                <h3 class="text-sm font-bold text-pink-800 mb-4">Mapeo de Columnas (Excel)</h3>
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label><select id="col-cod" class="custom-select"></select></div>
                     <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Título ARRIBA</label><select id="col-texto-arriba" class="custom-select"></select></div>
                     <div><label class="text-xs font-semibold text-amber-600 mb-1 block">Subtítulo ARRIBA</label><select id="col-texto-sub" class="custom-select border-amber-300 bg-amber-50/30"></select></div>
                     <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ABAJO</label><select id="col-texto-abajo" class="custom-select"></select></div>
+                </div>
+            </div>
+
+            <!-- SECCIÓN CARGA MANUAL (Solo visible en modo Manual) -->
+            <div id="manual-input-section" class="hidden bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 mb-6 max-h-80 overflow-y-auto">
+                <h3 class="text-sm font-bold text-indigo-800 mb-4">Textos Manuales por Foto</h3>
+                <div id="manual-text-list" class="space-y-3">
+                    <p class="text-xs text-slate-500 italic">Seleccioná las imágenes para poder cargarles el texto a cada una.</p>
                 </div>
             </div>
 
@@ -182,6 +205,54 @@
         let activeEditIndex = -1; 
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
+        // LÓGICA DE CAMBIO DE MODOS (Excel vs Manual)
+        const modeRadios = document.getElementsByName('input-mode');
+        const excelInputContainer = document.getElementById('excel-input-container');
+        const mappingSection = document.getElementById('mapping-section');
+        const manualInputSection = document.getElementById('manual-input-section');
+        const fileImages = document.getElementById('file-images');
+
+        function renderManualInputs() {
+            const list = document.getElementById('manual-text-list');
+            list.innerHTML = '';
+            if(fileImages.files.length === 0) {
+                list.innerHTML = '<p class="text-xs text-slate-500 italic">Seleccioná las imágenes primero.</p>';
+                return;
+            }
+            Array.from(fileImages.files).forEach((file, index) => {
+                list.innerHTML += `
+                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm grid grid-cols-1 md:grid-cols-4 gap-3 items-center">
+                        <span class="text-xs font-bold text-slate-700 truncate" title="${file.name}"><span class="text-indigo-500">#${index+1}</span> ${file.name}</span>
+                        <input type="text" id="man-top-${index}" placeholder="Título ARRIBA" class="custom-input py-1.5 text-xs border-blue-200 focus:border-blue-500">
+                        <input type="text" id="man-sub-${index}" placeholder="Subtítulo ARRIBA" class="custom-input py-1.5 text-xs border-amber-200 focus:border-amber-500">
+                        <input type="text" id="man-bot-${index}" placeholder="Texto ABAJO" class="custom-input py-1.5 text-xs border-emerald-200 focus:border-emerald-500">
+                    </div>
+                `;
+            });
+        }
+
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if(e.target.value === 'excel') {
+                    excelInputContainer.classList.remove('hidden');
+                    if(excelHeaders.length > 0) mappingSection.classList.remove('hidden');
+                    manualInputSection.classList.add('hidden');
+                } else {
+                    excelInputContainer.classList.add('hidden');
+                    mappingSection.classList.add('hidden');
+                    manualInputSection.classList.remove('hidden');
+                    renderManualInputs();
+                }
+            });
+        });
+
+        fileImages.addEventListener('change', () => {
+            if (document.querySelector('input[name="input-mode"]:checked').value === 'manual') {
+                renderManualInputs();
+            }
+        });
+
+        // CARGA EXCEL
         document.getElementById('file-excel').addEventListener('change', (e) => {
             if(e.target.files.length) {
                 const reader = new FileReader();
@@ -199,7 +270,10 @@
                             if(opt && String(opt).trim() !== "") select.innerHTML += `<option value='${opt}'>${opt}</option>`;
                         });
                     });
-                    document.getElementById('mapping-section').classList.remove('hidden');
+                    
+                    if (document.querySelector('input[name="input-mode"]:checked').value === 'excel') {
+                        mappingSection.classList.remove('hidden');
+                    }
                 };
                 reader.readAsArrayBuffer(e.target.files[0]);
             }
@@ -233,7 +307,6 @@
             const img = config.imgObj;
 
             if (config.mode === 'margin') {
-                // MODO CUADRADO CON MÁRGENES
                 const maxDim = Math.max(img.width, img.height);
                 const margin = Math.max(maxDim * 0.22, 120); 
                 const size = maxDim + (margin * 2);
@@ -244,7 +317,6 @@
 
                 ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-                // Título y Sub
                 let fontTop = margin * 0.35, fontSub, lhTop, lhSub, tLines = [], sLines = [], blockH = 0;
                 while (true) {
                     fontSub = fontTop * 0.7; lhTop = fontTop * 1.2; lhSub = fontSub * 1.2;
@@ -256,7 +328,6 @@
                     fontTop -= 2; 
                 }
 
-                // Acá aplicamos el margen por defecto (+30 px) para que baje un poco desde el borde
                 let y = ((margin - blockH) / 2) + 30; 
                 
                 if (tLines.length > 0) {
@@ -269,7 +340,6 @@
                     sLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhSub/2) + config.ySub); y += lhSub; });
                 }
 
-                // Abajo
                 if (config.bot) {
                     let fontBot = margin * 0.45; ctx.font = `normal ${fontBot}px ${fontFamily}`;
                     let w = ctx.measureText(config.bot).width;
@@ -278,19 +348,16 @@
                 }
 
             } else {
-                // MODO SUPERPUESTO (FOTO ORIGINAL)
                 canvas.width = img.width; canvas.height = img.height;
                 ctx.drawImage(img, 0, 0, img.width, img.height);
                 ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-                // Título y Sub
                 let fontTop = img.height * 0.08, fontSub, lhTop, lhSub, tLines = [], sLines = [];
                 fontSub = fontTop * 0.7; lhTop = fontTop * 1.2; lhSub = fontSub * 1.2;
                 
                 tLines = config.top ? getLines(ctx, config.top, img.width * 0.9) : [];
                 sLines = config.sub ? getLines(ctx, config.sub, img.width * 0.9) : [];
 
-                // Acá aplicamos el nuevo margen para texto superpuesto (12% desde arriba en vez de 5%)
                 let y = (img.height * 0.12); 
                 
                 if (tLines.length > 0) {
@@ -303,7 +370,6 @@
                     sLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.ySub); y += lhSub; });
                 }
 
-                // Abajo (Empieza 90% hacia abajo)
                 if (config.bot) {
                     let fontBot = img.height * 0.08; ctx.font = `normal ${fontBot}px ${fontFamily}`;
                     let w = ctx.measureText(config.bot).width;
@@ -316,67 +382,110 @@
 
         // PROCESO PRINCIPAL
         document.getElementById('btn-process').addEventListener('click', async () => {
-            const files = document.getElementById('file-images').files;
-            if(!document.getElementById('col-cod').value || files.length === 0) { alert("Completá los pasos requeridos."); return; }
-
-            const colCod = document.getElementById('col-cod').value;
-            const colTop = document.getElementById('col-texto-arriba').value;
-            const colSub = document.getElementById('col-texto-sub').value;
-            const colBot = document.getElementById('col-texto-abajo').value;
+            const files = fileImages.files;
+            const mode = document.querySelector('input[name="input-mode"]:checked').value;
             const globalMode = document.getElementById('global-mode').value;
 
-            const dictExcel = {};
-            excelData.forEach(row => {
-                let cod = String(row[colCod]||"").trim().toUpperCase();
-                let txtTop = colTop ? String(row[colTop]||"").trim() : "";
-                let txtSub = colSub ? String(row[colSub]||"").trim() : "";
-                let txtBot = colBot ? String(row[colBot]||"").trim() : "";
-                
-                if (txtTop.toLowerCase() === "undefined" || txtTop === "-" || txtTop === "0") txtTop = "";
-                if (txtSub.toLowerCase() === "undefined" || txtSub === "-" || txtSub === "0") txtSub = "";
-                if (txtBot.toLowerCase() === "undefined" || txtBot === "-") txtBot = "";
-                if (txtBot && colBot === colCod && !txtBot.includes("COD")) txtBot = "COD: " + txtBot;
-                if(cod) dictExcel[cod] = { top: txtTop, sub: txtSub, bot: txtBot };
-            });
+            if (files.length === 0) {
+                alert("Seleccioná al menos una imagen.");
+                return;
+            }
+
+            let dictExcel = {};
+            if (mode === 'excel') {
+                const colCod = document.getElementById('col-cod').value;
+                const colTop = document.getElementById('col-texto-arriba').value;
+                const colSub = document.getElementById('col-texto-sub').value;
+                const colBot = document.getElementById('col-texto-abajo').value;
+
+                if (!colCod) { alert("Seleccioná la columna del código para vincular las fotos."); return; }
+
+                excelData.forEach(row => {
+                    let cod = String(row[colCod]||"").trim().toUpperCase();
+                    let txtTop = colTop ? String(row[colTop]||"").trim() : "";
+                    let txtSub = colSub ? String(row[colSub]||"").trim() : "";
+                    let txtBot = colBot ? String(row[colBot]||"").trim() : "";
+                    
+                    if (txtTop.toLowerCase() === "undefined" || txtTop === "-" || txtTop === "0") txtTop = "";
+                    if (txtSub.toLowerCase() === "undefined" || txtSub === "-" || txtSub === "0") txtSub = "";
+                    if (txtBot.toLowerCase() === "undefined" || txtBot === "-") txtBot = "";
+                    if (txtBot && colBot === colCod && !txtBot.includes("COD")) txtBot = "COD: " + txtBot;
+                    if(cod) dictExcel[cod] = { top: txtTop, sub: txtSub, bot: txtBot };
+                });
+            }
 
             imagesData = [];
             document.getElementById('preview-grid').innerHTML = '<p class="col-span-full text-center text-slate-500 font-bold animate-pulse">Generando borradores...</p>';
             document.getElementById('results-section').classList.remove('hidden');
 
-            for (let file of files) {
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i];
                 let nameNoExt = file.name.substring(0, file.name.lastIndexOf('.') !== -1 ? file.name.lastIndexOf('.') : file.name.length).trim().toUpperCase();
                 
-                if (dictExcel[nameNoExt]) {
-                    const d = dictExcel[nameNoExt];
-                    const imgObj = await loadImgObj(file);
-                    
-                    const config = {
-                        file: file, name: file.name, imgObj: imgObj,
-                        top: d.top, sub: d.sub, bot: d.bot,
-                        mode: globalMode, textColor: '#000000',
-                        yTop: 0, ySub: 0, yBot: 0
-                    };
-                    
-                    config.dataUrl = renderCanvasDataUrl(config);
-                    imagesData.push(config);
+                let txtTop = "", txtSub = "", txtBot = "";
+
+                if (mode === 'excel') {
+                    if (dictExcel[nameNoExt]) {
+                        txtTop = dictExcel[nameNoExt].top;
+                        txtSub = dictExcel[nameNoExt].sub;
+                        txtBot = dictExcel[nameNoExt].bot;
+                    } else {
+                        continue; // Si está en Excel y no encuentra el código, lo saltea
+                    }
+                } else {
+                    // Modo Manual: Carga los valores de los inputs
+                    txtTop = document.getElementById(`man-top-${i}`)?.value || "";
+                    txtSub = document.getElementById(`man-sub-${i}`)?.value || "";
+                    txtBot = document.getElementById(`man-bot-${i}`)?.value || "";
                 }
+
+                const imgObj = await loadImgObj(file);
+                const config = {
+                    file: file, name: file.name, imgObj: imgObj,
+                    top: txtTop, sub: txtSub, bot: txtBot,
+                    mode: globalMode, textColor: '#000000',
+                    yTop: 0, ySub: 0, yBot: 0
+                };
+                
+                config.dataUrl = renderCanvasDataUrl(config);
+                imagesData.push(config);
             }
 
             renderGrid();
         });
 
+        // DESCARGA INDIVIDUAL DE IMAGEN
+        window.downloadSingle = function(index) {
+            const item = imagesData[index];
+            const link = document.createElement('a');
+            link.href = item.dataUrl;
+            link.download = item.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        };
+
         function renderGrid() {
             const grid = document.getElementById('preview-grid');
             grid.innerHTML = '';
+            
+            if(imagesData.length === 0) {
+                grid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold">No se encontraron coincidencias o no hay datos para renderizar.</p>';
+                return;
+            }
+
             imagesData.forEach((item, index) => {
                 grid.innerHTML += `
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group">
                         <div class="aspect-square bg-slate-100 flex items-center justify-center p-2">
                             <img id="grid-img-${index}" src="${item.dataUrl}" class="w-full h-full object-contain drop-shadow-sm" />
                         </div>
-                        <div class="p-3 bg-white flex justify-between items-center border-t border-slate-100">
-                            <p class="text-xs font-bold text-slate-700 truncate mr-2">${item.name}</p>
-                            <button onclick="openEditor(${index})" class="text-xs font-bold bg-pink-100 text-pink-600 hover:bg-pink-200 px-3 py-1.5 rounded-lg transition-colors">✏️ Editar</button>
+                        <div class="p-3 bg-white flex flex-col gap-2 border-t border-slate-100">
+                            <p class="text-[11px] font-bold text-slate-700 truncate" title="${item.name}">${item.name}</p>
+                            <div class="flex gap-2 w-full">
+                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-100 text-pink-600 hover:bg-pink-200 py-1.5 rounded transition-colors text-center shadow-sm">✏️ Editar</button>
+                                <button onclick="downloadSingle(${index})" class="flex-1 text-[11px] font-bold bg-emerald-100 text-emerald-600 hover:bg-emerald-200 py-1.5 rounded transition-colors text-center shadow-sm">⬇️ Bajar</button>
+                            </div>
                         </div>
                     </div>
                 `;
@@ -442,13 +551,12 @@
             config.yBot = parseInt(document.getElementById('edit-y-bot').value);
             
             config.dataUrl = renderCanvasDataUrl(config);
-            
             document.getElementById(`grid-img-${activeEditIndex}`).src = config.dataUrl;
             
             closeModal();
         };
 
-        // Descarga
+        // Descarga Lote ZIP
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
             if (imagesData.length === 0) return;
             const zip = new JSZip();
