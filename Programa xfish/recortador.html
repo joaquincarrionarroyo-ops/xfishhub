@@ -18,6 +18,7 @@
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         input[type=range] { width: 100%; accent-color: #10b981; }
+        input[type=color] { border: none; border-radius: 4px; padding: 0; width: 100%; height: 36px; cursor: pointer; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 selection:bg-emerald-500 selection:text-white pb-10">
@@ -102,14 +103,14 @@
                     </div>
                 </div>
 
-                <!-- NUEVA SECCIÓN: TEXTO -->
+                <!-- NUEVA SECCIÓN: TEXTO AVANZADO -->
                 <div class="lg:col-span-3 bg-white/80 p-6 rounded-2xl border border-slate-200">
                     <h3 class="text-sm font-bold text-indigo-800 mb-4 flex items-center gap-2">
-                        <span>📝</span> Texto / Marca (Opcional)
+                        <span>📝</span> Texto / Marca de Agua (Opcional)
                     </h3>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 items-end">
+                    <div class="grid grid-cols-1 md:grid-cols-5 gap-6 items-end">
                         <div class="md:col-span-2">
-                            <label class="text-xs font-bold text-slate-600 mb-2 block">Texto a mostrar (Dejar vacío si no querés texto)</label>
+                            <label class="text-xs font-bold text-slate-600 mb-2 block">Texto a mostrar (Dejar vacío para omitir)</label>
                             <input type="text" id="text-content" placeholder="Ej: Reel Shimano / $50.000" class="custom-input">
                         </div>
                         
@@ -127,6 +128,11 @@
                                 <span id="val-text-y" class="text-indigo-600">1800px</span>
                             </label>
                             <input type="range" id="text-y" min="0" max="2000" value="1800">
+                        </div>
+
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 mb-2 block">Color del Texto</label>
+                            <input type="color" id="text-color" value="#1e293b" class="rounded border border-slate-300">
                         </div>
                     </div>
                 </div>
@@ -146,11 +152,11 @@
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-emerald-500">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Recortes Finalizados (2000x2000px)</h3>
-                    <p class="text-sm text-slate-500 font-medium mt-1">Podés descargar todo el lote en ZIP o cada foto individualmente.</p>
+                    <p class="text-sm text-slate-500 font-medium mt-1">Descargá todas juntas en ZIP o usá el botón debajo de cada foto para bajarlas sueltas.</p>
                 </div>
                 <button id="btn-dl-zip" class="mt-4 md:mt-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Descargar todo en ZIP
+                    Descargar lote en ZIP
                 </button>
             </div>
 
@@ -170,10 +176,10 @@
             imglyRemoveBackground = aiModule.default;
         } catch (err) {
             console.error("Error al cargar la IA:", err);
-            alert("⚠️ ERROR CRÍTICO DE RED/CLOUDFLARE: No se pudo cargar el motor de IA:\n\n" + err.message);
+            alert("⚠️ ERROR DE RED/CLOUDFLARE: No se pudo cargar el motor de IA:\n\n" + err.message);
         }
 
-        // Helper para actualizar los numeritos de los sliders
+        // Helper para actualizar los textos de los sliders
         const updateVal = (id, suffix) => {
             document.getElementById(id).addEventListener('input', (e) => {
                 document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
@@ -206,17 +212,18 @@
             const resultsSection = document.getElementById('results-section');
             const btnProcess = document.getElementById('btn-process');
 
-            // Variables de sombra
+            // Sombras y Fondo
             const sBlur = parseInt(document.getElementById('shadow-blur').value);
             const sOpac = parseInt(document.getElementById('shadow-opacity').value) / 100;
             const sX = parseInt(document.getElementById('shadow-x').value);
             const sY = parseInt(document.getElementById('shadow-y').value);
             const bgConfig = document.getElementById('bg-color').value;
 
-            // Variables de texto
+            // Textos
             const txtContent = document.getElementById('text-content').value.trim();
             const txtSize = parseInt(document.getElementById('text-size').value);
             const txtY = parseInt(document.getElementById('text-y').value);
+            const txtColor = document.getElementById('text-color').value;
 
             const isWhiteBg = bgConfig.includes('white');
             const isPng = bgConfig.includes('png');
@@ -243,6 +250,7 @@
                         img.src = objectURL;
                     });
 
+                    // Achicar para que la IA no sature la memoria RAM
                     const maxDim = 1200;
                     const ratio = Math.min(1, maxDim / Math.max(img.width, img.height));
                     const compCanvas = document.createElement('canvas');
@@ -254,6 +262,7 @@
                     const imageData = compCtx.getImageData(0, 0, compCanvas.width, compCanvas.height);
                     URL.revokeObjectURL(objectURL);
 
+                    // Motor de IA recortando fondo
                     let cutoutBlob = await imglyRemoveBackground(imageData, imglyConfig);
                     
                     const cutoutImg = new Image();
@@ -263,6 +272,7 @@
                         cutoutImg.src = cutoutUrl;
                     });
 
+                    // Lienzo 2000x2000
                     const canvas = document.createElement('canvas');
                     canvas.width = FINAL_CANVAS_SIZE;
                     canvas.height = FINAL_CANVAS_SIZE;
@@ -275,14 +285,13 @@
                         ctx.clearRect(0, 0, canvas.width, canvas.height); 
                     }
 
-                    // Escalar objeto
+                    // Escalar objeto (Si hay texto, subimos la imagen un poquito para que no tape)
                     const SAFE_AREA = FINAL_CANVAS_SIZE * 0.80; 
                     const scaleFactor = Math.min(SAFE_AREA / cutoutImg.width, SAFE_AREA / cutoutImg.height);
                     const drawnWidth = cutoutImg.width * scaleFactor;
                     const drawnHeight = cutoutImg.height * scaleFactor;
                     const xPos = (FINAL_CANVAS_SIZE - drawnWidth) / 2;
-                    // Subimos un poquitito la imagen si hay texto para que quede mejor compensado
-                    const yOffset = txtContent ? -50 : 0; 
+                    const yOffset = txtContent ? -80 : 0; // Sube la imagen si hay texto
                     const yPos = ((FINAL_CANVAS_SIZE - drawnHeight) / 2) + yOffset;
 
                     // Sombras
@@ -294,38 +303,38 @@
                     ctx.drawImage(cutoutImg, xPos, yPos, drawnWidth, drawnHeight);
                     URL.revokeObjectURL(cutoutUrl);
 
-                    // Escribir Texto si se ingresó algo
+                    // Escribir Texto
                     if (txtContent !== "") {
-                        // Apagamos la sombra para que el texto sea nítido
-                        ctx.shadowColor = 'transparent';
+                        ctx.shadowColor = 'transparent'; // Desactiva la sombra para el texto
                         ctx.shadowBlur = 0;
                         ctx.shadowOffsetX = 0;
                         ctx.shadowOffsetY = 0;
 
                         ctx.font = `bold ${txtSize}px -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif`;
-                        ctx.fillStyle = "#1e293b"; // Color gris oscuro por defecto
+                        ctx.fillStyle = txtColor;
                         ctx.textAlign = "center";
                         ctx.textBaseline = "middle";
                         ctx.fillText(txtContent, FINAL_CANVAS_SIZE / 2, txtY);
                     }
 
                     const nameNoExt = file.name.substring(0, file.name.lastIndexOf('.'));
-                    const finalName = nameNoExt + "_ia" + outExt;
+                    const finalName = nameNoExt + "_ia_recorte" + outExt;
                     const dataUrl = canvas.toDataURL(outFormat, 0.95); 
 
                     processedImages.push({ name: finalName, dataUrl: dataUrl });
 
-                    // AGREGADO: Botón de Descarga Individual debajo del nombre
+                    // HTML CON EL BOTÓN DE DESCARGA INDIVIDUAL GIGANTE
                     previewGrid.innerHTML += `
                         <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden group flex flex-col">
                             <div class="aspect-square flex items-center justify-center p-2 relative" style="background: repeating-conic-gradient(#f1f5f9 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
                                 <img src="${dataUrl}" class="w-full h-full object-contain drop-shadow-sm" />
                             </div>
-                            <div class="p-3 bg-white text-center flex flex-col gap-2 flex-grow justify-between">
-                                <p class="text-[10px] font-bold text-slate-500 truncate" title="${finalName}">${finalName}</p>
-                                <a href="${dataUrl}" download="${finalName}" class="inline-flex items-center justify-center gap-1 w-full bg-slate-100 hover:bg-emerald-100 text-slate-600 hover:text-emerald-700 border border-slate-200 hover:border-emerald-300 font-bold py-1.5 px-2 rounded-lg text-xs transition-colors cursor-pointer">
-                                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                                    Descargar individual
+                            <div class="p-4 bg-white text-center flex flex-col gap-3 flex-grow justify-between border-t border-slate-100">
+                                <p class="text-[11px] font-bold text-slate-500 truncate" title="${finalName}">${finalName}</p>
+                                
+                                <a href="${dataUrl}" download="${finalName}" class="w-full bg-emerald-500 hover:bg-emerald-600 text-white font-bold py-2.5 px-3 rounded-lg flex items-center justify-center gap-2 transition-colors cursor-pointer shadow-md shadow-emerald-500/20">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                                    Descargar
                                 </a>
                             </div>
                         </div>
