@@ -93,14 +93,15 @@
                     <table class="w-full text-left text-sm text-slate-600">
                         <thead class="text-xs text-slate-700 uppercase bg-slate-100/50">
                             <tr>
-                                <th class="px-4 py-3 rounded-tl-lg">Código</th>
-                                <th class="px-4 py-3">Nombre</th>
-                                <th class="px-4 py-3 text-right bg-indigo-50/50">Unid x Bulto</th>
-                                <th class="px-4 py-3 text-right bg-indigo-50/50">Cant. Bultos</th>
-                                <th class="px-4 py-3 text-right font-bold text-indigo-700 bg-indigo-100/50">Total Alta</th>
-                                <th class="px-4 py-3 text-right border-l border-slate-200">Precio Viejo</th>
-                                <th class="px-4 py-3 text-right text-emerald-700 bg-emerald-50/50">Precio Nuevo</th>
-                                <th class="px-4 py-3 text-right border-l border-slate-200">Stock Anterior</th>
+                                <th class="px-3 py-3 rounded-tl-lg">Código</th>
+                                <th class="px-3 py-3">Nombre</th>
+                                <th class="px-3 py-3 text-right border-l border-slate-200">Pre. Viejo</th>
+                                <th class="px-3 py-3 text-right text-emerald-700 bg-emerald-50/50">Pre. Nuevo</th>
+                                <th class="px-3 py-3 text-right border-l border-slate-200">Stock Anterior</th>
+                                <th class="px-3 py-3 text-right bg-indigo-50/50">Unid/Bulto</th>
+                                <th class="px-3 py-3 text-right bg-indigo-50/50">Bultos</th>
+                                <th class="px-3 py-3 text-right font-bold text-indigo-700 bg-indigo-100/50">Total Alta</th>
+                                <th class="px-3 py-3 text-right rounded-tr-lg">Diferencia Stock</th>
                             </tr>
                         </thead>
                         <tbody id="table-body" class="divide-y divide-slate-100">
@@ -119,7 +120,6 @@
         let headersNuevo = [];
         let finalMergedData = [];
 
-        // Lector genérico de Excel
         function handleExcelUpload(fileInputId, mapContainerId, selectIds, dataArrayRef, headerArrayRef) {
             document.getElementById(fileInputId).addEventListener('change', (e) => {
                 if(e.target.files.length) {
@@ -132,11 +132,9 @@
                         const jsonData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
                         const headers = XLSX.utils.sheet_to_json(sheet, {header: 1})[0] || [];
                         
-                        // Guardar los datos en el array correspondiente (hack de JS usando window para mutar referencias globales)
                         if(fileInputId === 'file-excel-viejo') { dataViejo = jsonData; headersViejo = headers; }
                         else { dataNuevo = jsonData; headersNuevo = headers; }
 
-                        // Llenar los selectores
                         selectIds.forEach(id => {
                             const select = document.getElementById(id);
                             const isOptional = (id !== 'v-cod' && id !== 'n-cod');
@@ -154,11 +152,9 @@
             });
         }
 
-        // Inicializar lectores
         handleExcelUpload('file-excel-viejo', 'map-viejo', ['v-cod', 'v-nom', 'v-pre', 'v-can']);
         handleExcelUpload('file-excel-nuevo', 'map-nuevo', ['n-cod', 'n-pre', 'n-uni', 'n-bul', 'n-tot']);
 
-        // Función para limpiar números
         function parseNum(val) {
             if(val === undefined || val === null || val === "") return 0;
             if(typeof val === 'number') return val;
@@ -167,7 +163,6 @@
             return isNaN(num) ? 0 : num;
         }
 
-        // Botón Procesar
         document.getElementById('btn-process').addEventListener('click', () => {
             const vCod = document.getElementById('v-cod').value;
             const nCod = document.getElementById('n-cod').value;
@@ -177,7 +172,6 @@
                 return;
             }
 
-            // Crear diccionario del Inventario Viejo para buscar rápido
             const vNom = document.getElementById('v-nom').value;
             const vPre = document.getElementById('v-pre').value;
             const vCan = document.getElementById('v-can').value;
@@ -188,7 +182,6 @@
                 if(cod) dictViejo[cod] = row;
             });
 
-            // Mapeo del Excel Nuevo
             const nPre = document.getElementById('n-pre').value;
             const nUni = document.getElementById('n-uni').value;
             const nBul = document.getElementById('n-bul').value;
@@ -200,18 +193,14 @@
 
             let count = 0;
 
-            // Procesar fila por fila del ALTA (Excel Nuevo)
             dataNuevo.forEach(rowNuevo => {
                 let cod = String(rowNuevo[nCod]||"").trim().toUpperCase();
-                if(!cod) return; // Saltar filas sin código
+                if(!cod) return; 
 
-                let rowViejo = dictViejo[cod] || {}; // Si no existe en el viejo, devuelve vacío
+                let rowViejo = dictViejo[cod] || {}; 
 
-                // Cálculos
                 let uni = parseNum(rowNuevo[nUni]);
                 let bul = parseNum(rowNuevo[nBul]);
-                
-                // Si la columna de Cantidad Total no fue marcada, se auto calcula (unidades * bultos)
                 let totalAlta = nTot && rowNuevo[nTot] !== "" ? parseNum(rowNuevo[nTot]) : (uni * bul);
 
                 let preNuevo = parseNum(rowNuevo[nPre]);
@@ -219,32 +208,41 @@
                 let stockViejo = parseNum(rowViejo[vCan]);
                 let nombre = rowViejo[vNom] ? rowViejo[vNom] : (rowNuevo['Nombre'] || rowNuevo['Descripción'] || "S/N");
 
-                // Objeto exacto que va al Excel
+                // Cálculo de la diferencia
+                let diferenciaStock = totalAlta - stockViejo;
+                
+                // Formateo visual para la tabla
+                let difClass = "text-slate-600";
+                let difSign = "";
+                if (diferenciaStock > 0) { difClass = "text-emerald-600 font-bold bg-emerald-50/50"; difSign = "+"; }
+                else if (diferenciaStock < 0) { difClass = "text-red-500 font-bold bg-red-50/50"; }
+
                 const mergedRow = {
                     "Código": cod,
                     "Nombre": nombre,
                     "Unidades por bulto": uni,
                     "Cantidad de bultos": bul,
-                    "Cantidad total": totalAlta,
+                    "Cantidad total (Alta)": totalAlta,
                     "Precio viejo": preViejo,
                     "Precio nuevo": preNuevo,
-                    "Cantidad del primer excel": stockViejo
+                    "Stock anterior": stockViejo,
+                    "Diferencia de Stock": diferenciaStock
                 };
 
                 finalMergedData.push(mergedRow);
 
-                // Dibujar preview (solo los primeros 50 para no trabar el navegador)
                 if (count < 50) {
                     tbody.innerHTML += `
                         <tr class="hover:bg-slate-50 transition-colors">
-                            <td class="px-4 py-2 font-mono text-xs font-bold text-slate-800">${cod}</td>
-                            <td class="px-4 py-2 text-xs truncate max-w-[200px]" title="${nombre}">${nombre}</td>
-                            <td class="px-4 py-2 text-right bg-indigo-50/20">${uni}</td>
-                            <td class="px-4 py-2 text-right bg-indigo-50/20">${bul}</td>
-                            <td class="px-4 py-2 text-right font-bold text-indigo-700 bg-indigo-50/60">${totalAlta}</td>
-                            <td class="px-4 py-2 text-right border-l border-slate-200">$${preViejo.toLocaleString('es-AR')}</td>
-                            <td class="px-4 py-2 text-right font-bold text-emerald-700 bg-emerald-50/30">$${preNuevo.toLocaleString('es-AR')}</td>
-                            <td class="px-4 py-2 text-right border-l border-slate-200">${stockViejo}</td>
+                            <td class="px-3 py-2 font-mono text-[11px] font-bold text-slate-800">${cod}</td>
+                            <td class="px-3 py-2 text-[11px] truncate max-w-[150px]" title="${nombre}">${nombre}</td>
+                            <td class="px-3 py-2 text-right text-xs border-l border-slate-200">$${preViejo.toLocaleString('es-AR')}</td>
+                            <td class="px-3 py-2 text-right text-xs font-bold text-emerald-700 bg-emerald-50/30">$${preNuevo.toLocaleString('es-AR')}</td>
+                            <td class="px-3 py-2 text-right text-xs border-l border-slate-200">${stockViejo}</td>
+                            <td class="px-3 py-2 text-right text-xs bg-indigo-50/20">${uni}</td>
+                            <td class="px-3 py-2 text-right text-xs bg-indigo-50/20">${bul}</td>
+                            <td class="px-3 py-2 text-right text-xs font-bold text-indigo-700 bg-indigo-50/60">${totalAlta}</td>
+                            <td class="px-3 py-2 text-right text-xs ${difClass}">${difSign}${diferenciaStock}</td>
                         </tr>
                     `;
                 }
@@ -252,14 +250,13 @@
             });
 
             if(count > 50) {
-                tbody.innerHTML += `<tr><td colspan="8" class="text-center py-3 text-xs font-bold text-slate-400 bg-slate-50">... y ${count - 50} filas más ocultas (se descargarán en el Excel)</td></tr>`;
+                tbody.innerHTML += `<tr><td colspan="9" class="text-center py-3 text-xs font-bold text-slate-400 bg-slate-50">... y ${count - 50} filas más ocultas (se descargarán en el Excel)</td></tr>`;
             }
 
             document.getElementById('results-count').textContent = `Se procesaron y combinaron ${count} productos del Alta Nueva.`;
             document.getElementById('results-section').classList.remove('hidden');
         });
 
-        // Botón Descargar
         document.getElementById('btn-dl-excel').addEventListener('click', () => {
             if(finalMergedData.length === 0) return;
 
@@ -267,7 +264,6 @@
             const workbook = XLSX.utils.book_new();
             XLSX.utils.book_append_sheet(workbook, worksheet, "Alta Combinada");
             
-            // Generar archivo y forzar descarga
             XLSX.writeFile(workbook, "XFish_Cruce_Alta_Inventario.xlsx");
         });
     </script>
