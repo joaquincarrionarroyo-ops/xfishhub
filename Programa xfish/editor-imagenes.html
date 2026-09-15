@@ -25,8 +25,9 @@
         .modal-overlay { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 100; }
         .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
         
-        /* Touch sliders (evita que la pantalla scrollee al mover el dedo horizontalmente) */
+        /* Touch sliders */
         input[type=range] { width: 100%; accent-color: #ec4899; touch-action: pan-x; }
+        input[type=color] { border: none; border-radius: 4px; padding: 0; cursor: pointer; }
         textarea.custom-input { resize: vertical; min-height: 60px; }
     </style>
 </head>
@@ -53,7 +54,6 @@
         <div class="glass-panel rounded-3xl p-6 md:p-8">
             <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
-            <!-- SELECTOR DE MODO -->
             <div class="mb-6 flex flex-col sm:flex-row gap-4 sm:gap-6 border-b border-slate-100 pb-4">
                 <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors p-2 rounded-lg hover:bg-white/50">
                     <input type="radio" name="input-mode" value="excel" checked class="accent-pink-600 w-5 h-5">
@@ -66,7 +66,7 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6">
-                <!-- CONTENEDOR EXCEL -->
+                <!-- EXCEL -->
                 <div id="excel-input-container" class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
@@ -75,7 +75,7 @@
                     </div>
                 </div>
 
-                <!-- CONTENEDOR IMÁGENES -->
+                <!-- IMÁGENES -->
                 <div class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
@@ -85,28 +85,36 @@
                 </div>
             </div>
 
-            <!-- MODO DE DISEÑO Y POSICIONES GLOBALES -->
-            <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner">
-                <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 border-b border-slate-200 pb-2">⚙️ Ajustes Globales de Diseño</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- MODO DE DISEÑO CON MOCKUP EN VIVO -->
+            <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
+                
+                <!-- Controles Globales -->
+                <div class="w-full lg:w-1/2 space-y-5">
+                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales (Aplica a todas)</h3>
                     
-                    <div class="lg:col-span-1">
-                        <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño Base</label>
-                        <select id="global-mode" class="custom-select w-full">
-                            <option value="margin">🖼️ Cuadrado c/ Márgenes Blancos</option>
-                            <option value="overlay">📸 Texto Superpuesto (Foto Original)</option>
-                        </select>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Modo de Diseño Base</label>
+                            <select id="global-mode" class="custom-select w-full">
+                                <option value="margin">🖼️ Lienzo c/ Márgenes</option>
+                                <option value="overlay">📸 Texto Superpuesto</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Color General</label>
+                            <input type="color" id="global-color" value="#000000" class="w-full h-[36px] rounded border border-slate-300 bg-white p-1">
+                        </div>
                     </div>
-                    
-                    <div class="lg:col-span-1">
-                        <label class="text-xs font-semibold text-slate-600 flex justify-between mb-2">
-                            <span>Escala del Texto</span>
-                            <span id="val-global-scale" class="text-pink-600">100%</span>
+
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                            <span>Tamaño del Texto General</span>
+                            <span id="val-global-scale" class="text-pink-600 font-bold">100%</span>
                         </label>
                         <input type="range" id="global-scale" min="10" max="300" value="100">
                     </div>
 
-                    <div class="lg:col-span-1 border-l-0 lg:border-l border-slate-200 lg:pl-4 space-y-4">
+                    <div class="space-y-4 pt-2 border-t border-slate-200">
                         <div>
                             <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
                                 <span>Altura TÍTULO</span><span id="val-global-y-top">0px</span>
@@ -126,8 +134,22 @@
                             <input type="range" id="global-y-bot" min="-500" max="500" value="0">
                         </div>
                     </div>
-
                 </div>
+
+                <!-- Previsualización / Mockup en Vivo -->
+                <div class="w-full lg:w-1/2 flex flex-col">
+                    <h3 class="text-sm font-bold text-pink-700 border-b border-pink-200 pb-2 mb-4">👁️ Previsualización en Vivo</h3>
+                    <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[250px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
+                        
+                        <div id="mockup-placeholder" class="text-center">
+                            <span class="text-4xl mb-2 block">📸</span>
+                            <span class="text-xs text-slate-500 font-bold">Subí fotos en el paso 1<br>para ver el borrador en vivo</span>
+                        </div>
+                        
+                        <img id="global-mockup-img" class="hidden max-h-[300px] w-auto object-contain drop-shadow-md rounded" />
+                    </div>
+                </div>
+
             </div>
 
             <!-- SECCIÓN MAPEO EXCEL -->
@@ -150,19 +172,19 @@
             </div>
 
             <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/30 transform transition-all duration-200 active:scale-95 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
-                🎨 Generar Borradores
+                🎨 Procesar Lote Completo
             </button>
         </div>
 
         <div id="results-section" class="hidden space-y-6">
             
-            <!-- ALERTA DE ERRORES E IGNORADOS -->
+            <!-- ALERTA DE ERRORES -->
             <div id="error-alerts" class="w-full"></div>
 
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500">
                 <div class="mb-4 md:mb-0 w-full md:w-auto text-center md:text-left">
                     <h3 class="text-lg font-bold text-slate-800" id="results-text">Borradores generados</h3>
-                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Revisá, editá y descargá tus imágenes.</p>
+                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Revisá, editá individualmente y descargá.</p>
                 </div>
                 <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform hover:-translate-y-0.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -182,23 +204,19 @@
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[95vh] md:h-auto md:max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative">
             
-            <!-- Botón Cerrar Flotante Móvil -->
             <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/80 backdrop-blur w-8 h-8 flex items-center justify-center rounded-full text-red-500 font-bold shadow">&times;</button>
 
-            <!-- Vista Previa en Vivo -->
-            <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-200 h-[40vh] md:h-auto shrink-0">
+            <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-200 h-[40vh] md:h-auto shrink-0" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
                 <img id="modal-preview-img" class="max-w-full max-h-full object-contain drop-shadow-md rounded bg-white" />
             </div>
 
-            <!-- Panel de Controles -->
             <div class="w-full md:w-1/2 p-4 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
                 <div class="hidden md:flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Manual</h2>
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Individual</h2>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl">&times;</button>
                 </div>
 
                 <div class="space-y-5 ios-scroll flex-grow pr-2 pb-6">
-                    
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
                         <label class="text-[11px] font-bold text-slate-700 uppercase mb-2 block">Estilo de Fondo</label>
                         <select id="edit-mode" class="custom-select mb-4">
@@ -209,7 +227,7 @@
                         <div class="flex justify-between gap-4">
                             <div class="w-1/2">
                                 <label class="text-[11px] font-bold text-slate-700 uppercase mb-2 block">Color</label>
-                                <input type="color" id="edit-color" class="w-10 h-10 rounded cursor-pointer border-0">
+                                <input type="color" id="edit-color" class="w-full h-[36px] rounded cursor-pointer border border-slate-300 bg-white p-1">
                             </div>
                             <div class="w-1/2">
                                 <label class="text-[11px] font-bold text-slate-700 uppercase flex justify-between mb-2">
@@ -220,7 +238,6 @@
                         </div>
                     </div>
 
-                    <!-- Controles Individuales T/S/B -->
                     <div class="space-y-4">
                         <div>
                             <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Título</label>
@@ -259,19 +276,54 @@
         let activeEditIndex = -1; 
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-        // Helpers UI Sliders
+        // --- SISTEMA DE MOCKUP EN VIVO ---
+        let globalMockupImgObj = null;
+
         const updateVal = (id, suffix) => {
             document.getElementById(id).addEventListener('input', (e) => {
                 document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
             });
         };
         updateVal('global-scale', '%');
-        updateVal('edit-scale', '%');
         updateVal('global-y-top', 'px');
         updateVal('global-y-sub', 'px');
         updateVal('global-y-bot', 'px');
+        updateVal('edit-scale', '%');
 
-        // LÓGICA DE CAMBIO DE MODOS
+        // Actualizar Mockup
+        function updateGlobalPreview() {
+            if (!globalMockupImgObj) return;
+
+            const mode = document.getElementById('global-mode').value;
+            const color = document.getElementById('global-color').value;
+            const scale = parseInt(document.getElementById('global-scale').value);
+            const yTop = parseInt(document.getElementById('global-y-top').value);
+            const ySub = parseInt(document.getElementById('global-y-sub').value);
+            const yBot = parseInt(document.getElementById('global-y-bot').value);
+
+            // Armamos un config de prueba para que el usuario siempre vea dónde caen los textos
+            const mockupConfig = {
+                imgObj: globalMockupImgObj,
+                mode: mode,
+                textColor: color,
+                textScale: scale,
+                top: "TÍTULO DE PRODUCTO\nSEGUNDO RENGLÓN",
+                sub: "Subtítulo descriptivo",
+                bot: "COD: PRUEBA-001\nPRECIO: $99.999",
+                yTop: yTop,
+                ySub: ySub,
+                yBot: yBot
+            };
+
+            const dataUrl = renderCanvasDataUrl(mockupConfig);
+            document.getElementById('global-mockup-img').src = dataUrl;
+        }
+
+        ['global-mode', 'global-color', 'global-scale', 'global-y-top', 'global-y-sub', 'global-y-bot'].forEach(id => {
+            document.getElementById(id).addEventListener('input', updateGlobalPreview);
+        });
+        // ---------------------------------
+
         const modeRadios = document.getElementsByName('input-mode');
         const excelInputContainer = document.getElementById('excel-input-container');
         const mappingSection = document.getElementById('mapping-section');
@@ -314,9 +366,18 @@
             });
         });
 
-        fileImages.addEventListener('change', () => {
+        fileImages.addEventListener('change', async () => {
             if (document.querySelector('input[name="input-mode"]:checked').value === 'manual') {
                 renderManualInputs();
+            }
+            // Si cargó fotos, inicializamos el Mockup con la primera foto
+            if(fileImages.files.length > 0) {
+                try {
+                    globalMockupImgObj = await loadImgObj(fileImages.files[0]);
+                    document.getElementById('mockup-placeholder').classList.add('hidden');
+                    document.getElementById('global-mockup-img').classList.remove('hidden');
+                    updateGlobalPreview();
+                } catch(e) { console.error("Error cargando mockup", e); }
             }
         });
 
@@ -481,9 +542,9 @@
             const files = fileImages.files;
             const mode = document.querySelector('input[name="input-mode"]:checked').value;
             const globalMode = document.getElementById('global-mode').value;
+            const globalColor = document.getElementById('global-color').value;
             const globalScale = parseInt(document.getElementById('global-scale').value);
             
-            // Alturas Globales
             const gYTop = parseInt(document.getElementById('global-y-top').value);
             const gYSub = parseInt(document.getElementById('global-y-sub').value);
             const gYBot = parseInt(document.getElementById('global-y-bot').value);
@@ -550,7 +611,7 @@
                     const config = {
                         file: file, name: file.name, imgObj: imgObj,
                         top: txtTop, sub: txtSub, bot: txtBot,
-                        mode: globalMode, textColor: '#000000',
+                        mode: globalMode, textColor: globalColor,
                         textScale: globalScale, 
                         yTop: gYTop, ySub: gYSub, yBot: gYBot
                     };
@@ -562,7 +623,7 @@
                 }
             }
 
-            // Mostrar Errores e Ignorados
+            // Reporte de Errores e Ignorados
             let errorHtml = '';
             if (unmatchedFiles.length > 0) {
                 errorHtml += `
@@ -646,13 +707,12 @@
 
             updateModalPreview();
             modal.classList.remove('hidden');
-            // Evitar scroll del body en iOS al abrir modal
-            document.body.style.overflow = 'hidden';
+            document.body.style.overflow = 'hidden'; // Bloquea scroll fondo iOS
         };
 
         window.closeModal = function() { 
             modal.classList.add('hidden'); 
-            document.body.style.overflow = 'auto'; // Restaurar scroll
+            document.body.style.overflow = 'auto'; // Restaura scroll
         };
 
         function updateModalPreview() {
