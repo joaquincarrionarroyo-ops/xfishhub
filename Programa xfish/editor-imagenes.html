@@ -2,26 +2,31 @@
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Estampador Dinámico de Banners | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; -webkit-tap-highlight-color: transparent; }
         .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
         .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
         .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background-color: rgba(255, 255, 255, 0.8); outline: none; transition: all 0.2s; font-weight: 600; color: #334155; }
         .custom-select:focus, .custom-input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.2); background-color: #fff; }
-        ::-webkit-scrollbar { width: 8px; height: 8px; }
+        
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Modal Styles & Textareas */
+        /* Modal & iOS Optimization */
         .modal-overlay { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 100; }
-        input[type=range] { width: 100%; accent-color: #ec4899; }
+        .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
+        
+        /* Touch sliders (evita que la pantalla scrollee al mover el dedo horizontalmente) */
+        input[type=range] { width: 100%; accent-color: #ec4899; touch-action: pan-x; }
         textarea.custom-input { resize: vertical; min-height: 60px; }
     </style>
 </head>
@@ -31,37 +36,37 @@
     <div class="blob bg-indigo-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
     <div class="blob bg-purple-200 w-[300px] h-[300px] top-[40%] left-[50%] opacity-40" style="animation-delay: -4s;"></div>
 
-    <header class="glass-panel sticky top-0 z-50 px-8 py-4 mb-8">
+    <header class="glass-panel sticky top-0 z-50 px-6 md:px-8 py-4 mb-8">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 class="text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center">
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 Estampador Dinámico
             </h1>
-            <a href="index.html" class="text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver al Hub</a>
+            <a href="index.html" class="text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver</a>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto w-full px-6 space-y-6 relative z-10">
+    <main class="max-w-7xl mx-auto w-full px-4 md:px-6 space-y-6 relative z-10">
         
-        <div class="glass-panel rounded-3xl p-8">
+        <div class="glass-panel rounded-3xl p-6 md:p-8">
             <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
             <!-- SELECTOR DE MODO -->
-            <div class="mb-6 flex gap-6 border-b border-slate-100 pb-4">
-                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors">
-                    <input type="radio" name="input-mode" value="excel" checked class="accent-pink-600 w-4 h-4">
+            <div class="mb-6 flex flex-col sm:flex-row gap-4 sm:gap-6 border-b border-slate-100 pb-4">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors p-2 rounded-lg hover:bg-white/50">
+                    <input type="radio" name="input-mode" value="excel" checked class="accent-pink-600 w-5 h-5">
                     Usar Excel (Automático)
                 </label>
-                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors">
-                    <input type="radio" name="input-mode" value="manual" class="accent-pink-600 w-4 h-4">
+                <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors p-2 rounded-lg hover:bg-white/50">
+                    <input type="radio" name="input-mode" value="manual" class="accent-pink-600 w-5 h-5">
                     Carga Manual (Foto por foto)
                 </label>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-6">
-                <!-- CONTENEDOR EXCEL (Se oculta en modo manual) -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6">
+                <!-- CONTENEDOR EXCEL -->
                 <div id="excel-input-container" class="relative group">
                     <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 transition duration-200"></div>
                     <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
@@ -80,28 +85,55 @@
                 </div>
             </div>
 
-            <!-- MODO DE DISEÑO (Común) -->
-            <div class="mb-6 bg-slate-50 p-4 rounded-xl border border-slate-200 grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div>
-                    <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño por Defecto</label>
-                    <select id="global-mode" class="custom-select w-full">
-                        <option value="margin">🖼️ Cuadrado con Márgenes Blancos (Ideal Catálogo)</option>
-                        <option value="overlay">📸 Texto Superpuesto a la Foto (Sin achicar la imagen)</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="text-xs font-semibold text-slate-600 flex justify-between mb-2">
-                        <span>Tamaño del Texto</span>
-                        <span id="val-global-scale" class="text-pink-600">100%</span>
-                    </label>
-                    <input type="range" id="global-scale" min="10" max="300" value="100">
+            <!-- MODO DE DISEÑO Y POSICIONES GLOBALES -->
+            <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner">
+                <h3 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2 border-b border-slate-200 pb-2">⚙️ Ajustes Globales de Diseño</h3>
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    
+                    <div class="lg:col-span-1">
+                        <label class="text-xs font-semibold text-slate-600 mb-2 block">Modo de Diseño Base</label>
+                        <select id="global-mode" class="custom-select w-full">
+                            <option value="margin">🖼️ Cuadrado c/ Márgenes Blancos</option>
+                            <option value="overlay">📸 Texto Superpuesto (Foto Original)</option>
+                        </select>
+                    </div>
+                    
+                    <div class="lg:col-span-1">
+                        <label class="text-xs font-semibold text-slate-600 flex justify-between mb-2">
+                            <span>Escala del Texto</span>
+                            <span id="val-global-scale" class="text-pink-600">100%</span>
+                        </label>
+                        <input type="range" id="global-scale" min="10" max="300" value="100">
+                    </div>
+
+                    <div class="lg:col-span-1 border-l-0 lg:border-l border-slate-200 lg:pl-4 space-y-4">
+                        <div>
+                            <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
+                                <span>Altura TÍTULO</span><span id="val-global-y-top">0px</span>
+                            </label>
+                            <input type="range" id="global-y-top" min="-500" max="500" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-amber-600 uppercase flex justify-between">
+                                <span>Altura SUBTÍTULO</span><span id="val-global-y-sub">0px</span>
+                            </label>
+                            <input type="range" id="global-y-sub" min="-500" max="500" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-emerald-600 uppercase flex justify-between">
+                                <span>Altura TEXTO ABAJO</span><span id="val-global-y-bot">0px</span>
+                            </label>
+                            <input type="range" id="global-y-bot" min="-500" max="500" value="0">
+                        </div>
+                    </div>
+
                 </div>
             </div>
 
             <!-- SECCIÓN MAPEO EXCEL -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
                 <h3 class="text-sm font-bold text-pink-800 mb-4">Mapeo de Columnas (Excel)</h3>
-                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label><select id="col-cod" class="custom-select"></select></div>
                     <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Título ARRIBA</label><select id="col-texto-arriba" class="custom-select"></select></div>
                     <div><label class="text-xs font-semibold text-amber-600 mb-1 block">Subtítulo ARRIBA</label><select id="col-texto-sub" class="custom-select border-amber-300 bg-amber-50/30"></select></div>
@@ -110,32 +142,36 @@
             </div>
 
             <!-- SECCIÓN CARGA MANUAL -->
-            <div id="manual-input-section" class="hidden bg-indigo-50/50 p-5 rounded-2xl border border-indigo-100/50 mb-6 max-h-[500px] overflow-y-auto">
-                <h3 class="text-sm font-bold text-indigo-800 mb-4">Textos Manuales por Foto</h3>
+            <div id="manual-input-section" class="hidden bg-indigo-50/50 p-4 md:p-5 rounded-2xl border border-indigo-100/50 mb-6 max-h-[60vh] ios-scroll">
+                <h3 class="text-sm font-bold text-indigo-800 mb-4 sticky top-0 bg-indigo-50/90 backdrop-blur pb-2 z-10">Textos Manuales por Foto</h3>
                 <div id="manual-text-list" class="space-y-4">
                     <p class="text-xs text-slate-500 italic">Seleccioná las imágenes para poder cargarles el texto a cada una.</p>
                 </div>
             </div>
 
-            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/30 transform transition-all duration-200 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
+            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/30 transform transition-all duration-200 active:scale-95 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
                 🎨 Generar Borradores
             </button>
         </div>
 
         <div id="results-section" class="hidden space-y-6">
+            
+            <!-- ALERTA DE ERRORES E IGNORADOS -->
+            <div id="error-alerts" class="w-full"></div>
+
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500">
-                <div>
+                <div class="mb-4 md:mb-0 w-full md:w-auto text-center md:text-left">
                     <h3 class="text-lg font-bold text-slate-800" id="results-text">Borradores generados</h3>
                     <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Revisá, editá y descargá tus imágenes.</p>
                 </div>
-                <button id="btn-dl-zip" class="mt-4 md:mt-0 bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center gap-2 transition-transform hover:-translate-y-0.5">
+                <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform hover:-translate-y-0.5">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Descargar ZIP Final
                 </button>
             </div>
 
-            <div class="glass-panel rounded-3xl p-6">
-                <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+            <div class="glass-panel rounded-3xl p-4 md:p-6">
+                <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
                     <!-- Cards de imágenes -->
                 </div>
             </div>
@@ -143,72 +179,72 @@
     </main>
 
     <!-- MODAL EDITOR INDIVIDUAL -->
-    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl max-h-[90vh] flex flex-col md:flex-row overflow-hidden">
+    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[95vh] md:h-auto md:max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative">
             
+            <!-- Botón Cerrar Flotante Móvil -->
+            <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/80 backdrop-blur w-8 h-8 flex items-center justify-center rounded-full text-red-500 font-bold shadow">&times;</button>
+
             <!-- Vista Previa en Vivo -->
-            <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 border-r border-slate-200">
-                <img id="modal-preview-img" class="max-w-full max-h-[40vh] md:max-h-[80vh] object-contain drop-shadow-md rounded bg-white" />
+            <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-200 h-[40vh] md:h-auto shrink-0">
+                <img id="modal-preview-img" class="max-w-full max-h-full object-contain drop-shadow-md rounded bg-white" />
             </div>
 
             <!-- Panel de Controles -->
-            <div class="w-full md:w-1/2 p-6 flex flex-col h-full max-h-[50vh] md:max-h-[90vh] overflow-y-auto">
-                <div class="flex justify-between items-center mb-6 pb-4 border-b border-slate-200">
+            <div class="w-full md:w-1/2 p-4 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
+                <div class="hidden md:flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
                     <h2 class="text-xl font-extrabold text-slate-800">Ajuste Manual</h2>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-xl">&times;</button>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl">&times;</button>
                 </div>
 
-                <div class="space-y-6 flex-grow">
-                    <!-- Config Global de la Foto -->
+                <div class="space-y-5 ios-scroll flex-grow pr-2 pb-6">
+                    
                     <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <label class="text-xs font-bold text-slate-700 uppercase mb-2 block">Estilo de Fondo</label>
+                        <label class="text-[11px] font-bold text-slate-700 uppercase mb-2 block">Estilo de Fondo</label>
                         <select id="edit-mode" class="custom-select mb-4">
-                            <option value="margin">Con Márgenes (Lienzo Cuadrado Blanco)</option>
+                            <option value="margin">Con Márgenes (Lienzo Blanco)</option>
                             <option value="overlay">Superpuesto (Foto Original)</option>
                         </select>
 
                         <div class="flex justify-between gap-4">
                             <div class="w-1/2">
-                                <label class="text-xs font-bold text-slate-700 uppercase mb-2 block">Color del Texto</label>
+                                <label class="text-[11px] font-bold text-slate-700 uppercase mb-2 block">Color</label>
                                 <input type="color" id="edit-color" class="w-10 h-10 rounded cursor-pointer border-0">
                             </div>
                             <div class="w-1/2">
-                                <label class="text-xs font-bold text-slate-700 uppercase flex justify-between mb-2">
-                                    <span>Tamaño</span>
-                                    <span id="val-edit-scale" class="text-pink-600">100%</span>
+                                <label class="text-[11px] font-bold text-slate-700 uppercase flex justify-between mb-2">
+                                    <span>Tamaño</span><span id="val-edit-scale" class="text-pink-600">100%</span>
                                 </label>
                                 <input type="range" id="edit-scale" min="10" max="300" value="100">
                             </div>
                         </div>
                     </div>
 
-                    <!-- Título -->
-                    <div>
-                        <label class="text-xs font-bold text-blue-600 uppercase mb-1 block">Título</label>
-                        <textarea id="edit-txt-top" class="custom-input mb-2" rows="2" placeholder="Podés usar Enter para renglones"></textarea>
-                        <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
-                        <input type="range" id="edit-y-top" min="-500" max="500" value="0">
-                    </div>
-
-                    <!-- Subtítulo -->
-                    <div>
-                        <label class="text-xs font-bold text-amber-600 uppercase mb-1 block">Subtítulo</label>
-                        <textarea id="edit-txt-sub" class="custom-input mb-2" rows="2" placeholder="Podés usar Enter para renglones"></textarea>
-                        <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
-                        <input type="range" id="edit-y-sub" min="-500" max="500" value="0">
-                    </div>
-
-                    <!-- Abajo -->
-                    <div>
-                        <label class="text-xs font-bold text-emerald-600 uppercase mb-1 block">Texto Abajo</label>
-                        <textarea id="edit-txt-bot" class="custom-input mb-2" rows="2" placeholder="Podés usar Enter para renglones"></textarea>
-                        <label class="text-[10px] text-slate-500 flex justify-between"><span>Subir</span><span>Bajar</span></label>
-                        <input type="range" id="edit-y-bot" min="-500" max="500" value="0">
+                    <!-- Controles Individuales T/S/B -->
+                    <div class="space-y-4">
+                        <div>
+                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Título</label>
+                            <textarea id="edit-txt-top" class="custom-input mb-1 text-xs" rows="2"></textarea>
+                            <label class="text-[9px] font-bold text-slate-400 flex justify-between uppercase"><span>↑ Subir</span><span>Bajar ↓</span></label>
+                            <input type="range" id="edit-y-top" min="-500" max="500" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Subtítulo</label>
+                            <textarea id="edit-txt-sub" class="custom-input mb-1 text-xs" rows="2"></textarea>
+                            <label class="text-[9px] font-bold text-slate-400 flex justify-between uppercase"><span>↑ Subir</span><span>Bajar ↓</span></label>
+                            <input type="range" id="edit-y-sub" min="-500" max="500" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-emerald-600 uppercase mb-1 block">Texto Abajo</label>
+                            <textarea id="edit-txt-bot" class="custom-input mb-1 text-xs" rows="2"></textarea>
+                            <label class="text-[9px] font-bold text-slate-400 flex justify-between uppercase"><span>↑ Subir</span><span>Bajar ↓</span></label>
+                            <input type="range" id="edit-y-bot" min="-500" max="500" value="0">
+                        </div>
                     </div>
                 </div>
 
-                <div class="mt-6 pt-4 border-t border-slate-200">
-                    <button onclick="saveModalChanges()" class="w-full bg-pink-500 hover:bg-pink-600 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors">
+                <div class="mt-4 pt-3 border-t border-slate-200 shrink-0 bg-white">
+                    <button onclick="saveModalChanges()" class="w-full bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors text-sm">
                         ✅ Aplicar Cambios
                     </button>
                 </div>
@@ -223,7 +259,7 @@
         let activeEditIndex = -1; 
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-        // Helper Slider Textos
+        // Helpers UI Sliders
         const updateVal = (id, suffix) => {
             document.getElementById(id).addEventListener('input', (e) => {
                 document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
@@ -231,8 +267,11 @@
         };
         updateVal('global-scale', '%');
         updateVal('edit-scale', '%');
+        updateVal('global-y-top', 'px');
+        updateVal('global-y-sub', 'px');
+        updateVal('global-y-bot', 'px');
 
-        // LÓGICA DE CAMBIO DE MODOS (Excel vs Manual)
+        // LÓGICA DE CAMBIO DE MODOS
         const modeRadios = document.getElementsByName('input-mode');
         const excelInputContainer = document.getElementById('excel-input-container');
         const mappingSection = document.getElementById('mapping-section');
@@ -248,9 +287,9 @@
             }
             Array.from(fileImages.files).forEach((file, index) => {
                 list.innerHTML += `
-                    <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-3">
-                        <span class="text-sm font-bold text-slate-700 border-b border-slate-100 pb-2" title="${file.name}"><span class="text-indigo-500">#${index+1}</span> ${file.name}</span>
-                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                    <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
+                        <span class="text-xs font-bold text-slate-700 border-b border-slate-100 pb-2 truncate" title="${file.name}"><span class="text-indigo-500">#${index+1}</span> ${file.name}</span>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
                             <textarea id="man-top-${index}" placeholder="Título ARRIBA" class="custom-input text-xs border-blue-200 focus:border-blue-500" rows="2"></textarea>
                             <textarea id="man-sub-${index}" placeholder="Subtítulo ARRIBA" class="custom-input text-xs border-amber-200 focus:border-amber-500" rows="2"></textarea>
                             <textarea id="man-bot-${index}" placeholder="Texto ABAJO" class="custom-input text-xs border-emerald-200 focus:border-emerald-500" rows="2"></textarea>
@@ -308,11 +347,9 @@
             }
         });
 
-        // Funciones Helper MULTILÍNEA
         function getLines(ctx, text, maxWidth) {
             if (!text) return [];
             let lines = [];
-            // Separar primero por los "Enter" que hizo el usuario manual
             let explicitLines = text.split('\n');
             
             explicitLines.forEach(explicitLine => {
@@ -335,9 +372,10 @@
         }
 
         function loadImgObj(file) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 const img = new Image();
                 img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error("Error leyendo imagen"));
                 img.src = URL.createObjectURL(file);
             });
         }
@@ -348,7 +386,6 @@
             const ctx = canvas.getContext('2d');
             const img = config.imgObj;
             
-            // Factor de escala de tamaño del usuario (ej: 1.5 es 150%)
             const scaleFactor = (config.textScale || 100) / 100;
 
             if (config.mode === 'margin') {
@@ -362,7 +399,6 @@
 
                 ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-                // Cálculo de fuentes con la escala aplicada
                 let fontTop = (margin * 0.35) * scaleFactor;
                 let fontSub = fontTop * 0.7;
                 let lhTop = fontTop * 1.2;
@@ -404,7 +440,6 @@
                 ctx.drawImage(img, 0, 0, img.width, img.height);
                 ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
 
-                // Cálculo de fuentes con la escala aplicada
                 let fontTop = (img.height * 0.08) * scaleFactor;
                 let fontSub = fontTop * 0.7;
                 let lhTop = fontTop * 1.2;
@@ -447,6 +482,11 @@
             const mode = document.querySelector('input[name="input-mode"]:checked').value;
             const globalMode = document.getElementById('global-mode').value;
             const globalScale = parseInt(document.getElementById('global-scale').value);
+            
+            // Alturas Globales
+            const gYTop = parseInt(document.getElementById('global-y-top').value);
+            const gYSub = parseInt(document.getElementById('global-y-sub').value);
+            const gYBot = parseInt(document.getElementById('global-y-bot').value);
 
             if (files.length === 0) {
                 alert("Seleccioná al menos una imagen.");
@@ -477,7 +517,11 @@
             }
 
             imagesData = [];
-            document.getElementById('preview-grid').innerHTML = '<p class="col-span-full text-center text-slate-500 font-bold animate-pulse">Generando borradores...</p>';
+            let unmatchedFiles = [];
+            let errorFiles = [];
+
+            document.getElementById('preview-grid').innerHTML = '<p class="col-span-full text-center text-slate-500 font-bold animate-pulse">Procesando y generando borradores...</p>';
+            document.getElementById('error-alerts').innerHTML = '';
             document.getElementById('results-section').classList.remove('hidden');
 
             for (let i = 0; i < files.length; i++) {
@@ -492,6 +536,7 @@
                         txtSub = dictExcel[nameNoExt].sub;
                         txtBot = dictExcel[nameNoExt].bot;
                     } else {
+                        unmatchedFiles.push(file.name);
                         continue; 
                     }
                 } else {
@@ -500,18 +545,40 @@
                     txtBot = document.getElementById(`man-bot-${i}`)?.value || "";
                 }
 
-                const imgObj = await loadImgObj(file);
-                const config = {
-                    file: file, name: file.name, imgObj: imgObj,
-                    top: txtTop, sub: txtSub, bot: txtBot,
-                    mode: globalMode, textColor: '#000000',
-                    textScale: globalScale, 
-                    yTop: 0, ySub: 0, yBot: 0
-                };
-                
-                config.dataUrl = renderCanvasDataUrl(config);
-                imagesData.push(config);
+                try {
+                    const imgObj = await loadImgObj(file);
+                    const config = {
+                        file: file, name: file.name, imgObj: imgObj,
+                        top: txtTop, sub: txtSub, bot: txtBot,
+                        mode: globalMode, textColor: '#000000',
+                        textScale: globalScale, 
+                        yTop: gYTop, ySub: gYSub, yBot: gYBot
+                    };
+                    
+                    config.dataUrl = renderCanvasDataUrl(config);
+                    imagesData.push(config);
+                } catch (err) {
+                    errorFiles.push(file.name);
+                }
             }
+
+            // Mostrar Errores e Ignorados
+            let errorHtml = '';
+            if (unmatchedFiles.length > 0) {
+                errorHtml += `
+                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-4 rounded-r-xl shadow-sm">
+                        <p class="text-sm text-amber-800 font-bold flex items-center gap-2">⚠️ ${unmatchedFiles.length} Fotos sin código en el Excel (Omitidas):</p>
+                        <p class="text-xs text-amber-700 mt-1 max-h-20 overflow-y-auto ios-scroll">${unmatchedFiles.join(', ')}</p>
+                    </div>`;
+            }
+            if (errorFiles.length > 0) {
+                errorHtml += `
+                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r-xl shadow-sm">
+                        <p class="text-sm text-red-800 font-bold flex items-center gap-2">❌ Error procesando ${errorFiles.length} fotos:</p>
+                        <p class="text-xs text-red-700 mt-1">${errorFiles.join(', ')}</p>
+                    </div>`;
+            }
+            document.getElementById('error-alerts').innerHTML = errorHtml;
 
             renderGrid();
         });
@@ -532,21 +599,22 @@
             grid.innerHTML = '';
             
             if(imagesData.length === 0) {
-                grid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold">No se encontraron coincidencias o no hay datos para renderizar.</p>';
+                grid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold py-4">No se generó ninguna imagen (Revisá códigos o errores).</p>';
+                document.getElementById('results-subtext').textContent = `0 imágenes generadas.`;
                 return;
             }
 
             imagesData.forEach((item, index) => {
                 grid.innerHTML += `
                     <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group">
-                        <div class="aspect-square bg-slate-100 flex items-center justify-center p-2">
+                        <div class="aspect-square bg-slate-100 flex items-center justify-center p-2 relative">
                             <img id="grid-img-${index}" src="${item.dataUrl}" class="w-full h-full object-contain drop-shadow-sm" />
                         </div>
                         <div class="p-3 bg-white flex flex-col gap-2 border-t border-slate-100">
                             <p class="text-[11px] font-bold text-slate-700 truncate" title="${item.name}">${item.name}</p>
                             <div class="flex gap-2 w-full">
-                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-100 text-pink-600 hover:bg-pink-200 py-1.5 rounded transition-colors text-center shadow-sm">✏️ Editar</button>
-                                <button onclick="downloadSingle(${index})" class="flex-1 text-[11px] font-bold bg-emerald-100 text-emerald-600 hover:bg-emerald-200 py-1.5 rounded transition-colors text-center shadow-sm">⬇️ Bajar</button>
+                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-100 text-pink-600 hover:bg-pink-200 py-2 rounded-lg transition-colors text-center active:scale-95 shadow-sm">✏️ Editar</button>
+                                <button onclick="downloadSingle(${index})" class="flex-1 text-[11px] font-bold bg-emerald-100 text-emerald-600 hover:bg-emerald-200 py-2 rounded-lg transition-colors text-center active:scale-95 shadow-sm">⬇️ Bajar</button>
                             </div>
                         </div>
                     </div>
@@ -578,9 +646,14 @@
 
             updateModalPreview();
             modal.classList.remove('hidden');
+            // Evitar scroll del body en iOS al abrir modal
+            document.body.style.overflow = 'hidden';
         };
 
-        window.closeModal = function() { modal.classList.add('hidden'); };
+        window.closeModal = function() { 
+            modal.classList.add('hidden'); 
+            document.body.style.overflow = 'auto'; // Restaurar scroll
+        };
 
         function updateModalPreview() {
             if(activeEditIndex === -1) return;
