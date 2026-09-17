@@ -175,7 +175,28 @@
     // 1. Cargar Odoo
     async function cargarOdoo() {
         try {
-            const respuesta = await fetch(urlBackend);
+            // 1. Verificamos si el usuario ingresó la contraseña en el Hub
+const pwd = sessionStorage.getItem('odoo_pwd');
+if (!pwd) {
+    alert("Acceso denegado. Debes iniciar sesión en el Hub primero.");
+    window.location.href = 'index.html'; // Lo enviamos a poner la clave
+    return;
+}
+
+// 2. Le pasamos la contraseña al servidor en el Header
+const respuesta = await fetch(urlBackend, {
+    headers: {
+        'x-odoo-password': pwd
+    }
+});
+
+// 3. Si la contraseña es incorrecta o expiró
+if (respuesta.status === 401) {
+    sessionStorage.removeItem('odoo_pwd');
+    alert("La contraseña de Odoo es incorrecta. Vuelve a iniciar sesión.");
+    window.location.href = 'index.html';
+    return;
+}
             if (!respuesta.ok) throw new Error('Error en servidor');
             
             odooCatalog = await respuesta.json();
