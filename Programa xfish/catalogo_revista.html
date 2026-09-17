@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Catálogo Revista PDF - X-Fish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Librería jsPDF para generar el PDF en el navegador -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+        }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 24px -4px rgba(14, 56, 114, 0.08);
+        }
+        .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
+        select, input { background: rgba(255,255,255,0.9); border: 1px solid #cbd5e1; border-radius: 10px; padding: 10px 14px; outline: none; }
+        select:focus, input:focus { border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15); }
+    </style>
+</head>
+<body class="relative min-h-screen p-4 md:p-8 overflow-x-hidden">
+
+    <div class="blob bg-blue-300 w-[400px] h-[400px] top-[-50px] left-[-50px] opacity-50"></div>
+    <div class="blob bg-purple-200 w-[300px] h-[300px] bottom-[50px] right-[-50px] opacity-60" style="animation-delay: -3s;"></div>
+
+    <div class="relative z-10 w-full max-w-7xl mx-auto">
+        
+        <a href="index.html" class="inline-flex items-center text-blue-600 font-semibold mb-6 hover:text-blue-800 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver al Hub
+        </a>
+
+        <!-- Panel de Control y Filtros -->
+        <div class="glass-panel rounded-3xl p-6 mb-8">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
+                <div>
+                    <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Generador de Catálogo Revista</h1>
+                    <p class="text-sm text-slate-500 font-medium">Filtra por categorías o etiquetas de Odoo y exporta un PDF con diseño profesional.</p>
+                </div>
+                
+                <button onclick="generarPDF()" id="btn-pdf" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-purple-500/30 transition-all transform hover:-translate-y-0.5 flex items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
+                    <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    Descargar Catálogo PDF (<span id="contador-filtrados">0</span> items)
+                </button>
+            </div>
+
+            <!-- Grilla de Filtros -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Buscar por texto:</label>
+                    <input type="text" id="filtro-texto" placeholder="Código o nombre..." oninput="aplicarFiltros()">
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Categoría de Odoo:</label>
+                    <select id="filtro-categoria" onchange="aplicarFiltros()">
+                        <option value="all">-- Todas las Categorías --</option>
+                    </select>
+                </div>
+                <div class="flex flex-col">
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Etiqueta de Odoo (Tag):</label>
+                    <select id="filtro-etiqueta" onchange="aplicarFiltros()">
+                        <option value="all">-- Todas las Etiquetas --</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Estado de Carga -->
+        <div id="estado-carga" class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center text-center">
+            <svg class="animate-spin h-10 w-10 text-purple-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <h3 class="text-xl font-bold text-slate-700">Sincronizando con Odoo...</h3>
+        </div>
+
+        <!-- Previsualización Estilo Revista -->
+        <div id="grilla-vista-previa" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden pb-12">
+            <!-- Se inyecta por JS -->
+        </div>
+
+    </div>
+
+<script>
+    let odooCatalog = [];
+    let productosFiltrados = [];
+    const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
+
+    async function cargarDatos() {
+        try {
+            const pwd = sessionStorage.getItem('odoo_pwd');
+            if (!pwd) {
+                alert("Debes iniciar sesión en el Hub primero.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const respuesta = await fetch(urlBackend, {
+                headers: { 'x-odoo-password': pwd }
+            });
+
+            if (respuesta.status === 401) {
+                sessionStorage.removeItem('odoo_pwd');
+                alert("Contraseña incorrecta o sesión expirada.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            if (!respuesta.ok) throw new Error('Error al conectar');
+            
+            odooCatalog = await respuesta.json();
+            
+            document.getElementById('estado-carga').classList.add('hidden');
+            document.getElementById('grilla-vista-previa').classList.remove('hidden');
+            document.getElementById('btn-pdf').removeAttribute('disabled');
+
+            poblarSelectsOdoo();
+            aplicarFiltros();
+
+        } catch (error) {
+            console.error(error);
+            document.getElementById('estado-carga').innerHTML = `<span class="text-red-500 font-bold">❌ Error al conectar con Odoo.</span>`;
+        }
+    }
+
+    // Extraer dinámicamente categorías y etiquetas únicas del catálogo obtenido
+    function poblarSelectsOdoo() {
+        const categoriasSet = new Set();
+        const etiquetasSet = new Set();
+
+        odooCatalog.forEach(p => {
+            if (p.categ_id) categoriasSet.add(p.categ_id);
+            if (p.tag_ids && Array.isArray(p.tag_ids)) {
+                p.tag_ids.forEach(t => etiquetasSet.add(t));
+            }
+        });
+
+        const selCat = document.getElementById('filtro-categoria');
+        categoriasSet.forEach(cat => {
+            selCat.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+
+        const selTag = document.getElementById('filtro-etiqueta');
+        etiquetasSet.forEach(tag => {
+            selTag.innerHTML += `<option value="${tag}">${tag}</option>`;
+        });
+    }
+
+    function aplicarFiltros() {
+        const texto = document.getElementById('filtro-texto').value.toLowerCase();
+        const catFiltro = document.getElementById('filtro-categoria').value;
+        const tagFiltro = document.getElementById('filtro-etiqueta').value;
+
+        productosFiltrados = odooCatalog.filter(p => {
+            const matchTexto = (p.nombre || '').toLowerCase().includes(texto) || (p.sku || '').toLowerCase().includes(texto);
+            const matchCat = (catFiltro === 'all' || p.categ_id === catFiltro);
+            const matchTag = (tagFiltro === 'all' || (p.tag_ids && p.tag_ids.includes(tagFiltro)));
+            return matchTexto && matchCat && matchTag;
+        });
+
+        document.getElementById('contador-filtrados').innerText = productosFiltrados.length;
+        renderizarVistaPrevia();
+    }
+
+    function renderizarVistaPrevia() {
+        const grilla = document.getElementById('grilla-vista-previa');
+        grilla.innerHTML = '';
+
+        if(productosFiltrados.length === 0) {
+            grilla.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 font-medium">No se encontraron productos con estos filtros.</div>`;
+            return;
+        }
+
+        const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+
+        productosFiltrados.forEach(p => {
+            const imgUrl = p.foto ? `data:image/jpeg;base64,${p.foto}` : 'https://via.placeholder.com/200?text=SIN+FOTO';
+            
+            const tarjeta = document.createElement('div');
+            tarjeta.className = 'glass-panel rounded-2xl p-4 flex flex-col bg-white/80';
+            tarjeta.innerHTML = `
+                <div class="w-full aspect-square bg-white rounded-xl overflow-hidden mb-3 border border-slate-100 flex items-center justify-center">
+                    <img src="${imgUrl}" class="w-full h-full object-contain">
+                </div>
+                <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">${p.categ_id || 'General'}</span>
+                <h4 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2">${p.nombre}</h4>
+                <p class="text-xs text-slate-500 mb-3 font-mono">SKU: ${p.sku || 'S/N'}</p>
+                <div class="mt-auto pt-2 border-t border-slate-100 flex justify-between items-center">
+                    <span class="text-xs font-semibold text-slate-400">Precio:</span>
+                    <span class="font-black text-emerald-600 text-sm">${formatoMoneda.format(p.precio || 0)}</span>
+                </div>
+            `;
+            grilla.appendChild(tarjeta);
+        });
+    }
+
+    // 🎨 Generación del PDF con jsPDF
+    function generarPDF() {
+        if (productosFiltrados.length === 0) {
+            alert("No hay productos para exportar en el PDF.");
+            return;
+        }
+
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF('p', 'mm', 'a4'); // Formato A4 vertical
+
+        // Portada o Cabecera del Catálogo Revista
+        doc.setFillColor(30, 41, 59); // Slate-800
+        doc.rect(0, 0, 210, 35, 'F');
+        
+        doc.setTextColor(255, 255, 255);
+        doc.setFontSize(20);
+        doc.setFont("helvetica", "bold");
+        doc.text("X-FISH - Catálogo de Productos", 14, 22);
+
+        doc.setFontSize(10);
+        doc.setFont("helvetica", "normal");
+        doc.text(`Generado el: ${new Date().toLocaleDateString()} | Total Artículos: ${productosFiltrados.length}`, 14, 29);
+
+        let x = 14;
+        let y = 45;
+        const anchoItem = 55;
+        const altoItem = 75;
+        const margenX = 8;
+        const margenY = 10;
+        let itemsPorFila = 3;
+        let contadorFila = 0;
+
+        const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+
+        productosFiltrados.forEach((p, index) => {
+            // Verificar si necesitamos salto de página
+            if (y + altoItem > 280) {
+                doc.addPage();
+                y = 20;
+                x = 14;
+                contadorFila = 0;
+            }
+
+            // Fondo de la tarjeta en PDF
+            doc.setDrawColor(226, 232, 240);
+            doc.setFillColor(255, 255, 255);
+            doc.roundedRect(x, y, anchoItem, altoItem, 3, 3, 'FD');
+
+            // Imagen (si existe base64)
+            if (p.foto) {
+                try {
+                    doc.addImage(`data:image/jpeg;base64,${p.foto}`, 'JPEG', x + 5, y + 5, 45, 45);
+                } catch(e) {
+                    // Si falla la imagen, continuamos sin romper el PDF
+                }
+            }
+
+            // Textos (Nombre, SKU y Precio)
+            doc.setTextColor(51, 65, 85);
+            doc.setFontSize(9);
+            doc.setFont("helvetica", "bold");
+            
+            // Cortar nombres muy largos para que no rompan el diseño
+            let nombreLimpio = p.nombre.length > 38 ? p.nombre.substring(0, 35) + '...' : p.nombre;
+            doc.text(nombreLimpio, x + 5, y + 55);
+
+            doc.setFontSize(8);
+            doc.setFont("helvetica", "normal");
+            doc.setTextColor(100, 116, 139);
+            doc.text(`SKU: ${p.sku || 'S/N'}`, x + 5, y + 62);
+
+            doc.setFontSize(10);
+            doc.setFont("helvetica", "bold");
+            doc.setTextColor(16, 185, 129); // Esmeralda
+            doc.text(formatoMoneda.format(p.precio || 0), x + 5, y + 70);
+
+            // Coordenadas para el siguiente ítem en la grilla
+            contadorFila++;
+            if (contadorFila < itemsPorFila) {
+                x += anchoItem + margenX;
+            } else {
+                x = 14;
+                y += altoItem + margenY;
+                contadorFila = 0;
+            }
+        });
+
+        // Descargar el archivo PDF resultante
+        doc.save("Catalogo_XFish_Revista.pdf");
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarDatos);
+</script>
+
+</body>
+</html>
