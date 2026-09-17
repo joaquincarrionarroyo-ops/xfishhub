@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Alta y Comparador - X-Fish</title>
+    <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Librería SheetJS para procesar Excel -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <style>
         /* Tipografía estilo Apple */
@@ -66,7 +68,7 @@
         
         <div class="mb-10">
             <h1 class="text-4xl font-extrabold text-slate-800 tracking-tight mb-2">Conciliación de Alta vs Odoo</h1>
-            <p class="text-slate-500 font-medium">Cruza tu Excel con el sistema en tiempo real, detecta variaciones de precios y genera el archivo de importación con IDs nativos.</p>
+            <p class="text-slate-500 font-medium">Cruza tu Excel con el sistema en tiempo real, detecta variaciones de precios y genera el archivo de importación con IDs Externos nativos.</p>
         </div>
 
         <!-- PASO 1: Conexión Odoo -->
@@ -77,7 +79,7 @@
             </div>
             <div id="odoo-status" class="flex items-center text-slate-600 font-medium bg-white/50 p-4 rounded-xl border border-white">
                 <svg class="animate-spin -ml-1 mr-3 h-5 w-5 text-blue-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-                Descargando catálogo completo desde Odoo...
+                Descargando catálogo completo y metadatos desde Odoo...
             </div>
         </div>
 
@@ -165,7 +167,7 @@
 <script>
     let odooCatalog = []; 
     let excelData = [];
-    let resultadosProcesados = []; // Almacena la fusión para exportarla luego
+    let resultadosProcesados = []; 
 
     const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos'; 
     const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
@@ -262,9 +264,9 @@
                 const tienePrecioNuevo = precioExcel !== null && !isNaN(precioExcel);
                 const diferenciaPrecio = tienePrecioNuevo && precioOdoo !== precioExcel;
 
-                // Guardar para exportación (El 'id' es el campo vital para Odoo)
+                // Guardar para exportación utilizando el ID Externo
                 resultadosProcesados.push({
-                    id: productoOdoo.id,
+                    id_externo: productoOdoo.id_externo, 
                     default_code: productoOdoo.sku,
                     name: productoOdoo.nombre,
                     lst_price: tienePrecioNuevo ? precioExcel : precioOdoo,
@@ -274,7 +276,6 @@
                 // Renderizar Fila
                 const tr = document.createElement('tr');
                 
-                // Formateo visual de la columna Precio Nuevo
                 let celdaPrecioNuevo = `<td class="text-slate-400 italic">-</td>`;
                 if (tienePrecioNuevo) {
                     if (diferenciaPrecio) {
@@ -297,11 +298,11 @@
             }
         });
 
-        document.getElementById('res-resumen').innerText = `Se encontraron ${coincidencias} productos cruzados con éxito. Revisa las diferencias de precio en naranja antes de exportar.`;
+        document.getElementById('res-resumen').innerText = `Se encontraron ${coincidencias} productos cruzados con éxito. Revisa las diferencias de precio (en color) antes de exportar.`;
         document.getElementById('panel-resultados').classList.remove('hidden');
     });
 
-    // 4. Exportar a Odoo usando el 'id' Nativo
+    // 4. Exportar a Odoo usando el 'id' Externo (External ID)
     function exportarOdoo() {
         if (resultadosProcesados.length === 0) {
             alert("No hay datos procesados para exportar.");
@@ -316,13 +317,12 @@
             return;
         }
 
-        // Armar el arreglo final respetando los nombres técnicos de Odoo
         const datosParaOdoo = resultadosProcesados.map(item => {
-            // El 'id' y el 'default_code' (SKU) siempre van para seguridad e identificación
+            // El truco aquí es usar el nombre de columna "id" y pasarle el id_externo que Odoo necesita
             let fila = { 
-                id: item.id, 
-                default_code: item.default_code,
-                name: item.name // Agregamos el nombre para que el Excel sea legible para un humano
+                "id": item.id_externo, 
+                "default_code": item.default_code,
+                "name": item.name 
             }; 
             
             if (expPrecios) fila.lst_price = item.lst_price;
@@ -340,7 +340,7 @@
         XLSX.writeFile(workbook, "Update_Odoo_Precios_Stock.xlsx");
     }
 
-    // Arrancar la maquinaria
+    // Arrancar la aplicación
     document.addEventListener('DOMContentLoaded', cargarOdoo);
 </script>
 
