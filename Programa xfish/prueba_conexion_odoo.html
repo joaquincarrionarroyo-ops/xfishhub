@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Prueba Conexión Odoo - X-Fish</title>
+    <title>Catálogo de Variantes - X-Fish</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -13,7 +13,7 @@
             padding: 20px;
         }
         .container {
-            max-width: 1000px;
+            max-width: 1100px;
             margin: 0 auto;
             background: white;
             padding: 30px;
@@ -49,6 +49,7 @@
             padding: 12px 15px;
             text-align: left;
             border-bottom: 1px solid #ddd;
+            vertical-align: middle;
         }
         th {
             background-color: #34495e;
@@ -80,6 +81,13 @@
         .back-btn:hover {
             text-decoration: underline;
         }
+        .img-miniatura {
+            width: 55px; 
+            height: 55px; 
+            object-fit: cover; 
+            border-radius: 6px;
+            border: 1px solid #ddd;
+        }
     </style>
 </head>
 <body>
@@ -87,17 +95,18 @@
 <div class="container">
     <a href="index.html" class="back-btn">&larr; Volver al inicio</a>
     
-    <h1>Prueba de Conexión a Odoo</h1>
+    <h1>Inventario de Variantes (Odoo)</h1>
     
     <div id="estado-carga">Conectando con la base de datos de Odoo... por favor espera.</div>
     
     <table id="tabla-productos-container" style="display: none;">
         <thead>
             <tr>
-                <th>SKU</th>
-                <th>Producto</th>
-                <th>Precio Base</th>
-                <th>Stock Disponible</th>
+                <th>Foto</th>
+                <th>SKU (Ref. Interna)</th>
+                <th>Producto y Atributos</th>
+                <th>Precio</th>
+                <th>Stock Disp.</th>
             </tr>
         </thead>
         <tbody id="cuerpo-tabla">
@@ -108,7 +117,6 @@
 
 <script>
     async function cargarCatalogo() {
-        // URL de tu servicio en Render ya configurada
         const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
         
         const estadoCarga = document.getElementById('estado-carga');
@@ -128,7 +136,6 @@
                 throw new Error(productos.error);
             }
             
-            // Ocultar mensaje de carga y mostrar tabla
             estadoCarga.style.display = 'none';
             tablaContainer.style.display = 'table';
             tbody.innerHTML = ''; 
@@ -136,7 +143,7 @@
             if (productos.length === 0) {
                 estadoCarga.style.display = 'block';
                 estadoCarga.className = 'error-msg';
-                estadoCarga.innerText = 'No se encontraron productos vendibles en la base de datos.';
+                estadoCarga.innerText = 'No se encontraron variantes vendibles en la base de datos.';
                 tablaContainer.style.display = 'none';
                 return;
             }
@@ -144,10 +151,15 @@
             productos.forEach(prod => {
                 const fila = document.createElement('tr');
                 
+                // Si hay imagen Base64 la procesamos, si no ponemos una imagen por defecto
+                const imagenSrc = prod.image_128 
+                    ? `data:image/jpeg;base64,${prod.image_128}` 
+                    : 'https://via.placeholder.com/55?text=Sin+Foto';
+
                 // Formateo de datos
                 const sku = prod.default_code ? prod.default_code : '<span style="color: #999; font-style: italic;">Sin SKU</span>';
-                const nombre = prod.name || 'Producto sin nombre';
-                const precio = prod.list_price ? parseFloat(prod.list_price).toFixed(2) : '0.00';
+                const nombre = prod.display_name || 'Variante sin nombre';
+                const precio = prod.lst_price ? parseFloat(prod.lst_price).toFixed(2) : '0.00';
                 const stock = prod.qty_available ? parseFloat(prod.qty_available) : 0;
                 
                 // Lógica visual para el stock
@@ -156,6 +168,7 @@
                 else if (stock < 5) claseStock = 'stock-low';
                 
                 fila.innerHTML = `
+                    <td><img src="${imagenSrc}" alt="Foto" class="img-miniatura"></td>
                     <td><strong>${sku}</strong></td>
                     <td>${nombre}</td>
                     <td>$ ${precio}</td>
@@ -172,7 +185,6 @@
         }
     }
 
-    // Iniciar la carga de datos al abrir la página
     document.addEventListener('DOMContentLoaded', cargarCatalogo);
 </script>
 
