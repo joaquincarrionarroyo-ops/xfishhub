@@ -23,7 +23,6 @@
         .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
         @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
 
-        /* Estilos de los botones de filtro */
         .filter-btn {
             background: rgba(255, 255, 255, 0.5);
             border: 1px solid rgba(203, 213, 225, 0.8);
@@ -32,7 +31,7 @@
         }
         .filter-btn:hover { background: rgba(255, 255, 255, 0.9); border-color: #94a3b8; }
         .filter-btn.active {
-            background: #3b82f6; /* Blue-500 */
+            background: #3b82f6;
             color: white;
             border-color: #2563eb;
             box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
@@ -50,7 +49,6 @@
             outline: none;
         }
 
-        /* Ocultar barra de desplazamiento para un look más limpio */
         ::-webkit-scrollbar { width: 8px; }
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
@@ -59,19 +57,16 @@
 </head>
 <body class="relative min-h-screen p-4 md:p-8 overflow-x-hidden">
 
-    <!-- Fondos Decorativos -->
     <div class="blob bg-blue-300 w-[400px] h-[400px] top-[-50px] left-[-50px] opacity-50"></div>
     <div class="blob bg-teal-200 w-[300px] h-[300px] bottom-[50px] right-[-50px] opacity-60" style="animation-delay: -3s;"></div>
 
     <div class="relative z-10 w-full max-w-7xl mx-auto">
         
-        <!-- Navegación -->
         <a href="index.html" class="inline-flex items-center text-blue-600 font-semibold mb-6 hover:text-blue-800 transition-colors">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             Volver al Hub
         </a>
 
-        <!-- Controles: Buscador y Filtros -->
         <div class="glass-panel rounded-3xl p-6 mb-8 sticky top-4 z-50">
             <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-4">
                 <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight flex-shrink-0">
@@ -82,11 +77,10 @@
                     <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
                     </div>
-                    <input type="text" id="input-busqueda" placeholder="Buscar por código, nombre o atributo de variante..." class="search-input w-full pl-11 pr-4 py-3 rounded-2xl text-slate-700 font-medium w-full">
+                    <input type="text" id="input-busqueda" placeholder="Buscar por código, nombre o atributo de variante..." class="search-input w-full pl-11 pr-4 py-3 rounded-2xl text-slate-700 font-medium">
                 </div>
             </div>
 
-            <!-- Filtros Inteligentes -->
             <div class="flex flex-wrap gap-2 items-center" id="contenedor-filtros">
                 <span class="text-sm font-bold text-slate-500 mr-2 uppercase tracking-wide">Filtros:</span>
                 <button data-filter="all" class="filter-btn active px-4 py-1.5 rounded-full text-sm font-semibold">Todos</button>
@@ -97,17 +91,14 @@
             </div>
         </div>
 
-        <!-- Estado de carga -->
         <div id="estado-carga" class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center text-center">
             <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
             <h3 class="text-xl font-bold text-slate-700">Sincronizando inventario...</h3>
             <p class="text-slate-500">Descargando imágenes, variantes y ubicaciones desde Odoo.</p>
         </div>
 
-        <!-- Grilla de Resultados -->
         <div id="resumen-resultados" class="text-slate-500 font-semibold mb-4 ml-2 hidden"></div>
         <div id="grilla-productos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 hidden pb-12">
-            <!-- Las tarjetas se inyectan aquí -->
         </div>
 
     </div>
@@ -117,11 +108,30 @@
     let filtroActivo = 'all';
     const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
 
-    // 1. Iniciar y Cargar Datos
     async function cargarCatalogo() {
         try {
-            const respuesta = await fetch(urlBackend);
+            // 🔐 Validar que la contraseña exista en la memoria de la sesión
+            const pwd = sessionStorage.getItem('odoo_pwd');
+            if (!pwd) {
+                alert("Debes iniciar sesión en el Hub primero.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            // 🚀 Enviar la contraseña en los Headers al servidor de Render
+            const respuesta = await fetch(urlBackend, {
+                headers: { 'x-odoo-password': pwd }
+            });
+
+            if (respuesta.status === 401) {
+                sessionStorage.removeItem('odoo_pwd');
+                alert("La contraseña de Odoo es incorrecta o expiró.");
+                window.location.href = 'index.html';
+                return;
+            }
+
             if (!respuesta.ok) throw new Error('Error al conectar al backend');
+            
             odooCatalog = await respuesta.json();
             
             document.getElementById('estado-carga').classList.add('hidden');
@@ -131,22 +141,20 @@
             procesarFiltrosYRenderizar();
 
         } catch (error) {
+            console.error(error);
             document.getElementById('estado-carga').innerHTML = `<span class="text-red-500 font-bold text-xl">❌ Error al conectar con Odoo.</span>`;
         }
     }
 
-    // 2. Lógica de Filtros y Búsqueda
     function procesarFiltrosYRenderizar() {
         const textoBusqueda = document.getElementById('input-busqueda').value.toLowerCase().trim();
         
         const productosFiltrados = odooCatalog.filter(prod => {
-            // A. Filtro de Texto (Nombre o SKU)
             const nombre = (prod.nombre || '').toLowerCase();
             const sku = (prod.sku || '').toLowerCase();
             const coincideTexto = nombre.includes(textoBusqueda) || sku.includes(textoBusqueda);
             if (!coincideTexto) return false;
 
-            // B. Filtros de Estado (Botones)
             const tieneFoto = prod.foto ? true : false;
             const tieneStock = prod.total > 0;
 
@@ -155,14 +163,13 @@
                 case 'sin_foto': return !tieneFoto;
                 case 'foto_sin_stock': return tieneFoto && !tieneStock;
                 case 'stock_sin_foto': return tieneStock && !tieneFoto;
-                default: return true; // 'all'
+                default: return true;
             }
         });
 
         renderizarGrilla(productosFiltrados);
     }
 
-    // 3. Renderizar las Tarjetas HTML
     function renderizarGrilla(productos) {
         const grilla = document.getElementById('grilla-productos');
         grilla.innerHTML = '';
@@ -173,7 +180,6 @@
             const tieneFoto = !!prod.foto;
             const imgUrl = tieneFoto ? `data:image/jpeg;base64,${prod.foto}` : 'https://via.placeholder.com/300x300?text=SIN+FOTO';
             
-            // Generar los "badges" (etiquetas) de las ubicaciones
             let ubicacionesHTML = '';
             if (prod.total > 0 && prod.ubicaciones) {
                 Object.entries(prod.ubicaciones).forEach(([loc, cant]) => {
@@ -183,9 +189,6 @@
                 ubicacionesHTML = `<span class="bg-red-50 text-red-600 border border-red-100 text-[10px] px-2 py-0.5 rounded-full font-bold">Agotado</span>`;
             }
 
-            // Odoo manda el nombre del template + atributos en el display_name, ej: "Caña (Roja)"
-            // Eso cubre nativamente el requerimiento de mostrar variantes
-            
             const tarjeta = document.createElement('div');
             tarjeta.className = 'glass-panel rounded-2xl p-4 flex flex-col hover:-translate-y-1 transition-transform duration-300';
             tarjeta.innerHTML = `
@@ -211,14 +214,11 @@
         });
     }
 
-    // 4. Eventos
     document.getElementById('input-busqueda').addEventListener('input', procesarFiltrosYRenderizar);
 
     document.querySelectorAll('.filter-btn').forEach(btn => {
         btn.addEventListener('click', function() {
-            // Quitar clase active a todos
             document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-            // Activar el clickeado
             this.classList.add('active');
             
             filtroActivo = this.getAttribute('data-filter');
@@ -226,7 +226,6 @@
         });
     });
 
-    // Iniciar
     document.addEventListener('DOMContentLoaded', cargarCatalogo);
 </script>
 
