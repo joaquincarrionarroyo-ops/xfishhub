@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Buscador Visual - X-Fish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background-color: #f0f4f8;
+            color: #334155;
+        }
+        
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.9);
+            box-shadow: 0 4px 24px -4px rgba(14, 56, 114, 0.08);
+        }
+
+        .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
+
+        /* Estilos de los botones de filtro */
+        .filter-btn {
+            background: rgba(255, 255, 255, 0.5);
+            border: 1px solid rgba(203, 213, 225, 0.8);
+            color: #64748b;
+            transition: all 0.2s;
+        }
+        .filter-btn:hover { background: rgba(255, 255, 255, 0.9); border-color: #94a3b8; }
+        .filter-btn.active {
+            background: #3b82f6; /* Blue-500 */
+            color: white;
+            border-color: #2563eb;
+            box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+        }
+
+        .search-input {
+            background: rgba(255, 255, 255, 0.8);
+            border: 2px solid #e2e8f0;
+            transition: all 0.3s ease;
+        }
+        .search-input:focus {
+            border-color: #3b82f6;
+            background: #ffffff;
+            box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+            outline: none;
+        }
+
+        /* Ocultar barra de desplazamiento para un look más limpio */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+    </style>
+</head>
+<body class="relative min-h-screen p-4 md:p-8 overflow-x-hidden">
+
+    <!-- Fondos Decorativos -->
+    <div class="blob bg-blue-300 w-[400px] h-[400px] top-[-50px] left-[-50px] opacity-50"></div>
+    <div class="blob bg-teal-200 w-[300px] h-[300px] bottom-[50px] right-[-50px] opacity-60" style="animation-delay: -3s;"></div>
+
+    <div class="relative z-10 w-full max-w-7xl mx-auto">
+        
+        <!-- Navegación -->
+        <a href="index.html" class="inline-flex items-center text-blue-600 font-semibold mb-6 hover:text-blue-800 transition-colors">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+            Volver al Hub
+        </a>
+
+        <!-- Controles: Buscador y Filtros -->
+        <div class="glass-panel rounded-3xl p-6 mb-8 sticky top-4 z-50">
+            <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-4">
+                <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight flex-shrink-0">
+                    Buscador de Artículos
+                </h1>
+                
+                <div class="w-full relative max-w-2xl">
+                    <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                        <svg class="h-5 w-5 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    </div>
+                    <input type="text" id="input-busqueda" placeholder="Buscar por código, nombre o atributo de variante..." class="search-input w-full pl-11 pr-4 py-3 rounded-2xl text-slate-700 font-medium w-full">
+                </div>
+            </div>
+
+            <!-- Filtros Inteligentes -->
+            <div class="flex flex-wrap gap-2 items-center" id="contenedor-filtros">
+                <span class="text-sm font-bold text-slate-500 mr-2 uppercase tracking-wide">Filtros:</span>
+                <button data-filter="all" class="filter-btn active px-4 py-1.5 rounded-full text-sm font-semibold">Todos</button>
+                <button data-filter="con_foto" class="filter-btn px-4 py-1.5 rounded-full text-sm font-semibold flex items-center"><span class="mr-1">📸</span> Con Foto</button>
+                <button data-filter="sin_foto" class="filter-btn px-4 py-1.5 rounded-full text-sm font-semibold flex items-center"><span class="mr-1">🚫</span> Sin Foto</button>
+                <button data-filter="foto_sin_stock" class="filter-btn px-4 py-1.5 rounded-full text-sm font-semibold flex items-center"><span class="mr-1">⚠️</span> Con Foto pero SIN Stock</button>
+                <button data-filter="stock_sin_foto" class="filter-btn px-4 py-1.5 rounded-full text-sm font-semibold flex items-center"><span class="mr-1">👻</span> Con Stock pero SIN Foto</button>
+            </div>
+        </div>
+
+        <!-- Estado de carga -->
+        <div id="estado-carga" class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center text-center">
+            <svg class="animate-spin h-10 w-10 text-blue-500 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+            <h3 class="text-xl font-bold text-slate-700">Sincronizando inventario...</h3>
+            <p class="text-slate-500">Descargando imágenes, variantes y ubicaciones desde Odoo.</p>
+        </div>
+
+        <!-- Grilla de Resultados -->
+        <div id="resumen-resultados" class="text-slate-500 font-semibold mb-4 ml-2 hidden"></div>
+        <div id="grilla-productos" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 hidden pb-12">
+            <!-- Las tarjetas se inyectan aquí -->
+        </div>
+
+    </div>
+
+<script>
+    let odooCatalog = [];
+    let filtroActivo = 'all';
+    const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
+
+    // 1. Iniciar y Cargar Datos
+    async function cargarCatalogo() {
+        try {
+            const respuesta = await fetch(urlBackend);
+            if (!respuesta.ok) throw new Error('Error al conectar al backend');
+            odooCatalog = await respuesta.json();
+            
+            document.getElementById('estado-carga').classList.add('hidden');
+            document.getElementById('grilla-productos').classList.remove('hidden');
+            document.getElementById('resumen-resultados').classList.remove('hidden');
+            
+            procesarFiltrosYRenderizar();
+
+        } catch (error) {
+            document.getElementById('estado-carga').innerHTML = `<span class="text-red-500 font-bold text-xl">❌ Error al conectar con Odoo.</span>`;
+        }
+    }
+
+    // 2. Lógica de Filtros y Búsqueda
+    function procesarFiltrosYRenderizar() {
+        const textoBusqueda = document.getElementById('input-busqueda').value.toLowerCase().trim();
+        
+        const productosFiltrados = odooCatalog.filter(prod => {
+            // A. Filtro de Texto (Nombre o SKU)
+            const nombre = (prod.nombre || '').toLowerCase();
+            const sku = (prod.sku || '').toLowerCase();
+            const coincideTexto = nombre.includes(textoBusqueda) || sku.includes(textoBusqueda);
+            if (!coincideTexto) return false;
+
+            // B. Filtros de Estado (Botones)
+            const tieneFoto = prod.foto ? true : false;
+            const tieneStock = prod.total > 0;
+
+            switch (filtroActivo) {
+                case 'con_foto': return tieneFoto;
+                case 'sin_foto': return !tieneFoto;
+                case 'foto_sin_stock': return tieneFoto && !tieneStock;
+                case 'stock_sin_foto': return tieneStock && !tieneFoto;
+                default: return true; // 'all'
+            }
+        });
+
+        renderizarGrilla(productosFiltrados);
+    }
+
+    // 3. Renderizar las Tarjetas HTML
+    function renderizarGrilla(productos) {
+        const grilla = document.getElementById('grilla-productos');
+        grilla.innerHTML = '';
+        
+        document.getElementById('resumen-resultados').innerText = `Mostrando ${productos.length} artículos`;
+
+        productos.forEach(prod => {
+            const tieneFoto = !!prod.foto;
+            const imgUrl = tieneFoto ? `data:image/jpeg;base64,${prod.foto}` : 'https://via.placeholder.com/300x300?text=SIN+FOTO';
+            
+            // Generar los "badges" (etiquetas) de las ubicaciones
+            let ubicacionesHTML = '';
+            if (prod.total > 0 && prod.ubicaciones) {
+                Object.entries(prod.ubicaciones).forEach(([loc, cant]) => {
+                    ubicacionesHTML += `<span class="bg-indigo-50 text-indigo-700 border border-indigo-100 text-[10px] px-2 py-0.5 rounded-full font-bold whitespace-nowrap">${loc}: ${cant}</span>`;
+                });
+            } else {
+                ubicacionesHTML = `<span class="bg-red-50 text-red-600 border border-red-100 text-[10px] px-2 py-0.5 rounded-full font-bold">Agotado</span>`;
+            }
+
+            // Odoo manda el nombre del template + atributos en el display_name, ej: "Caña (Roja)"
+            // Eso cubre nativamente el requerimiento de mostrar variantes
+            
+            const tarjeta = document.createElement('div');
+            tarjeta.className = 'glass-panel rounded-2xl p-4 flex flex-col hover:-translate-y-1 transition-transform duration-300';
+            tarjeta.innerHTML = `
+                <div class="relative w-full aspect-square mb-4 rounded-xl overflow-hidden bg-white/50 border border-slate-100">
+                    <img src="${imgUrl}" alt="${prod.nombre}" class="w-full h-full object-contain ${tieneFoto ? '' : 'opacity-50 grayscale'}">
+                    ${!tieneFoto ? '<div class="absolute inset-0 flex items-center justify-center"><span class="bg-red-500/80 text-white text-xs font-bold px-3 py-1 rounded-full backdrop-blur-sm">Sin Imagen</span></div>' : ''}
+                </div>
+                
+                <h3 class="font-bold text-slate-800 text-sm leading-tight mb-1 line-clamp-2" title="${prod.nombre}">${prod.nombre}</h3>
+                <p class="text-xs text-slate-500 mb-4">SKU: <span class="font-mono text-slate-700 font-semibold">${prod.sku || 'N/A'}</span></p>
+
+                <div class="mt-auto pt-3 border-t border-slate-200/60">
+                    <div class="flex justify-between items-center mb-2">
+                        <span class="text-xs font-semibold text-slate-500 uppercase tracking-wider">Stock</span>
+                        <span class="text-sm font-black ${prod.total > 0 ? 'text-emerald-600' : 'text-red-500'}">${prod.total} un.</span>
+                    </div>
+                    <div class="flex flex-wrap gap-1">
+                        ${ubicacionesHTML}
+                    </div>
+                </div>
+            `;
+            grilla.appendChild(tarjeta);
+        });
+    }
+
+    // 4. Eventos
+    document.getElementById('input-busqueda').addEventListener('input', procesarFiltrosYRenderizar);
+
+    document.querySelectorAll('.filter-btn').forEach(btn => {
+        btn.addEventListener('click', function() {
+            // Quitar clase active a todos
+            document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+            // Activar el clickeado
+            this.classList.add('active');
+            
+            filtroActivo = this.getAttribute('data-filter');
+            procesarFiltrosYRenderizar();
+        });
+    });
+
+    // Iniciar
+    document.addEventListener('DOMContentLoaded', cargarCatalogo);
+</script>
+
+</body>
+</html>
