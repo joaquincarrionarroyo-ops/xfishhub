@@ -42,7 +42,7 @@
         /* Tablas adaptadas al estilo Glass */
         table { width: 100%; border-collapse: collapse; text-align: left; }
         th { background-color: rgba(241, 245, 249, 0.7); color: #475569; font-weight: 600; padding: 12px 16px; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 0.05em; border-bottom: 2px solid #e2e8f0; }
-        td { padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.6); font-size: 0.9rem; color: #334155; }
+        td, tf { padding: 12px 16px; border-bottom: 1px solid rgba(226, 232, 240, 0.6); font-size: 0.9rem; color: #334155; }
         tr:hover { background-color: rgba(255, 255, 255, 0.5); }
         
         /* Inputs y Selects */
@@ -158,6 +158,9 @@
                     <tbody id="tabla-cuerpo">
                         <!-- Inyectado por JS -->
                     </tbody>
+                    <tfoot id="tabla-pie" class="bg-slate-100/80 font-bold border-t-2 border-slate-200">
+                        <!-- Total inyectado por JS -->
+                    </tfoot>
                 </table>
             </div>
         </div>
@@ -242,7 +245,7 @@
         select.innerHTML = htmlBase + columnas.map(col => `<option value="${col}">${col}</option>`).join('');
     }
 
-    // 3. Procesar Cruce (Con filtro estricto para evitar repetidos)
+    // 3. Procesar Cruce (Muestra repetidos en vista previa, pero únicos en exportación)
     document.getElementById('btn-procesar').addEventListener('click', function() {
         const colSku = document.getElementById('map-sku').value;
         const colPrecio = document.getElementById('map-precio').value;
@@ -254,22 +257,23 @@
         }
 
         const tbody = document.getElementById('tabla-cuerpo');
+        const tfoot = document.getElementById('tabla-pie');
         tbody.innerHTML = '';
+        tfoot.innerHTML = '';
+        
         resultadosProcesados = []; 
+        let skusExportadosSet = new Set(); // Para asegurar unicidad solo al exportar
         let coincidencias = 0;
-        let skusProcesados = new Set(); // 🛡️ Control para evitar duplicados en el mismo archivo
+        let sumaTotalPreciosNuevos = 0;
+        let sumaTotalPreciosActuales = 0;
 
         excelData.forEach(filaExcel => {
             const skuExcel = filaExcel[colSku] ? filaExcel[colSku].toString().trim().toUpperCase() : null;
             if(!skuExcel) return;
 
-            // 🚫 Si el SKU ya fue procesado antes en este Excel, lo saltamos para que no se repita
-            if (skusProcesados.has(skuExcel)) return;
-
             const productoOdoo = odooCatalog.find(p => p.sku && p.sku.toUpperCase() === skuExcel);
 
             if(productoOdoo) {
-                skusProcesados.add(skuExcel); // Marcar SKU como procesado
                 coincidencias++;
                 
                 const precioOdoo = productoOdoo.precio || 0;
@@ -280,18 +284,26 @@
                 if(isNaN(cantExcel)) cantExcel = 0;
 
                 const stockFinal = stockOdoo + cantExcel;
-                
                 const tienePrecioNuevo = precioExcel !== null && !isNaN(precioExcel);
                 const diferenciaPrecio = tienePrecioNuevo && precioOdoo !== precioExcel;
 
-                resultadosProcesados.push({
-                    id_externo: productoOdoo.id_externo, 
-                    default_code: productoOdoo.sku,
-                    name: productoOdoo.nombre,
-                    lst_price: tienePrecioNuevo ? precioExcel : precioOdoo,
-                    qty_available: stockFinal
-                });
+                const precioFinalFila = tienePrecioNuevo ? precioExcel : precioOdoo;
+                sumaTotalPreciosActuales += precioOdoo;
+                sumaTotalPreciosNuevos += precioFinalFila;
 
+                // 🛡️ Agregar a exportación solo si el SKU no se exportó antes (evita duplicados en Excel exportado)
+                if (!skusExportadosSet.has(skuExcel)) {
+                    skusExportadosSet.add(skuExcel);
+                    resultadosProcesados.push({
+                        id_externo: productoOdoo.id_externo, 
+                        default_code: productoOdoo.sku,
+                        name: productoOdoo.nombre,
+                        lst_price: precioFinalFila,
+                        qty_available: stockFinal
+                    });
+                }
+
+                // Renderizar Fila en la Previsualización (Muestra todas las ocurrencias, incluyendo repetidos)
                 const tr = document.createElement('tr');
                 
                 let celdaPrecioNuevo = `<td class="text-slate-400 italic">-</td>`;
@@ -316,7 +328,17 @@
             }
         });
 
-        document.getElementById('res-resumen').innerText = `Se encontraron ${coincidencias} productos únicos cruzados con éxito (se excluyeron duplicados del Excel). Revisa las diferencias antes de exportar.`;
+        // Fila de Totales al pie de la tabla
+        tfoot.innerHTML = `
+            <tr>
+                <td colspan="2" class="text-right font-extrabold text-slate-700">TOTALES (${coincidencias} filas):</td>
+                <td class="text-slate-700">${formatoMoneda.format(sumaTotalPreciosActuales)}</td>
+                <td class="text-emerald-700 font-extrabold">${formatoMoneda.format(sumaTotalPreciosNuevos)}</td>
+                <td colspan="3"></td>
+            </tr>
+        `;
+
+        document.getElementById('res-resumen').innerText = `Se procesaron ${coincidencias} filas en la previsualización (se muestran repetidos si los hay; para la exportación se unificaron a ${resultadosProcesados.length} elementos únicos).`;
         document.getElementById('panel-resultados').classList.remove('hidden');
     });
 
