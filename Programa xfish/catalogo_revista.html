@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo Revista PDF - X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Librería jsPDF para generar el PDF en el navegador -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     <style>
         body {
@@ -43,7 +42,7 @@
             <div class="flex flex-col md:flex-row gap-4 items-center justify-between mb-6">
                 <div>
                     <h1 class="text-3xl font-extrabold text-slate-800 tracking-tight">Generador de Catálogo Revista</h1>
-                    <p class="text-sm text-slate-500 font-medium">Filtra por categorías o etiquetas de Odoo y exporta un PDF con diseño profesional.</p>
+                    <p class="text-sm text-slate-500 font-medium">Mostrando únicamente artículos con foto. Filtra por categoría o etiqueta comercial.</p>
                 </div>
                 
                 <button onclick="generarPDF()" id="btn-pdf" class="bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold py-3 px-6 rounded-2xl shadow-lg shadow-purple-500/30 transition-all transform hover:-translate-y-0.5 flex items-center disabled:opacity-50 disabled:cursor-not-allowed" disabled>
@@ -65,7 +64,7 @@
                     </select>
                 </div>
                 <div class="flex flex-col">
-                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Etiqueta de Odoo (Tag):</label>
+                    <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-1">Etiqueta del Comercio:</label>
                     <select id="filtro-etiqueta" onchange="aplicarFiltros()">
                         <option value="all">-- Todas las Etiquetas --</option>
                     </select>
@@ -73,16 +72,12 @@
             </div>
         </div>
 
-        <!-- Estado de Carga -->
         <div id="estado-carga" class="glass-panel p-8 rounded-3xl flex flex-col items-center justify-center text-center">
             <svg class="animate-spin h-10 w-10 text-purple-600 mb-4" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
-            <h3 class="text-xl font-bold text-slate-700">Sincronizando con Odoo...</h3>
+            <h3 class="text-xl font-bold text-slate-700">Filtrando artículos con imagen...</h3>
         </div>
 
-        <!-- Previsualización Estilo Revista -->
-        <div id="grilla-vista-previa" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden pb-12">
-            <!-- Se inyecta por JS -->
-        </div>
+        <div id="grilla-vista-previa" class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 hidden pb-12"></div>
 
     </div>
 
@@ -113,7 +108,10 @@
 
             if (!respuesta.ok) throw new Error('Error al conectar');
             
-            odooCatalog = await respuesta.json();
+            const rawCatalog = await respuesta.json();
+            
+            // 🚫 Descartar productos sin foto
+            odooCatalog = rawCatalog.filter(p => p.foto && p.foto.trim() !== "");
             
             document.getElementById('estado-carga').classList.add('hidden');
             document.getElementById('grilla-vista-previa').classList.remove('hidden');
@@ -128,15 +126,14 @@
         }
     }
 
-    // Extraer dinámicamente categorías y etiquetas únicas del catálogo obtenido
     function poblarSelectsOdoo() {
         const categoriasSet = new Set();
         const etiquetasSet = new Set();
 
         odooCatalog.forEach(p => {
             if (p.categ_id) categoriasSet.add(p.categ_id);
-            if (p.tag_ids && Array.isArray(p.tag_ids)) {
-                p.tag_ids.forEach(t => etiquetasSet.add(t));
+            if (p.etiqueta && p.etiqueta !== "Sin Etiqueta") {
+                p.etiqueta.split(',').forEach(tag => etiquetasSet.add(tag.trim()));
             }
         });
 
@@ -159,7 +156,7 @@
         productosFiltrados = odooCatalog.filter(p => {
             const matchTexto = (p.nombre || '').toLowerCase().includes(texto) || (p.sku || '').toLowerCase().includes(texto);
             const matchCat = (catFiltro === 'all' || p.categ_id === catFiltro);
-            const matchTag = (tagFiltro === 'all' || (p.tag_ids && p.tag_ids.includes(tagFiltro)));
+            const matchTag = (tagFiltro === 'all' || (p.etiqueta && p.etiqueta.includes(tagFiltro)));
             return matchTexto && matchCat && matchTag;
         });
 
@@ -172,14 +169,14 @@
         grilla.innerHTML = '';
 
         if(productosFiltrados.length === 0) {
-            grilla.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 font-medium">No se encontraron productos con estos filtros.</div>`;
+            grilla.innerHTML = `<div class="col-span-full text-center py-12 text-slate-400 font-medium">No se encontraron productos con imagen bajo estos filtros.</div>`;
             return;
         }
 
         const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
 
         productosFiltrados.forEach(p => {
-            const imgUrl = p.foto ? `data:image/jpeg;base64,${p.foto}` : 'https://via.placeholder.com/200?text=SIN+FOTO';
+            const imgUrl = `data:image/jpeg;base64,${p.foto}`;
             
             const tarjeta = document.createElement('div');
             tarjeta.className = 'glass-panel rounded-2xl p-4 flex flex-col bg-white/80';
@@ -187,7 +184,10 @@
                 <div class="w-full aspect-square bg-white rounded-xl overflow-hidden mb-3 border border-slate-100 flex items-center justify-center">
                     <img src="${imgUrl}" class="w-full h-full object-contain">
                 </div>
-                <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider mb-0.5">${p.categ_id || 'General'}</span>
+                <div class="flex justify-between items-center mb-1">
+                    <span class="text-[10px] font-bold text-indigo-600 uppercase tracking-wider">${p.categ_id || 'General'}</span>
+                    <span class="text-[9px] font-semibold bg-purple-50 text-purple-600 px-2 py-0.5 rounded-full">${p.etiqueta}</span>
+                </div>
                 <h4 class="font-bold text-slate-800 text-sm mb-1 line-clamp-2">${p.nombre}</h4>
                 <p class="text-xs text-slate-500 mb-3 font-mono">SKU: ${p.sku || 'S/N'}</p>
                 <div class="mt-auto pt-2 border-t border-slate-100 flex justify-between items-center">
@@ -199,7 +199,6 @@
         });
     }
 
-    // 🎨 Generación del PDF con jsPDF
     function generarPDF() {
         if (productosFiltrados.length === 0) {
             alert("No hay productos para exportar en el PDF.");
@@ -207,25 +206,24 @@
         }
 
         const { jsPDF } = window.jspdf;
-        const doc = new jsPDF('p', 'mm', 'a4'); // Formato A4 vertical
+        const doc = new jsPDF('p', 'mm', 'a4');
 
-        // Portada o Cabecera del Catálogo Revista
-        doc.setFillColor(30, 41, 59); // Slate-800
+        doc.setFillColor(30, 41, 59);
         doc.rect(0, 0, 210, 35, 'F');
         
         doc.setTextColor(255, 255, 255);
         doc.setFontSize(20);
         doc.setFont("helvetica", "bold");
-        doc.text("X-FISH - Catálogo de Productos", 14, 22);
+        doc.text("X-FISH - Catálogo Comercial", 14, 22);
 
         doc.setFontSize(10);
         doc.setFont("helvetica", "normal");
-        doc.text(`Generado el: ${new Date().toLocaleDateString()} | Total Artículos: ${productosFiltrados.length}`, 14, 29);
+        doc.text(`Generado el: ${new Date().toLocaleDateString()} | Artículos con Foto: ${productosFiltrados.length}`, 14, 29);
 
         let x = 14;
         let y = 45;
         const anchoItem = 55;
-        const altoItem = 75;
+        const altoItem = 80; // Altura ampliada ligeramente para dar buen respiro al texto
         const margenX = 8;
         const margenY = 10;
         let itemsPorFila = 3;
@@ -233,8 +231,7 @@
 
         const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
 
-        productosFiltrados.forEach((p, index) => {
-            // Verificar si necesitamos salto de página
+        productosFiltrados.forEach((p) => {
             if (y + altoItem > 280) {
                 doc.addPage();
                 y = 20;
@@ -242,40 +239,45 @@
                 contadorFila = 0;
             }
 
-            // Fondo de la tarjeta en PDF
+            // Fondo y borde de la tarjeta en el PDF
             doc.setDrawColor(226, 232, 240);
             doc.setFillColor(255, 255, 255);
             doc.roundedRect(x, y, anchoItem, altoItem, 3, 3, 'FD');
 
-            // Imagen (si existe base64)
+            // Imagen del producto
             if (p.foto) {
                 try {
                     doc.addImage(`data:image/jpeg;base64,${p.foto}`, 'JPEG', x + 5, y + 5, 45, 45);
-                } catch(e) {
-                    // Si falla la imagen, continuamos sin romper el PDF
-                }
+                } catch(e) {}
             }
 
-            // Textos (Nombre, SKU y Precio)
+            // 📝 TEXTO RESPONSIVO CON AJUSTE AUTOMÁTICO (Evita superposiciones)
             doc.setTextColor(51, 65, 85);
-            doc.setFontSize(9);
-            doc.setFont("helvetica", "bold");
-            
-            // Cortar nombres muy largos para que no rompan el diseño
-            let nombreLimpio = p.nombre.length > 38 ? p.nombre.substring(0, 35) + '...' : p.nombre;
-            doc.text(nombreLimpio, x + 5, y + 55);
-
             doc.setFontSize(8);
+            doc.setFont("helvetica", "bold");
+
+            // Dividir el nombre automáticamente en líneas que entren en el ancho de la tarjeta
+            const maxTextWidth = anchoItem - 10;
+            const lineasNombre = doc.splitTextToSize(p.nombre, maxTextWidth);
+            const lineasAMostrar = lineasNombre.slice(0, 2); // Máximo 2 líneas para cuidar el diseño
+
+            doc.text(lineasAMostrar, x + 5, y + 54);
+
+            // Calcular dinámicamente el espacio vertical ocupado por el título
+            const alturaNombre = lineasAMostrar.length * 3.5;
+
+            // SKU posicionado de forma fluida debajo del nombre
+            doc.setFontSize(7);
             doc.setFont("helvetica", "normal");
             doc.setTextColor(100, 116, 139);
-            doc.text(`SKU: ${p.sku || 'S/N'}`, x + 5, y + 62);
+            doc.text(`SKU: ${p.sku || 'S/N'}`, x + 5, y + 56 + alturaNombre);
 
-            doc.setFontSize(10);
+            // Precio alineado al pie de la tarjeta de forma segura
+            doc.setFontSize(9);
             doc.setFont("helvetica", "bold");
-            doc.setTextColor(16, 185, 129); // Esmeralda
-            doc.text(formatoMoneda.format(p.precio || 0), x + 5, y + 70);
+            doc.setTextColor(16, 185, 129);
+            doc.text(formatoMoneda.format(p.precio || 0), x + 5, y + 73);
 
-            // Coordenadas para el siguiente ítem en la grilla
             contadorFila++;
             if (contadorFila < itemsPorFila) {
                 x += anchoItem + margenX;
@@ -286,7 +288,6 @@
             }
         });
 
-        // Descargar el archivo PDF resultante
         doc.save("Catalogo_XFish_Revista.pdf");
     }
 
