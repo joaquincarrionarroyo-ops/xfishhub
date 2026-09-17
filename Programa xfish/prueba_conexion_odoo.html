@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Catálogo de Variantes - X-Fish</title>
+    <title>Catálogo Completo - X-Fish</title>
     <style>
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -34,6 +34,26 @@
             margin-bottom: 20px;
             font-weight: bold;
         }
+        /* Estilos del Buscador */
+        .search-container {
+            margin-bottom: 20px;
+            display: none; /* Se oculta hasta que carguen los datos */
+        }
+        #buscador {
+            width: 100%;
+            padding: 15px 20px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            box-sizing: border-box;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        #buscador:focus {
+            border-color: #3498db;
+            outline: none;
+            box-shadow: 0 0 8px rgba(52, 152, 219, 0.4);
+        }
         .error-msg {
             background-color: #fde8e8 !important;
             border-left-color: #e74c3c !important;
@@ -42,7 +62,6 @@
         table {
             width: 100%;
             border-collapse: collapse;
-            margin-top: 20px;
             box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
         th, td {
@@ -95,55 +114,58 @@
 <div class="container">
     <a href="index.html" class="back-btn">&larr; Volver al inicio</a>
     
-    <h1>Inventario de Variantes (Odoo)</h1>
+    <h1>Inventario Completo (Odoo)</h1>
     
-    <div id="estado-carga">Conectando con la base de datos de Odoo... por favor espera.</div>
+    <div id="estado-carga">Cargando todo el catálogo desde Odoo... puede demorar unos segundos.</div>
     
+    <!-- Buscador -->
+    <div class="search-container" id="search-container">
+        <input type="text" id="buscador" onkeyup="filtrarTabla()" placeholder="🔍 Buscar por SKU o nombre del producto...">
+    </div>
+
     <table id="tabla-productos-container" style="display: none;">
         <thead>
             <tr>
                 <th>Foto</th>
-                <th>SKU (Ref. Interna)</th>
+                <th>SKU</th>
                 <th>Producto y Atributos</th>
                 <th>Precio</th>
                 <th>Stock Disp.</th>
             </tr>
         </thead>
         <tbody id="cuerpo-tabla">
-            <!-- Los datos se inyectarán aquí dinámicamente -->
+            <!-- Datos inyectados por JS -->
         </tbody>
     </table>
 </div>
 
 <script>
+    // Función para conectar a Render y traer datos
     async function cargarCatalogo() {
         const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
         
         const estadoCarga = document.getElementById('estado-carga');
+        const searchContainer = document.getElementById('search-container');
         const tablaContainer = document.getElementById('tabla-productos-container');
         const tbody = document.getElementById('cuerpo-tabla');
         
         try {
             const respuesta = await fetch(urlBackend);
-            
-            if (!respuesta.ok) {
-                throw new Error(`Error de red: ${respuesta.status}`);
-            }
+            if (!respuesta.ok) throw new Error(`Error de red: ${respuesta.status}`);
             
             const productos = await respuesta.json();
-            
-            if (productos.error) {
-                throw new Error(productos.error);
-            }
+            if (productos.error) throw new Error(productos.error);
             
             estadoCarga.style.display = 'none';
+            searchContainer.style.display = 'block'; // Muestra el buscador
             tablaContainer.style.display = 'table';
             tbody.innerHTML = ''; 
 
             if (productos.length === 0) {
                 estadoCarga.style.display = 'block';
                 estadoCarga.className = 'error-msg';
-                estadoCarga.innerText = 'No se encontraron variantes vendibles en la base de datos.';
+                estadoCarga.innerText = 'No se encontraron productos.';
+                searchContainer.style.display = 'none';
                 tablaContainer.style.display = 'none';
                 return;
             }
@@ -151,26 +173,23 @@
             productos.forEach(prod => {
                 const fila = document.createElement('tr');
                 
-                // Si hay imagen Base64 la procesamos, si no ponemos una imagen por defecto
                 const imagenSrc = prod.image_128 
                     ? `data:image/jpeg;base64,${prod.image_128}` 
                     : 'https://via.placeholder.com/55?text=Sin+Foto';
 
-                // Formateo de datos
-                const sku = prod.default_code ? prod.default_code : '<span style="color: #999; font-style: italic;">Sin SKU</span>';
-                const nombre = prod.display_name || 'Variante sin nombre';
+                const sku = prod.default_code ? prod.default_code : '-';
+                const nombre = prod.display_name || 'Sin nombre';
                 const precio = prod.lst_price ? parseFloat(prod.lst_price).toFixed(2) : '0.00';
                 const stock = prod.qty_available ? parseFloat(prod.qty_available) : 0;
                 
-                // Lógica visual para el stock
                 let claseStock = 'stock-ok';
                 if (stock <= 0) claseStock = 'stock-out';
                 else if (stock < 5) claseStock = 'stock-low';
                 
                 fila.innerHTML = `
                     <td><img src="${imagenSrc}" alt="Foto" class="img-miniatura"></td>
-                    <td><strong>${sku}</strong></td>
-                    <td>${nombre}</td>
+                    <td class="sku-cell"><strong>${sku}</strong></td>
+                    <td class="nombre-cell">${nombre}</td>
                     <td>$ ${precio}</td>
                     <td><span class="stock-badge ${claseStock}">${stock} unid.</span></td>
                 `;
@@ -179,9 +198,35 @@
             });
 
         } catch (error) {
-            console.error('Error de conexión:', error);
+            console.error('Error:', error);
             estadoCarga.className = 'error-msg';
-            estadoCarga.innerHTML = `<strong>Error de conexión:</strong> No se pudo cargar el inventario. <br><small>Revisa la consola para más detalles.</small>`;
+            estadoCarga.innerHTML = `<strong>Error:</strong> No se pudo cargar el inventario.`;
+        }
+    }
+
+    // Función del Buscador
+    function filtrarTabla() {
+        const input = document.getElementById("buscador");
+        const filtro = input.value.toUpperCase(); // Convertimos a mayúsculas para que no importe cómo escriban
+        const tabla = document.getElementById("cuerpo-tabla");
+        const filas = tabla.getElementsByTagName("tr");
+
+        for (let i = 0; i < filas.length; i++) {
+            // Buscamos dentro de la columna SKU (índice 1) y Nombre (índice 2)
+            const columnaSKU = filas[i].getElementsByTagName("td")[1];
+            const columnaNombre = filas[i].getElementsByTagName("td")[2];
+            
+            if (columnaSKU && columnaNombre) {
+                const textoSKU = columnaSKU.textContent || columnaSKU.innerText;
+                const textoNombre = columnaNombre.textContent || columnaNombre.innerText;
+                
+                // Si el filtro coincide con el SKU o el Nombre, mostramos la fila, sino la ocultamos
+                if (textoSKU.toUpperCase().indexOf(filtro) > -1 || textoNombre.toUpperCase().indexOf(filtro) > -1) {
+                    filas[i].style.display = "";
+                } else {
+                    filas[i].style.display = "none";
+                }
+            }       
         }
     }
 
