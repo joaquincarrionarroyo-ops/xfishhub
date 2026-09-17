@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reporte de Inventario - X-Fish</title>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1400px; margin: 0 auto; background: white; padding: 20px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); overflow-x: auto; }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        #estado-carga { padding: 15px; background-color: #e8f4fd; border-left: 4px solid #3498db; color: #2980b9; margin-bottom: 20px; font-weight: bold; display: flex; align-items: center; }
+        .spinner { border: 4px solid rgba(52,152,219,0.2); border-top: 4px solid #3498db; border-radius: 50%; width: 24px; height: 24px; animation: girar 1s linear infinite; margin-right: 15px; flex-shrink: 0; }
+        @keyframes girar { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        #buscador { width: 100%; padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 6px; margin-bottom: 20px; }
+        
+        table { width: 100%; border-collapse: collapse; font-size: 13px; white-space: nowrap; }
+        th, td { border: 1px solid #ccc; padding: 8px; text-align: center; vertical-align: middle; }
+        
+        th { background-color: #d4edda; color: #333; font-weight: bold; }
+        .col-nombre { text-align: left; white-space: normal; min-width: 250px; background-color: #ffffe0; }
+        .col-codigo { background-color: #ffffe0; font-weight: bold; }
+        .col-precio { background-color: #7d3c98; color: white; font-weight: bold; }
+        .col-ubicacion { background-color: #fff2cc; font-weight: bold; }
+        .col-total { background-color: #ffff99; font-weight: bold; font-size: 14px; }
+        
+        .img-miniatura { width: 40px; height: 40px; object-fit: cover; border-radius: 4px; border: 1px solid #ddd; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" style="color: #3498db; text-decoration: none; font-weight: bold;">&larr; Volver al inicio</a>
+    <h1>Reporte Dinámico de Inventario</h1>
+    
+    <div id="estado-carga">
+        <div class="spinner"></div><span>Cargando existencias y ubicaciones desde Odoo...</span>
+    </div>
+    
+    <input type="text" id="buscador" onkeyup="filtrarTabla()" placeholder="🔍 Buscar por Código o Detalle..." style="display:none;">
+
+    <table id="tabla-productos" style="display: none;">
+        <thead id="cabecera-tabla">
+            <!-- Los títulos se crearán dinámicamente según las ubicaciones reales -->
+        </thead>
+        <tbody id="cuerpo-tabla">
+            <!-- Datos inyectados por JS -->
+        </tbody>
+    </table>
+</div>
+
+<script>
+    async function cargarCatalogo() {
+        const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
+        const thead = document.getElementById('cabecera-tabla');
+        const tbody = document.getElementById('cuerpo-tabla');
+        
+        try {
+            const respuesta = await fetch(urlBackend);
+            const productos = await respuesta.json();
+            
+            document.getElementById('estado-carga').style.display = 'none';
+            document.getElementById('buscador').style.display = 'block';
+            document.getElementById('tabla-productos').style.display = 'table';
+            
+            // 1. Extraer todas las ubicaciones únicas que existen en este momento en Odoo
+            const locacionesUnicas = new Set();
+            productos.forEach(prod => {
+                if (prod.ubicaciones) {
+                    Object.keys(prod.ubicaciones).forEach(loc => locacionesUnicas.add(loc));
+                }
+            });
+            const locacionesArray = Array.from(locacionesUnicas).sort(); // Ordenadas alfabéticamente
+
+            // 2. Construir el encabezado de la tabla dinámicamente
+            let theadHTML = `
+                <tr>
+                    <th>Foto</th>
+                    <th>Código</th>
+                    <th>Detalle</th>
+                    <th>Lote (Bulto)</th>
+                    <th>QxB</th>
+                    <th class="col-precio">Precio</th>
+            `;
+            locacionesArray.forEach(loc => {
+                theadHTML += `<th class="col-ubicacion">${loc}</th>`; // Crea una columna por cada ubicación real
+            });
+            theadHTML += `
+                    <th class="col-total">Total</th>
+                    <th class="col-total">Valorizado</th>
+                </tr>
+            `;
+            thead.innerHTML = theadHTML;
+            
+            // 3. Construir las filas con los datos
+            tbody.innerHTML = ''; 
+            const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+
+            productos.forEach(prod => {
+                const imagenSrc = prod.foto ? `data:image/jpeg;base64,${prod.foto}` : 'https://via.placeholder.com/40?text=No+Img';
+                const precio = prod.precio ? parseFloat(prod.precio) : 0;
+                const valorizado = precio * prod.total;
+
+                let filaHTML = `
+                    <td><img src="${imagenSrc}" class="img-miniatura"></td>
+                    <td class="col-codigo">${prod.sku || '-'}</td>
+                    <td class="col-nombre">${prod.nombre || '-'}</td>
+                    <td>${prod.lotes || '-'}</td>
+                    <td>${prod.qxb}</td>
+                    <td class="col-precio">${formatoMoneda.format(precio)}</td>
+                `;
+
+                // Recorremos el arreglo exacto de locaciones para poner la cantidad en la columna correcta
+                locacionesArray.forEach(loc => {
+                    const cantidad = prod.ubicaciones[loc] || ''; // Si no hay en esa ubicación, lo deja en blanco
+                    filaHTML += `<td class="col-ubicacion">${cantidad}</td>`;
+                });
+
+                filaHTML += `
+                    <td class="col-total">${prod.total}</td>
+                    <td class="col-total">${formatoMoneda.format(valorizado)}</td>
+                `;
+
+                const fila = document.createElement('tr');
+                fila.innerHTML = filaHTML;
+                tbody.appendChild(fila);
+            });
+        } catch (error) {
+            console.error('Error:', error);
+            document.getElementById('estado-carga').innerHTML = `<strong>Error:</strong> No se pudo cargar el inventario.`;
+        }
+    }
+
+    function filtrarTabla() {
+        const filtro = document.getElementById("buscador").value.toUpperCase();
+        const filas = document.getElementById("cuerpo-tabla").getElementsByTagName("tr");
+
+        for (let i = 0; i < filas.length; i++) {
+            const codigo = filas[i].getElementsByTagName("td")[1].textContent;
+            const detalle = filas[i].getElementsByTagName("td")[2].textContent;
+            
+            if (codigo.toUpperCase().indexOf(filtro) > -1 || detalle.toUpperCase().indexOf(filtro) > -1) {
+                filas[i].style.display = "";
+            } else {
+                filas[i].style.display = "none";
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', cargarCatalogo);
+</script>
+
+</body>
+</html>
