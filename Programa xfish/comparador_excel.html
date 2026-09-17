@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador Excel vs Odoo - X-Fish</title>
+    <!-- Librería SheetJS para leer Excel en el navegador -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: 'Segoe UI', sans-serif; background-color: #f4f7f6; color: #333; margin: 0; padding: 20px; }
+        .container { max-width: 1200px; margin: 0 auto; background: white; padding: 30px; border-radius: 8px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        h1 { color: #2c3e50; border-bottom: 2px solid #3498db; padding-bottom: 10px; margin-bottom: 20px; }
+        
+        /* Cajas de estado y paneles */
+        .panel { background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 6px; padding: 20px; margin-bottom: 20px; }
+        .success-text { color: #27ae60; font-weight: bold; }
+        .warning-text { color: #f39c12; font-weight: bold; }
+        
+        /* Controles de subida y mapeo */
+        .file-upload { margin-bottom: 15px; }
+        .mapping-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin-top: 15px; }
+        .mapping-group { display: flex; flex-direction: column; }
+        .mapping-group label { font-weight: bold; font-size: 14px; margin-bottom: 5px; color: #555; }
+        select { padding: 8px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; }
+        
+        button { background-color: #3498db; color: white; border: none; padding: 10px 20px; font-size: 16px; border-radius: 4px; cursor: pointer; font-weight: bold; transition: 0.2s; margin-top: 15px;}
+        button:hover { background-color: #2980b9; }
+        button:disabled { background-color: #bdc3c7; cursor: not-allowed; }
+
+        /* Tabla de resultados */
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; font-size: 14px; }
+        th, td { border: 1px solid #ddd; padding: 10px; text-align: center; }
+        th { background-color: #34495e; color: white; }
+        .col-nombre { text-align: left; }
+        .val-old { color: #7f8c8d; font-style: italic; }
+        .val-new { color: #27ae60; font-weight: bold; }
+        
+        .back-btn { display: inline-block; margin-bottom: 20px; text-decoration: none; color: #3498db; font-weight: bold; }
+        .back-btn:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <a href="index.html" class="back-btn">&larr; Volver al inicio</a>
+    <h1>Comparador de Alta (Excel) vs Odoo</h1>
+    
+    <!-- Paso 1: Estado de Odoo -->
+    <div class="panel" id="panel-odoo">
+        <h3>1. Conexión a Odoo</h3>
+        <p id="odoo-status">⏳ Descargando catálogo actual desde Odoo...</p>
+    </div>
+
+    <!-- Paso 2: Subida de Excel y Mapeo -->
+    <div class="panel" id="panel-excel" style="display: none;">
+        <h3>2. Cargar Alta de Excel</h3>
+        <input type="file" id="file-input" class="file-upload" accept=".xlsx, .xls, .csv">
+        
+        <div id="mapping-section" style="display: none;">
+            <p>Selecciona qué columna del Excel corresponde a cada dato:</p>
+            <div class="mapping-grid">
+                <div class="mapping-group">
+                    <label>Columna de Código (SKU):</label>
+                    <select id="map-sku"></select>
+                </div>
+                <div class="mapping-group">
+                    <label>Columna de Precio Nuevo:</label>
+                    <select id="map-precio"><option value="">-- No actualizar precio --</option></select>
+                </div>
+                <div class="mapping-group">
+                    <label>Columna de Cantidad a Añadir:</label>
+                    <select id="map-cantidad"><option value="">-- No añadir stock --</option></select>
+                </div>
+            </div>
+            <button id="btn-procesar">Comparar y Procesar Datos</button>
+        </div>
+    </div>
+
+    <!-- Paso 3: Resultados -->
+    <div id="panel-resultados" style="display: none;">
+        <h3>3. Resultados de la Comparación</h3>
+        <p id="res-resumen" class="success-text"></p>
+        
+        <table>
+            <thead>
+                <tr>
+                    <th>SKU</th>
+                    <th class="col-nombre">Producto en Odoo</th>
+                    <th>Precio Odoo</th>
+                    <th>Precio Excel</th>
+                    <th>Stock Actual (Odoo)</th>
+                    <th>Cant. a Añadir (Excel)</th>
+                    <th>Stock Final Proyectado</th>
+                </tr>
+            </thead>
+            <tbody id="tabla-cuerpo">
+                <!-- Se inyecta por JS -->
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<script>
+    let odooCatalog = []; // Guardará el catálogo de Odoo
+    let excelData = [];   // Guardará el Excel crudo
+
+    // 1. Cargar datos de Odoo al iniciar la página
+    async function cargarOdoo() {
+        try {
+            const respuesta = await fetch('https://xfish-odoo-api.onrender.com/api/productos');
+            if (!respuesta.ok) throw new Error('Error en servidor');
+            
+            odooCatalog = await respuesta.json();
+            
+            document.getElementById('odoo-status').innerHTML = `✅ <span class="success-text">Catálogo descargado: ${odooCatalog.length} productos listos para comparar.</span>`;
+            document.getElementById('panel-excel').style.display = 'block'; // Habilita el paso 2
+        } catch (error) {
+            document.getElementById('odoo-status').innerHTML = `❌ <span style="color:red;">Error al conectar con Odoo.</span>`;
+        }
+    }
+
+    // 2. Leer Excel usando SheetJS
+    document.getElementById('file-input').addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, {type: 'array'});
+            
+            // Tomamos la primera hoja del Excel
+            const primeraHoja = workbook.Sheets[workbook.SheetNames[0]];
+            
+            // Convertimos la hoja a JSON
+            excelData = XLSX.utils.sheet_to_json(primeraHoja, {defval: ""});
+            
+            if(excelData.length > 0) {
+                // Obtener los títulos de las columnas (las llaves del primer objeto)
+                const columnas = Object.keys(excelData[0]);
+                generarOpcionesSelect('map-sku', columnas, false);
+                generarOpcionesSelect('map-precio', columnas, true);
+                generarOpcionesSelect('map-cantidad', columnas, true);
+                
+                document.getElementById('mapping-section').style.display = 'block';
+            }
+        };
+        reader.readAsArrayBuffer(file);
+    });
+
+    // Función auxiliar para llenar los <select>
+    function generarOpcionesSelect(idElemento, columnas, permiteVacio) {
+        const select = document.getElementById(idElemento);
+        // Mantiene la primera opción si permite vacío
+        const htmlBase = permiteVacio ? select.innerHTML : '<option value="">-- Selecciona --</option>';
+        
+        let opciones = columnas.map(col => `<option value="${col}">${col}</option>`).join('');
+        select.innerHTML = htmlBase + opciones;
+    }
+
+    // 3. Cruzar Datos y Renderizar Tabla
+    document.getElementById('btn-procesar').addEventListener('click', function() {
+        const colSku = document.getElementById('map-sku').value;
+        const colPrecio = document.getElementById('map-precio').value;
+        const colCant = document.getElementById('map-cantidad').value;
+
+        if(!colSku) {
+            alert("Debes seleccionar la columna del SKU obligatoriamente para poder cruzar los datos.");
+            return;
+        }
+
+        const tbody = document.getElementById('tabla-cuerpo');
+        tbody.innerHTML = '';
+        let coincidencias = 0;
+
+        const formatoMoneda = new Intl.NumberFormat('es-AR', { style: 'currency', currency: 'ARS' });
+
+        excelData.forEach(filaExcel => {
+            const skuExcel = filaExcel[colSku] ? filaExcel[colSku].toString().trim().toUpperCase() : null;
+            if(!skuExcel) return;
+
+            // Buscar este SKU en el catálogo de Odoo
+            const productoOdoo = odooCatalog.find(p => p.sku && p.sku.toUpperCase() === skuExcel);
+
+            if(productoOdoo) {
+                coincidencias++;
+                
+                // Extraer valores de Odoo
+                const precioOdoo = productoOdoo.precio || 0;
+                const stockOdoo = productoOdoo.total || 0;
+
+                // Extraer valores del Excel (Limpiar formatos si vienen con símbolos $ o letras)
+                let precioExcel = colPrecio && filaExcel[colPrecio] ? parseFloat(filaExcel[colPrecio].toString().replace(/[^0-9.-]+/g,"")) : null;
+                let cantExcel = colCant && filaExcel[colCant] ? parseFloat(filaExcel[colCant]) : 0;
+                if(isNaN(cantExcel)) cantExcel = 0;
+
+                const stockFinal = stockOdoo + cantExcel;
+
+                // Armar fila
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><strong>${productoOdoo.sku}</strong></td>
+                    <td class="col-nombre">${productoOdoo.nombre}</td>
+                    <td class="val-old">${formatoMoneda.format(precioOdoo)}</td>
+                    <td class="val-new">${precioExcel !== null ? formatoMoneda.format(precioExcel) : '-'}</td>
+                    <td class="val-old">${stockOdoo}</td>
+                    <td class="val-new">+ ${cantExcel}</td>
+                    <td><strong>${stockFinal}</strong></td>
+                `;
+                tbody.appendChild(tr);
+            }
+        });
+
+        document.getElementById('res-resumen').innerText = `Se encontraron ${coincidencias} productos del Excel que coinciden con la base de Odoo.`;
+        document.getElementById('panel-resultados').style.display = 'block';
+    });
+
+    // Iniciar carga al abrir la página
+    document.addEventListener('DOMContentLoaded', cargarOdoo);
+</script>
+
+</body>
+</html>
