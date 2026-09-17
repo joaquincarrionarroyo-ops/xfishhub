@@ -175,28 +175,24 @@
     // 1. Cargar Odoo
     async function cargarOdoo() {
         try {
-            // 1. Verificamos si el usuario ingresó la contraseña en el Hub
-const pwd = sessionStorage.getItem('odoo_pwd');
-if (!pwd) {
-    alert("Acceso denegado. Debes iniciar sesión en el Hub primero.");
-    window.location.href = 'index.html'; // Lo enviamos a poner la clave
-    return;
-}
+            const pwd = sessionStorage.getItem('odoo_pwd');
+            if (!pwd) {
+                alert("Acceso denegado. Debes iniciar sesión en el Hub primero.");
+                window.location.href = 'index.html';
+                return;
+            }
 
-// 2. Le pasamos la contraseña al servidor en el Header
-const respuesta = await fetch(urlBackend, {
-    headers: {
-        'x-odoo-password': pwd
-    }
-});
+            const respuesta = await fetch(urlBackend, {
+                headers: { 'x-odoo-password': pwd }
+            });
 
-// 3. Si la contraseña es incorrecta o expiró
-if (respuesta.status === 401) {
-    sessionStorage.removeItem('odoo_pwd');
-    alert("La contraseña de Odoo es incorrecta. Vuelve a iniciar sesión.");
-    window.location.href = 'index.html';
-    return;
-}
+            if (respuesta.status === 401) {
+                sessionStorage.removeItem('odoo_pwd');
+                alert("La contraseña de Odoo es incorrecta. Vuelve a iniciar sesión.");
+                window.location.href = 'index.html';
+                return;
+            }
+
             if (!respuesta.ok) throw new Error('Error en servidor');
             
             odooCatalog = await respuesta.json();
@@ -207,7 +203,6 @@ if (respuesta.status === 401) {
             statusDiv.innerHTML = `<svg class="w-6 h-6 mr-3 text-emerald-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg> 
                                    Conexión exitosa. Catálogo sincronizado: ${odooCatalog.length} productos listos.`;
             
-            // Habilitar Paso 2
             const panelExcel = document.getElementById('panel-excel');
             panelExcel.classList.remove('opacity-30', 'pointer-events-none');
             panelExcel.classList.add('opacity-100');
@@ -247,7 +242,7 @@ if (respuesta.status === 401) {
         select.innerHTML = htmlBase + columnas.map(col => `<option value="${col}">${col}</option>`).join('');
     }
 
-    // 3. Procesar Cruce
+    // 3. Procesar Cruce (Con filtro estricto para evitar repetidos)
     document.getElementById('btn-procesar').addEventListener('click', function() {
         const colSku = document.getElementById('map-sku').value;
         const colPrecio = document.getElementById('map-precio').value;
@@ -260,16 +255,21 @@ if (respuesta.status === 401) {
 
         const tbody = document.getElementById('tabla-cuerpo');
         tbody.innerHTML = '';
-        resultadosProcesados = []; // Reiniciar array de resultados
+        resultadosProcesados = []; 
         let coincidencias = 0;
+        let skusProcesados = new Set(); // 🛡️ Control para evitar duplicados en el mismo archivo
 
         excelData.forEach(filaExcel => {
             const skuExcel = filaExcel[colSku] ? filaExcel[colSku].toString().trim().toUpperCase() : null;
             if(!skuExcel) return;
 
+            // 🚫 Si el SKU ya fue procesado antes en este Excel, lo saltamos para que no se repita
+            if (skusProcesados.has(skuExcel)) return;
+
             const productoOdoo = odooCatalog.find(p => p.sku && p.sku.toUpperCase() === skuExcel);
 
             if(productoOdoo) {
+                skusProcesados.add(skuExcel); // Marcar SKU como procesado
                 coincidencias++;
                 
                 const precioOdoo = productoOdoo.precio || 0;
@@ -281,11 +281,9 @@ if (respuesta.status === 401) {
 
                 const stockFinal = stockOdoo + cantExcel;
                 
-                // Lógica de Diferencia de Precios
                 const tienePrecioNuevo = precioExcel !== null && !isNaN(precioExcel);
                 const diferenciaPrecio = tienePrecioNuevo && precioOdoo !== precioExcel;
 
-                // Guardar para exportación utilizando el ID Externo
                 resultadosProcesados.push({
                     id_externo: productoOdoo.id_externo, 
                     default_code: productoOdoo.sku,
@@ -294,7 +292,6 @@ if (respuesta.status === 401) {
                     qty_available: stockFinal
                 });
 
-                // Renderizar Fila
                 const tr = document.createElement('tr');
                 
                 let celdaPrecioNuevo = `<td class="text-slate-400 italic">-</td>`;
@@ -319,7 +316,7 @@ if (respuesta.status === 401) {
             }
         });
 
-        document.getElementById('res-resumen').innerText = `Se encontraron ${coincidencias} productos cruzados con éxito. Revisa las diferencias de precio (en color) antes de exportar.`;
+        document.getElementById('res-resumen').innerText = `Se encontraron ${coincidencias} productos únicos cruzados con éxito (se excluyeron duplicados del Excel). Revisa las diferencias antes de exportar.`;
         document.getElementById('panel-resultados').classList.remove('hidden');
     });
 
@@ -339,7 +336,6 @@ if (respuesta.status === 401) {
         }
 
         const datosParaOdoo = resultadosProcesados.map(item => {
-            // El truco aquí es usar el nombre de columna "id" y pasarle el id_externo que Odoo necesita
             let fila = { 
                 "id": item.id_externo, 
                 "default_code": item.default_code,
@@ -352,16 +348,13 @@ if (respuesta.status === 401) {
             return fila;
         });
 
-        // Generar archivo Excel con SheetJS
         const worksheet = XLSX.utils.json_to_sheet(datosParaOdoo);
         const workbook = XLSX.utils.book_new();
         XLSX.utils.book_append_sheet(workbook, worksheet, "Actualizacion_Odoo");
         
-        // Descargar archivo
         XLSX.writeFile(workbook, "Update_Odoo_Precios_Stock.xlsx");
     }
 
-    // Arrancar la aplicación
     document.addEventListener('DOMContentLoaded', cargarOdoo);
 </script>
 
