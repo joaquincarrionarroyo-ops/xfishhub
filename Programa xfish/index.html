@@ -21,11 +21,10 @@
     <div class="relative z-10 w-full max-w-6xl">
         
         <div class="text-center mb-12 flex flex-col items-center">
-            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-3">Hub de Inventario</h1>
-            <p class="text-lg text-slate-500 font-medium max-w-xl mx-auto mb-4">Selecciona la herramienta que deseas utilizar hoy.</p>
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-3">Hub Operativo X-Fish</h1>
+            <p class="text-lg text-slate-500 font-medium max-w-2xl mx-auto mb-4">Plataforma centralizada de gestión de inventario, auditoría de catálogo, automatización gráfica y control en tiempo real sincronizado con Odoo.</p>
             
-            <!-- Botón discreto para configurar/cambiar la API Key -->
-            <button onclick="cambiarApiKey()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold bg-white/80 border border-blue-200 px-4 py-1.5 rounded-full shadow-sm transition-all">
+            <button onclick="cambiarApiKey()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold bg-white/80 border border-blue-200 px-4 py-1.5 rounded-full shadow-sm transition-all hover:shadow-md">
                 🔑 Configurar / Cambiar Clave API de Odoo
             </button>
         </div>
@@ -34,67 +33,97 @@
             
             <!-- 1. Generador de Altas -->
             <a href="altas.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg mb-6"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg></div>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </div>
                 <h2 class="text-2xl font-bold text-slate-800 mb-2">Generador de Altas</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Compara Excel original con nuevos ingresos.</p>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Compara planillas de compras e ingresos contra el maestro original. Detecta artículos nuevos, calcula diferencias de cantidades recibidas y genera automáticamente la estructura de alta para el catálogo.
+                </p>
                 <div class="flex items-center text-blue-600 font-semibold text-sm">Abrir herramienta →</div>
             </a>
 
             <!-- 2. Diferencia General -->
             <a href="diferenciainventario.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-lg mb-6"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg></div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Diferencia General</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Auditoría financiera y conteo físico.</p>
-                <div class="flex items-center text-slate-600 font-semibold text-sm">Abrir herramienta →</div>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Diferencia de Inventario</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Módulo de auditoría física y contable. Contrasta los conteos físicos de almacén contra el stock teórico en Odoo, identificando sobrantes, faltantes, desvíos por ubicación y valuación de diferencias.
+                </p>
+                <div class="flex items-center text-slate-700 font-semibold text-sm">Abrir herramienta →</div>
             </a>
 
             <!-- 3. Estampador Dinámico -->
             <a href="editor-imagenes.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg mb-6"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg></div>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
                 <h2 class="text-2xl font-bold text-slate-800 mb-2">Estampador Dinámico</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Automatiza el diseño de tus imágenes.</p>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Editor por lotes para procesamiento gráfico comercial. Permite aplicar marcas de agua, marcos institucionales, logos y etiquetas sobre fotografías de productos manteniendo fondo blanco y formato estandarizado.
+                </p>
                 <div class="flex items-center text-pink-600 font-semibold text-sm">Abrir estampador →</div>
             </a>
 
             <!-- 4. Alta de Inventario -->
             <a href="alta-inventario.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg mb-6"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg></div>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
                 <h2 class="text-2xl font-bold text-slate-800 mb-2">Alta de Inventario</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Cruza inventario anterior con nuevas altas.</p>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Conciliación integral de stock entre planillas maestras previas e ingresos recientes. Valida códigos SKU, unidades por bulto y genera archivos de importación masiva para ajustes de inventario.
+                </p>
                 <div class="flex items-center text-indigo-600 font-semibold text-sm">Abrir módulo →</div>
             </a>
 
             <!-- 5. Actualizador Precios -->
             <a href="precios_nuevos.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg mb-6"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg></div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Actualizador Precios</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Cruza tu Excel con Odoo en tiempo real.</p>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Actualizador de Precios</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Cruza listas de proveedores en Excel contra Odoo en tiempo real. Resalta variaciones tarifarias, suma importes totales y exporta un archivo con External IDs exactos de variantes sin duplicados.
+                </p>
                 <div class="flex items-center text-emerald-600 font-semibold text-sm">Abrir actualizador →</div>
             </a>
 
             <!-- 6. Buscador Visual -->
             <a href="buscador.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg mb-6"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg></div>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
                 <h2 class="text-2xl font-bold text-slate-800 mb-2">Buscador Visual</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Busca productos y audita fotos y stock.</p>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Catálogo de consulta inmediata por nombre o SKU. Permite auditar fotos cargadas, validar existencia de stock por depósito o estantería y verificar lotes sin necesidad de ingresar al ERP.
+                </p>
                 <div class="flex items-center text-cyan-600 font-semibold text-sm">Abrir buscador →</div>
             </a>
 
             <!-- 7. Catálogo Revista PDF -->
             <a href="catalogo_revista.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-900/10 cursor-pointer">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 mb-6 group-hover:scale-105 transition-transform">
                     <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
                 </div>
                 <h2 class="text-2xl font-bold text-slate-800 mb-2">Catálogo Revista PDF</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Filtra por categorías o etiquetas de Odoo y genera un PDF profesional.</p>
-                <div class="flex items-center text-purple-600 font-semibold text-sm group-hover:text-amber-500 transition-colors">Abrir generador →</div>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Generador editorial de folletos comerciales en PDF. Filtra por categorías y etiquetas comerciales de Odoo, excluye artículos sin foto y adapta textos automáticamente para evitar solapamientos.
+                </p>
+                <div class="flex items-center text-purple-600 font-semibold text-sm group-hover:text-purple-800 transition-colors">Abrir generador →</div>
             </a>
 
             <!-- 8. Manuales y Procedimientos -->
             <a href="manuales.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
-                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg mb-6"><svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg></div>
-                <h2 class="text-2xl font-bold text-slate-800 mb-2">Manuales</h2>
-                <p class="text-sm text-slate-500 font-medium flex-grow mb-6">Guías operativas, instructivos de proceso y documentación del sistema.</p>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Manuales y Documentación</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Biblioteca de instructivos operativos en PDF: procedimientos de venta interna y externa, facturación, cierres de caja, recepción ICO y actualización masiva de precios en Odoo.
+                </p>
                 <div class="flex items-center text-amber-600 font-semibold text-sm">Ver manuales →</div>
             </a>
 
