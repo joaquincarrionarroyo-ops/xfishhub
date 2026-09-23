@@ -1,0 +1,783 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Generador de Fichas Comerciales | X-Fish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; -webkit-tap-highlight-color: transparent; }
+        .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
+        .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
+        .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background-color: rgba(255, 255, 255, 0.85); outline: none; transition: all 0.2s; font-weight: 600; color: #334155; }
+        .custom-select:focus, .custom-input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2); background-color: #fff; }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+        .modal-overlay { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 100; }
+        .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
+        input[type=range] { width: 100%; accent-color: #0284c7; touch-action: none; cursor: pointer; }
+        input[type=color] { border: none; border-radius: 4px; padding: 0; cursor: pointer; }
+        textarea.custom-input { resize: vertical; min-height: 50px; }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-800 selection:bg-sky-500 selection:text-white pb-12">
+
+    <div class="blob bg-sky-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
+    <div class="blob bg-indigo-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
+    <div class="blob bg-cyan-200 w-[300px] h-[300px] top-[40%] left-[50%] opacity-40" style="animation-delay: -4s;"></div>
+
+    <header class="glass-panel sticky top-0 z-50 px-6 md:px-8 py-4 mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                Fichas Comerciales de Producto
+            </h1>
+            <a href="index.html" class="text-sm font-semibold text-sky-600 hover:text-sky-800 transition-colors">← Volver al Hub</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto w-full px-4 md:px-6 space-y-6 relative z-10">
+
+        <!-- 1. SELECCIÓN DE PRODUCTOS DESDE ODOO -->
+        <div class="glass-panel rounded-3xl p-6 md:p-8">
+            <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-6 border-b border-slate-200/60 gap-3">
+                <div>
+                    <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Artículos desde Odoo</h2>
+                    <p class="text-xs text-slate-500 font-medium">Pegá una lista de SKUs o seleccioná directamente del catálogo sincronizado.</p>
+                </div>
+                <div id="odoo-sync-status" class="text-xs font-bold text-slate-500 bg-white/70 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Conectando con Odoo...
+                </div>
+            </div>
+
+            <!-- MÉTODOS DE SELECCIÓN -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                <!-- Método 1: Pegar lista de SKUs -->
+                <div class="bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">📋 Pegar Lista de Códigos (SKUs)</label>
+                        <p class="text-xs text-slate-500 mb-2">Ingresá uno o varios códigos separados por renglón, espacio o coma.</p>
+                        <textarea id="input-sku-list" class="custom-input text-xs font-mono h-24" placeholder="Ej: CAST17&#10;ALPINE.L&#10;AD80"></textarea>
+                    </div>
+                    <button onclick="seleccionarPorListaSkus()" class="mt-3 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors shadow-sm">
+                        🔍 Buscar y Cargar desde Lista
+                    </button>
+                </div>
+
+                <!-- Método 2: Filtro manual del catálogo -->
+                <div class="bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
+                    <div>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">🗂️ Filtrar del Catálogo</label>
+                        <p class="text-xs text-slate-500 mb-2">Buscá y seleccioná manualmente para sumar a la lista.</p>
+                        <div class="flex gap-2 mb-2">
+                            <input type="text" id="filtro-rapido" placeholder="Buscar por código o nombre..." class="custom-input text-xs" oninput="filtrarCatalogoOdoo()">
+                            <select id="filtro-categoria" class="custom-select text-xs w-48" onchange="filtrarCatalogoOdoo()">
+                                <option value="all">Todas las Categorías</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div id="lista-catalogo-selector" class="max-h-28 ios-scroll border border-slate-200 rounded-lg p-2 bg-white/50 text-xs space-y-1">
+                        <p class="text-slate-400 italic">Cargando productos de Odoo...</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ARTÍCULOS SELECCIONADOS ACTUALMENTE -->
+            <div class="bg-sky-50/60 border border-sky-200 p-4 rounded-2xl mb-6">
+                <div class="flex items-center justify-between mb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-sky-800">
+                        Artículos Listos para Procesar: <span id="contador-seleccionados" class="text-sky-600 font-extrabold text-sm">0</span>
+                    </span>
+                    <button onclick="limpiarSeleccion()" class="text-[11px] font-bold text-rose-600 hover:underline">Limpiar selección</button>
+                </div>
+                <div id="chips-seleccionados" class="flex flex-wrap gap-2 max-h-24 ios-scroll">
+                    <span class="text-xs text-slate-400 italic">No hay productos seleccionados aún.</span>
+                </div>
+            </div>
+
+            <!-- CONTROLES GLOBALES Y MOCKUP -->
+            <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
+                <!-- Controles -->
+                <div class="w-full lg:w-1/2 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes de Diseño (Lote)</h3>
+                    
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Modo de Lienzo</label>
+                            <select id="global-mode" class="custom-select w-full">
+                                <option value="margin">🖼️ Cuadrado c/ Fondo Blanco</option>
+                                <option value="overlay">📸 Texto Superpuesto Directo</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Color General de Texto</label>
+                            <input type="color" id="global-color" value="#0f172a" class="w-full h-[36px] rounded border border-slate-300 bg-white p-1">
+                        </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                            <span>Escala de Tipografía</span>
+                            <span id="val-global-scale" class="text-sky-600 font-bold">100%</span>
+                        </label>
+                        <input type="range" id="global-scale" min="30" max="250" value="100">
+                    </div>
+
+                    <div class="space-y-3 pt-2 border-t border-slate-200">
+                        <div>
+                            <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
+                                <span>Altura TÍTULO (Nombre)</span><span id="val-global-y-top">0px</span>
+                            </label>
+                            <input type="range" id="global-y-top" min="-300" max="300" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-amber-600 uppercase flex justify-between">
+                                <span>Altura SUBTÍTULO (Variante / Atributo)</span><span id="val-global-y-sub">0px</span>
+                            </label>
+                            <input type="range" id="global-y-sub" min="-300" max="300" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-emerald-600 uppercase flex justify-between">
+                                <span>Altura TEXTO ABAJO (Código / SKU)</span><span id="val-global-y-bot">0px</span>
+                            </label>
+                            <input type="range" id="global-y-bot" min="-300" max="300" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mockup de Prueba -->
+                <div class="w-full lg:w-1/2 flex flex-col">
+                    <h3 class="text-sm font-bold text-sky-800 border-b border-sky-200 pb-2 mb-3">👁️ Previsualización del Formato</h3>
+                    
+                    <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[260px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
+                        <img id="global-mockup-img" class="max-h-[260px] w-auto object-contain drop-shadow-md rounded bg-white" />
+                    </div>
+                </div>
+            </div>
+
+            <button id="btn-process" onclick="procesarLote()" class="w-full sm:w-auto bg-gradient-to-r from-sky-500 to-blue-600 hover:from-sky-600 hover:to-blue-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-sky-500/30 transform transition-all duration-200 active:scale-95 text-sm uppercase tracking-wide flex items-center justify-center gap-2">
+                <span>🎨 Generar Fichas Comerciales</span>
+            </button>
+        </div>
+
+        <!-- 2. RESULTADOS Y GRILLA DE TARJETAS -->
+        <div id="results-section" class="hidden space-y-6">
+            <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500 gap-4">
+                <div>
+                    <h3 class="text-lg font-bold text-slate-800">Fichas Generadas con Éxito</h3>
+                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá cada ficha, editá de forma individual si lo necesitás y descargá.</p>
+                </div>
+                <button onclick="descargarTodoZip()" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Descargar Lote en ZIP
+                </button>
+            </div>
+
+            <div class="glass-panel rounded-3xl p-4 md:p-6">
+                <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
+            </div>
+        </div>
+
+    </main>
+
+    <!-- MODAL EDITOR INDIVIDUAL -->
+    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[95vh] md:h-auto md:max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative">
+            
+            <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/80 backdrop-blur w-8 h-8 flex items-center justify-center rounded-full text-red-500 font-bold shadow">&times;</button>
+
+            <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-200 h-[40vh] md:h-auto shrink-0" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
+                <img id="modal-preview-img" class="max-w-full max-h-full object-contain drop-shadow-md rounded bg-white" />
+            </div>
+
+            <div class="w-full md:w-1/2 p-4 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
+                <div class="hidden md:flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Individual de Ficha</h2>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl">&times;</button>
+                </div>
+
+                <div class="space-y-4 ios-scroll flex-grow pr-2 pb-6">
+                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="text-[11px] font-bold text-slate-700 uppercase mb-2 block">Estilo de Fondo</label>
+                        <select id="edit-mode" class="custom-select mb-3">
+                            <option value="margin">Con Márgenes (Lienzo Blanco)</option>
+                            <option value="overlay">Superpuesto (Foto Original)</option>
+                        </select>
+
+                        <div class="flex justify-between gap-4">
+                            <div class="w-1/2">
+                                <label class="text-[11px] font-bold text-slate-700 uppercase mb-1 block">Color</label>
+                                <input type="color" id="edit-color" class="w-full h-[36px] rounded cursor-pointer border border-slate-300 bg-white p-1">
+                            </div>
+                            <div class="w-1/2">
+                                <label class="text-[11px] font-bold text-slate-700 uppercase flex justify-between mb-1">
+                                    <span>Tamaño</span><span id="val-edit-scale" class="text-sky-600">100%</span>
+                                </label>
+                                <input type="range" id="edit-scale" min="30" max="250" value="100">
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div>
+                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Nombre del Producto (Título)</label>
+                            <textarea id="edit-txt-top" class="custom-input text-xs" rows="2"></textarea>
+                            <input type="range" id="edit-y-top" min="-300" max="300" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Variante / Atributo (Subtítulo)</label>
+                            <textarea id="edit-txt-sub" class="custom-input text-xs" rows="1"></textarea>
+                            <input type="range" id="edit-y-sub" min="-300" max="300" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-bold text-emerald-600 uppercase mb-1 block">Código Principal / SKU (Texto Abajo)</label>
+                            <textarea id="edit-txt-bot" class="custom-input text-xs" rows="1"></textarea>
+                            <input type="range" id="edit-y-bot" min="-300" max="300" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4 pt-3 border-t border-slate-200 shrink-0 bg-white">
+                    <button onclick="saveModalChanges()" class="w-full bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors text-sm">
+                        ✅ Aplicar Cambios a la Ficha
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+<script>
+    let odooCatalog = [];
+    let selectedProducts = [];
+    let generatedCards = [];
+    let activeEditIndex = -1;
+    const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
+    const fontFamily = '"Berlin Sans FB", "Century Gothic", "Arial Rounded MT Bold", sans-serif';
+
+    // Cargar Catálogo de Odoo al entrar
+    async function sincronizarOdoo() {
+        try {
+            const pwd = sessionStorage.getItem('odoo_pwd');
+            if (!pwd) {
+                alert("Debes iniciar sesión en el Hub primero.");
+                window.location.href = 'index.html';
+                return;
+            }
+
+            const res = await fetch(urlBackend, { headers: { 'x-odoo-password': pwd } });
+            if (!res.ok) throw new Error("Fallo al conectar con Odoo");
+
+            const data = await res.json();
+            // Filtrar solo los que tienen imagen
+            odooCatalog = data.filter(p => p.foto && p.foto.trim() !== "");
+
+            document.getElementById('odoo-sync-status').innerHTML = `
+                <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                ${odooCatalog.length} productos con foto sincronizados
+            `;
+            document.getElementById('odoo-sync-status').classList.replace('text-slate-500', 'text-emerald-700');
+
+            poblarFiltrosOdoo();
+            filtrarCatalogoOdoo();
+            generarMockupBase();
+
+        } catch (e) {
+            console.error(e);
+            document.getElementById('odoo-sync-status').innerHTML = `<span class="text-rose-500 font-bold">❌ Error de conexión</span>`;
+        }
+    }
+
+    function poblarFiltrosOdoo() {
+        const catSelect = document.getElementById('filtro-categoria');
+        const categorias = new Set();
+        odooCatalog.forEach(p => { if (p.categ_id) categorias.add(p.categ_id); });
+        categorias.forEach(cat => {
+            catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+        });
+    }
+
+    function filtrarCatalogoOdoo() {
+        const txt = document.getElementById('filtro-rapido').value.toLowerCase();
+        const cat = document.getElementById('filtro-categoria').value;
+        const contenedor = document.getElementById('lista-catalogo-selector');
+
+        const filtrados = odooCatalog.filter(p => {
+            const matchTxt = (p.nombre || '').toLowerCase().includes(txt) || (p.sku || '').toLowerCase().includes(txt);
+            const matchCat = (cat === 'all' || p.categ_id === cat);
+            return matchTxt && matchCat;
+        }).slice(0, 40); // Mostrar top 40 para ligereza
+
+        if (filtrados.length === 0) {
+            contenedor.innerHTML = '<p class="text-slate-400 italic">No se encontraron artículos.</p>';
+            return;
+        }
+
+        contenedor.innerHTML = '';
+        filtrados.forEach(p => {
+            const item = document.createElement('div');
+            item.className = 'flex items-center justify-between p-1.5 hover:bg-sky-50 rounded cursor-pointer border-b border-slate-100 last:border-0';
+            item.innerHTML = `
+                <div class="truncate mr-2">
+                    <span class="font-bold text-slate-800">[${p.sku || 'S/N'}]</span> 
+                    <span class="text-slate-600">${p.nombre}</span>
+                </div>
+                <button onclick="agregarProductoPorSku('${p.sku}')" class="text-sky-600 hover:text-sky-800 font-extrabold text-xs px-2 py-0.5 bg-sky-100 rounded">+</button>
+            `;
+            contenedor.appendChild(item);
+        });
+    }
+
+    // Funciones de selección
+    function agregarProductoPorSku(sku) {
+        if (!sku) return;
+        const normSku = sku.trim().toUpperCase();
+        if (selectedProducts.some(p => p.sku && p.sku.toUpperCase() === normSku)) return;
+
+        const prod = odooCatalog.find(p => p.sku && p.sku.toUpperCase() === normSku);
+        if (prod) {
+            selectedProducts.push(prod);
+            actualizarChipsSeleccionados();
+        }
+    }
+
+    function seleccionarPorListaSkus() {
+        const raw = document.getElementById('input-sku-list').value;
+        if (!raw.trim()) return;
+
+        const skus = raw.split(/[\n, ]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
+        let encontrados = 0;
+
+        skus.forEach(sku => {
+            if (!selectedProducts.some(p => p.sku && p.sku.toUpperCase() === sku)) {
+                const prod = odooCatalog.find(p => p.sku && p.sku.toUpperCase() === sku);
+                if (prod) {
+                    selectedProducts.push(prod);
+                    encontrados++;
+                }
+            }
+        });
+
+        actualizarChipsSeleccionados();
+        if (encontrados === 0) {
+            alert("No se encontraron productos con esos SKUs o ya estaban en la lista.");
+        }
+    }
+
+    function eliminarSeleccion(sku) {
+        selectedProducts = selectedProducts.filter(p => p.sku !== sku);
+        actualizarChipsSeleccionados();
+    }
+
+    function limpiarSeleccion() {
+        selectedProducts = [];
+        actualizarChipsSeleccionados();
+    }
+
+    function actualizarChipsSeleccionados() {
+        const contador = document.getElementById('contador-seleccionados');
+        const chipsContainer = document.getElementById('chips-seleccionados');
+        contador.textContent = selectedProducts.length;
+
+        if (selectedProducts.length === 0) {
+            chipsContainer.innerHTML = '<span class="text-xs text-slate-400 italic">No hay productos seleccionados aún.</span>';
+            return;
+        }
+
+        chipsContainer.innerHTML = '';
+        selectedProducts.forEach(p => {
+            const chip = document.createElement('div');
+            chip.className = 'bg-white border border-sky-300 text-slate-800 text-[11px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm';
+            chip.innerHTML = `
+                <span class="text-sky-600 font-mono">${p.sku}</span>
+                <span class="truncate max-w-[120px]">${p.nombre}</span>
+                <button onclick="eliminarSeleccion('${p.sku}')" class="text-slate-400 hover:text-rose-500 font-bold ml-1">&times;</button>
+            `;
+            chipsContainer.appendChild(chip);
+        });
+    }
+
+    // Desglose de Nombre, Atributo/Variante y Código Principal
+    function desglosarDatosProducto(prod) {
+        let display = prod.nombre || "";
+        let codigo = prod.sku ? `COD: ${prod.sku}` : "";
+        let variante = "";
+        let tituloPrincipal = display;
+
+        // Si Odoo incluye el SKU entre corchetes ej: "[ALPINE.L] Reel Huevito (Izquierdo)"
+        if (tituloPrincipal.startsWith('[')) {
+            const idxCierre = tituloPrincipal.indexOf(']');
+            if (idxCierre !== -1) {
+                tituloPrincipal = tituloPrincipal.substring(idxCierre + 1).trim();
+            }
+        }
+
+        // Si Odoo especifica variante entre paréntesis ej: "Reel Huevito (Izquierdo)" o con guión
+        const parentesisMatch = tituloPrincipal.match(/\((.*?)\)/);
+        if (parentesisMatch) {
+            variante = parentesisMatch[1];
+            tituloPrincipal = tituloPrincipal.replace(/\(.*?\)/, '').trim();
+        } else if (tituloPrincipal.includes(' - ')) {
+            const partes = tituloPrincipal.split(' - ');
+            tituloPrincipal = partes[0].trim();
+            variante = partes.slice(1).join(' - ').trim();
+        }
+
+        return {
+            titulo: tituloPrincipal,
+            variante: variante ? `VAR: ${variante}` : (prod.categ_id || ''),
+            codigo: codigo
+        };
+    }
+
+    // Canvas Engine y Text Wrapping
+    function getLines(ctx, text, maxWidth) {
+        if (!text) return [];
+        let lines = [];
+        text.split('\n').forEach(explicitLine => {
+            let words = explicitLine.split(" ");
+            if(words.length === 0) return;
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                let word = words[i];
+                if (ctx.measureText(currentLine + " " + word).width < maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+        });
+        return lines;
+    }
+
+    function renderCanvasDataUrl(config) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = config.imgObj;
+        const scaleFactor = (config.textScale || 100) / 100;
+
+        if (config.mode === 'margin') {
+            const maxDim = Math.max(img.width, img.height);
+            const margin = Math.max(maxDim * 0.22, 120);
+            const size = maxDim + (margin * 2);
+            canvas.width = size; canvas.height = size;
+
+            ctx.fillStyle = '#ffffff'; 
+            ctx.fillRect(0, 0, size, size);
+            ctx.drawImage(img, (size - img.width) / 2, (size - img.height) / 2, img.width, img.height);
+
+            ctx.fillStyle = config.textColor; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle';
+
+            let fontTop = (margin * 0.35) * scaleFactor;
+            let fontSub = fontTop * 0.7;
+            let lhTop = fontTop * 1.2;
+            let lhSub = fontSub * 1.2;
+
+            ctx.font = `bold ${fontTop}px ${fontFamily}`;
+            let tLines = config.top ? getLines(ctx, config.top, size * 0.88) : [];
+            ctx.font = `normal ${fontSub}px ${fontFamily}`;
+            let sLines = config.sub ? getLines(ctx, config.sub, size * 0.88) : [];
+
+            let blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
+            if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
+
+            let y = ((margin - blockH) / 2) + 30;
+
+            if (tLines.length > 0) {
+                ctx.font = `bold ${fontTop}px ${fontFamily}`;
+                tLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhTop/2) + config.yTop); y += lhTop; });
+                if (sLines.length > 0) y += (fontTop * 0.2);
+            }
+            if (sLines.length > 0) {
+                ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                sLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhSub/2) + config.ySub); y += lhSub; });
+            }
+
+            if (config.bot) {
+                let fontBot = (margin * 0.45) * scaleFactor;
+                ctx.font = `bold ${fontBot}px ${fontFamily}`;
+                let bLines = getLines(ctx, config.bot, size * 0.88);
+                let lhBot = fontBot * 1.2;
+                let botH = bLines.length * lhBot;
+                let botY = size - (margin / 2) - (botH / 2) + (lhBot/2) + config.yBot;
+                bLines.forEach(l => { ctx.fillText(l, size / 2, botY); botY += lhBot; });
+            }
+
+        } else {
+            canvas.width = img.width; canvas.height = img.height;
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+            ctx.fillStyle = config.textColor; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle';
+
+            let fontTop = (img.height * 0.08) * scaleFactor;
+            let fontSub = fontTop * 0.7;
+            let lhTop = fontTop * 1.2;
+            let lhSub = fontSub * 1.2;
+
+            ctx.font = `bold ${fontTop}px ${fontFamily}`;
+            let tLines = config.top ? getLines(ctx, config.top, img.width * 0.9) : [];
+            ctx.font = `normal ${fontSub}px ${fontFamily}`;
+            let sLines = config.sub ? getLines(ctx, config.sub, img.width * 0.9) : [];
+
+            let y = (img.height * 0.12);
+            if (tLines.length > 0) {
+                ctx.font = `bold ${fontTop}px ${fontFamily}`;
+                tLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.yTop); y += lhTop; });
+                if (sLines.length > 0) y += (fontTop * 0.2);
+            }
+            if (sLines.length > 0) {
+                ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                sLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.ySub); y += lhSub; });
+            }
+
+            if (config.bot) {
+                let fontBot = (img.height * 0.08) * scaleFactor;
+                ctx.font = `bold ${fontBot}px ${fontFamily}`;
+                let bLines = getLines(ctx, config.bot, img.width * 0.9);
+                let lhBot = fontBot * 1.2;
+                let botH = bLines.length * lhBot;
+                let botY = (img.height * 0.92) - (botH / 2) + config.yBot;
+                bLines.forEach(l => { ctx.fillText(l, img.width / 2, botY); botY += lhBot; });
+            }
+        }
+        return canvas.toDataURL('image/jpeg', 0.95);
+    }
+
+    function loadImageFromBase64(base64) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Error decodificando imagen Base64"));
+            img.src = `data:image/jpeg;base64,${base64}`;
+        });
+    }
+
+    // Mockup en Vivo
+    let mockupImgObj = null;
+    async function generarMockupBase() {
+        if (odooCatalog.length === 0) return;
+        try {
+            mockupImgObj = await loadImageFromBase64(odooCatalog[0].foto);
+            updateGlobalMockup();
+        } catch(e) {}
+    }
+
+    function updateGlobalMockup() {
+        if (!mockupImgObj) return;
+        const config = {
+            imgObj: mockupImgObj,
+            mode: document.getElementById('global-mode').value,
+            textColor: document.getElementById('global-color').value,
+            textScale: parseInt(document.getElementById('global-scale').value),
+            top: "NOMBRE DEL PRODUCTO\nLINEA PRINCIPAL",
+            sub: "VAR: Atributo / Color / Tamaño",
+            bot: "COD: SKU-EJEMPLO",
+            yTop: parseInt(document.getElementById('global-y-top').value),
+            ySub: parseInt(document.getElementById('global-y-sub').value),
+            yBot: parseInt(document.getElementById('global-y-bot').value),
+        };
+        document.getElementById('global-mockup-img').src = renderCanvasDataUrl(config);
+    }
+
+    const updateSlider = (id, suffix) => {
+        document.getElementById(id).addEventListener('input', (e) => {
+            document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
+            updateGlobalMockup();
+        });
+    };
+    updateSlider('global-scale', '%');
+    updateSlider('global-y-top', 'px');
+    updateSlider('global-y-sub', 'px');
+    updateSlider('global-y-bot', 'px');
+    updateSlider('edit-scale', '%');
+
+    ['global-mode', 'global-color'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateGlobalMockup);
+    });
+
+    // Procesar Lote
+    async function procesarLote() {
+        if (selectedProducts.length === 0) {
+            alert("Seleccioná al menos un artículo para generar sus fichas.");
+            return;
+        }
+
+        generatedCards = [];
+        const grid = document.getElementById('preview-grid');
+        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas en alta definición...</p>';
+        document.getElementById('results-section').classList.remove('hidden');
+
+        const gMode = document.getElementById('global-mode').value;
+        const gColor = document.getElementById('global-color').value;
+        const gScale = parseInt(document.getElementById('global-scale').value);
+        const gyTop = parseInt(document.getElementById('global-y-top').value);
+        const gySub = parseInt(document.getElementById('global-y-sub').value);
+        const gyBot = parseInt(document.getElementById('global-y-bot').value);
+
+        for (let i = 0; i < selectedProducts.length; i++) {
+            const prod = selectedProducts[i];
+            const info = desglosarDatosProducto(prod);
+
+            try {
+                const imgObj = await loadImageFromBase64(prod.foto);
+                const config = {
+                    sku: prod.sku || `ITEM_${i+1}`,
+                    name: `${prod.sku || 'PRODUCTO'}.jpg`,
+                    imgObj: imgObj,
+                    top: info.titulo,
+                    sub: info.variante,
+                    bot: info.codigo,
+                    mode: gMode,
+                    textColor: gColor,
+                    textScale: gScale,
+                    yTop: gyTop,
+                    ySub: gySub,
+                    yBot: gyBot
+                };
+
+                config.dataUrl = renderCanvasDataUrl(config);
+                generatedCards.push(config);
+            } catch(e) {
+                console.error("Error procesando", prod.sku, e);
+            }
+        }
+
+        renderResultGrid();
+    }
+
+    function renderResultGrid() {
+        const grid = document.getElementById('preview-grid');
+        grid.innerHTML = '';
+        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas listas para compartir.`;
+
+        generatedCards.forEach((item, index) => {
+            grid.innerHTML += `
+                <div class="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden flex flex-col group hover:shadow-md transition-shadow">
+                    <div class="aspect-square bg-slate-50 flex items-center justify-center p-2">
+                        <img id="grid-img-${index}" src="${item.dataUrl}" class="w-full h-full object-contain drop-shadow-sm" />
+                    </div>
+                    <div class="p-3 bg-white flex flex-col gap-2 border-t border-slate-100">
+                        <div class="truncate">
+                            <span class="text-xs font-bold text-sky-700 font-mono">[${item.sku}]</span>
+                            <span class="text-xs font-medium text-slate-700" title="${item.top}">${item.top}</span>
+                        </div>
+                        <div class="flex gap-2 w-full pt-1">
+                            <button onclick="openEditor(${index})" class="flex-1 text-xs font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 py-1.5 rounded-lg transition-colors text-center active:scale-95 shadow-sm">✏️ Editar</button>
+                            <button onclick="descargarIndividual(${index})" class="flex-1 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-lg transition-colors text-center active:scale-95 shadow-sm">⬇️ Bajar</button>
+                        </div>
+                    </div>
+                </div>
+            `;
+        });
+    }
+
+    // Modal Editor Individual
+    window.openEditor = function(index) {
+        activeEditIndex = index;
+        const config = generatedCards[index];
+
+        document.getElementById('edit-mode').value = config.mode;
+        document.getElementById('edit-color').value = config.textColor;
+        document.getElementById('edit-scale').value = config.textScale;
+        document.getElementById('val-edit-scale').textContent = config.textScale + '%';
+
+        document.getElementById('edit-txt-top').value = config.top;
+        document.getElementById('edit-txt-sub').value = config.sub;
+        document.getElementById('edit-txt-bot').value = config.bot;
+
+        document.getElementById('edit-y-top').value = config.yTop;
+        document.getElementById('edit-y-sub').value = config.ySub;
+        document.getElementById('edit-y-bot').value = config.yBot;
+
+        updateModalPreview();
+        document.getElementById('editor-modal').classList.remove('hidden');
+        document.body.style.overflow = 'hidden';
+    };
+
+    window.closeModal = function() {
+        document.getElementById('editor-modal').classList.add('hidden');
+        document.body.style.overflow = 'auto';
+    };
+
+    function updateModalPreview() {
+        if(activeEditIndex === -1) return;
+        const tempConfig = {
+            ...generatedCards[activeEditIndex],
+            mode: document.getElementById('edit-mode').value,
+            textColor: document.getElementById('edit-color').value,
+            textScale: parseInt(document.getElementById('edit-scale').value),
+            top: document.getElementById('edit-txt-top').value,
+            sub: document.getElementById('edit-txt-sub').value,
+            bot: document.getElementById('edit-txt-bot').value,
+            yTop: parseInt(document.getElementById('edit-y-top').value),
+            ySub: parseInt(document.getElementById('edit-y-sub').value),
+            yBot: parseInt(document.getElementById('edit-y-bot').value),
+        };
+        document.getElementById('modal-preview-img').src = renderCanvasDataUrl(tempConfig);
+    }
+
+    ['edit-mode', 'edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
+        document.getElementById(id).addEventListener('input', updateModalPreview);
+    });
+
+    window.saveModalChanges = function() {
+        if(activeEditIndex === -1) return;
+        const config = generatedCards[activeEditIndex];
+        config.mode = document.getElementById('edit-mode').value;
+        config.textColor = document.getElementById('edit-color').value;
+        config.textScale = parseInt(document.getElementById('edit-scale').value);
+        config.top = document.getElementById('edit-txt-top').value;
+        config.sub = document.getElementById('edit-txt-sub').value;
+        config.bot = document.getElementById('edit-txt-bot').value;
+        config.yTop = parseInt(document.getElementById('edit-y-top').value);
+        config.ySub = parseInt(document.getElementById('edit-y-sub').value);
+        config.yBot = parseInt(document.getElementById('edit-y-bot').value);
+
+        config.dataUrl = renderCanvasDataUrl(config);
+        document.getElementById(`grid-img-${activeEditIndex}`).src = config.dataUrl;
+        closeModal();
+    };
+
+    // Descargas
+    window.descargarIndividual = function(index) {
+        const item = generatedCards[index];
+        const link = document.createElement('a');
+        link.href = item.dataUrl;
+        link.download = item.name;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+    };
+
+    window.descargarTodoZip = async function() {
+        if (generatedCards.length === 0) return;
+        const zip = new JSZip();
+        const folder = zip.folder("Fichas_Comerciales_XFish");
+
+        generatedCards.forEach(item => {
+            const base64Data = item.dataUrl.split(',')[1];
+            folder.file(item.name, base64Data, {base64: true});
+        });
+
+        const content = await zip.generateAsync({type:"blob"});
+        const link = document.createElement('a');
+        link.href = URL.createObjectURL(content);
+        link.download = "Fichas_Comerciales_XFish.zip";
+        link.click();
+    };
+
+    document.addEventListener('DOMContentLoaded', sincronizarOdoo);
+</script>
+
+</body>
+</html>
