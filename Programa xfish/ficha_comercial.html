@@ -44,40 +44,45 @@
 
     <main class="max-w-7xl mx-auto w-full px-4 md:px-6 space-y-6 relative z-10">
 
-        <!-- 1. SELECCIÓN DE PRODUCTOS DESDE ODOO -->
+        <!-- 1. SELECCIÓN DE PRODUCTOS MATRICES -->
         <div class="glass-panel rounded-3xl p-6 md:p-8">
             <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-6 border-b border-slate-200/60 gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Artículos desde Odoo</h2>
-                    <p class="text-xs text-slate-500 font-medium">Pegá una lista de SKUs o seleccioná directamente del catálogo sincronizado.</p>
+                    <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Productos Matrices</h2>
+                    <p class="text-xs text-slate-500 font-medium">Al seleccionar un producto matriz, agrupa sus tipos (Casting/Spinning), tramos, medidas y librajes en columnas.</p>
                 </div>
                 <div id="odoo-sync-status" class="text-xs font-bold text-slate-500 bg-white/70 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Conectando con Odoo...
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Sincronizando catálogo y atributos...
                 </div>
             </div>
 
-            <!-- MÉTODOS DE SELECCIÓN -->
+            <!-- CONTROLES DE BÚSQUEDA Y CATEGORÍAS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- Método 1: Pegar lista de SKUs -->
+                <!-- Entrada de SKUs por lote -->
                 <div class="bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">📋 Pegar Lista de Códigos (SKUs)</label>
-                        <p class="text-xs text-slate-500 mb-2">Ingresá uno o varios códigos separados por renglón, espacio o coma.</p>
-                        <textarea id="input-sku-list" class="custom-input text-xs font-mono h-24" placeholder="Ej: CAST17&#10;ALPINE.L&#10;AD80"></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">📋 Pegar Lista de Códigos o SKUs</label>
+                        <p class="text-xs text-slate-500 mb-2">Pega códigos base o variantes (separados por renglón o coma).</p>
+                        <textarea id="input-sku-list" class="custom-input text-xs font-mono h-24" placeholder="Ej: CAST17&#10;CAÑA PERLA BLANCA&#10;AD80"></textarea>
                     </div>
                     <button onclick="seleccionarPorListaSkus()" class="mt-3 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors shadow-sm">
-                        🔍 Buscar y Cargar desde Lista
+                        🔍 Buscar y Agregar a la Selección
                     </button>
                 </div>
 
-                <!-- Método 2: Filtro manual del catálogo -->
+                <!-- Buscador de Catálogo con botón de Categoría Completa -->
                 <div class="bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">🗂️ Filtrar del Catálogo</label>
-                        <p class="text-xs text-slate-500 mb-2">Buscá y seleccioná manualmente para sumar a la lista.</p>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block text-sm font-bold text-slate-700">🗂️ Catálogo Disponible</label>
+                            <button onclick="seleccionarCategoriaCompleta()" id="btn-cat-completa" class="text-[11px] font-bold text-sky-600 bg-sky-100 hover:bg-sky-200 px-2 py-0.5 rounded transition-colors hidden">
+                                ➕ Seleccionar Toda la Categoría
+                            </button>
+                        </div>
+                        <p class="text-xs text-slate-500 mb-2">Los artículos seleccionados desaparecen automáticamente de esta lista.</p>
                         <div class="flex gap-2 mb-2">
                             <input type="text" id="filtro-rapido" placeholder="Buscar por código o nombre..." class="custom-input text-xs" oninput="filtrarCatalogoOdoo()">
-                            <select id="filtro-categoria" class="custom-select text-xs w-48" onchange="filtrarCatalogoOdoo()">
+                            <select id="filtro-categoria" class="custom-select text-xs w-48" onchange="alCambiarCategoria()">
                                 <option value="all">Todas las Categorías</option>
                             </select>
                         </div>
@@ -88,24 +93,24 @@
                 </div>
             </div>
 
-            <!-- ARTÍCULOS SELECCIONADOS ACTUALMENTE -->
+            <!-- CHIPS DE PRODUCTOS SELECCIONADOS -->
             <div class="bg-sky-50/60 border border-sky-200 p-4 rounded-2xl mb-6">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-xs font-bold uppercase tracking-wider text-sky-800">
-                        Artículos Listos para Procesar: <span id="contador-seleccionados" class="text-sky-600 font-extrabold text-sm">0</span>
+                        Productos Matrices Seleccionados: <span id="contador-seleccionados" class="text-sky-600 font-extrabold text-sm">0</span>
                     </span>
-                    <button onclick="limpiarSeleccion()" class="text-[11px] font-bold text-rose-600 hover:underline">Limpiar selección</button>
+                    <button onclick="limpiarSeleccion()" class="text-[11px] font-bold text-rose-600 hover:underline">Limpiar selección completa</button>
                 </div>
                 <div id="chips-seleccionados" class="flex flex-wrap gap-2 max-h-24 ios-scroll">
                     <span class="text-xs text-slate-400 italic">No hay productos seleccionados aún.</span>
                 </div>
             </div>
 
-            <!-- CONTROLES GLOBALES Y MOCKUP -->
+            <!-- AJUSTES GLOBALES Y MOCKUP EN VIVO -->
             <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
                 <!-- Controles -->
                 <div class="w-full lg:w-1/2 space-y-4">
-                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes de Diseño (Lote)</h3>
+                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales de Diseño</h3>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
@@ -117,7 +122,7 @@
                         </div>
                         <div>
                             <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Color General de Texto</label>
-                            <input type="color" id="global-color" value="#0f172a" class="w-full h-[36px] rounded border border-slate-300 bg-white p-1">
+                            <input type="color" id="global-color" value="#000000" class="w-full h-[36px] rounded border border-slate-300 bg-white p-1">
                         </div>
                     </div>
 
@@ -138,20 +143,20 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-amber-600 uppercase flex justify-between">
-                                <span>Altura SUBTÍTULO (Variante / Atributo)</span><span id="val-global-y-sub">0px</span>
+                                <span>Altura TRAMOS (Cabecera)</span><span id="val-global-y-sub">0px</span>
                             </label>
                             <input type="range" id="global-y-sub" min="-300" max="300" value="0">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-emerald-600 uppercase flex justify-between">
-                                <span>Altura TEXTO ABAJO (Código / SKU)</span><span id="val-global-y-bot">0px</span>
+                                <span>Altura COLUMNAS DE ATRIBUTOS</span><span id="val-global-y-bot">0px</span>
                             </label>
                             <input type="range" id="global-y-bot" min="-300" max="300" value="0">
                         </div>
                     </div>
                 </div>
 
-                <!-- Mockup de Prueba -->
+                <!-- Previsualización en Vivo del Mockup -->
                 <div class="w-full lg:w-1/2 flex flex-col">
                     <h3 class="text-sm font-bold text-sky-800 border-b border-sky-200 pb-2 mb-3">👁️ Previsualización del Formato</h3>
                     
@@ -166,12 +171,12 @@
             </button>
         </div>
 
-        <!-- 2. RESULTADOS Y GRILLA DE TARJETAS -->
+        <!-- 2. RESULTADOS Y GRILLA DE FICHAS -->
         <div id="results-section" class="hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500 gap-4">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800">Fichas Generadas con Éxito</h3>
-                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá cada ficha, editá de forma individual si lo necesitás y descargá.</p>
+                    <h3 class="text-lg font-bold text-slate-800">Fichas Generadas</h3>
+                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá cada ficha, editá individualmente los textos o posiciones y descargá.</p>
                 </div>
                 <button onclick="descargarTodoZip()" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -226,18 +231,29 @@
 
                     <div class="space-y-3">
                         <div>
-                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Nombre del Producto (Título)</label>
-                            <textarea id="edit-txt-top" class="custom-input text-xs" rows="2"></textarea>
+                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Nombre Principal (Título)</label>
+                            <textarea id="edit-txt-top" class="custom-input text-xs" rows="1"></textarea>
                             <input type="range" id="edit-y-top" min="-300" max="300" value="0">
                         </div>
                         <div>
-                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Variante / Atributo (Subtítulo)</label>
+                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Tramos / Subtítulo</label>
                             <textarea id="edit-txt-sub" class="custom-input text-xs" rows="1"></textarea>
                             <input type="range" id="edit-y-sub" min="-300" max="300" value="0">
                         </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Izq (Casting)</label>
+                                <textarea id="edit-txt-col-left" class="custom-input text-xs font-mono" rows="6"></textarea>
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Der (Spinning)</label>
+                                <textarea id="edit-txt-col-right" class="custom-input text-xs font-mono" rows="6"></textarea>
+                            </div>
+                        </div>
                         <div>
-                            <label class="text-[11px] font-bold text-emerald-600 uppercase mb-1 block">Código Principal / SKU (Texto Abajo)</label>
-                            <textarea id="edit-txt-bot" class="custom-input text-xs" rows="1"></textarea>
+                            <label class="text-[10px] font-bold text-slate-400 uppercase flex justify-between">
+                                <span>Altura Columnas</span>
+                            </label>
                             <input type="range" id="edit-y-bot" min="-300" max="300" value="0">
                         </div>
                     </div>
@@ -253,14 +269,16 @@
     </div>
 
 <script>
-    let odooCatalog = [];
-    let selectedProducts = [];
+    let rawOdooVariants = [];
+    let productTemplates = [];
+    let selectedTemplateIds = new Set();
     let generatedCards = [];
     let activeEditIndex = -1;
     const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
-    const fontFamily = '"Berlin Sans FB", "Century Gothic", "Arial Rounded MT Bold", sans-serif';
 
-    // Cargar Catálogo de Odoo al entrar
+    // 🎨 Tipografía fiel al estampador
+    const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
+
     async function sincronizarOdoo() {
         try {
             const pwd = sessionStorage.getItem('odoo_pwd');
@@ -274,16 +292,17 @@
             if (!res.ok) throw new Error("Fallo al conectar con Odoo");
 
             const data = await res.json();
-            // Filtrar solo los que tienen imagen
-            odooCatalog = data.filter(p => p.foto && p.foto.trim() !== "");
+            rawOdooVariants = data.filter(p => p.foto && p.foto.trim() !== "");
+
+            agruparPorProductoMatriz();
 
             document.getElementById('odoo-sync-status').innerHTML = `
                 <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
-                ${odooCatalog.length} productos con foto sincronizados
+                ${productTemplates.length} productos matrices listos
             `;
             document.getElementById('odoo-sync-status').classList.replace('text-slate-500', 'text-emerald-700');
 
-            poblarFiltrosOdoo();
+            poblarCategorias();
             filtrarCatalogoOdoo();
             generarMockupBase();
 
@@ -293,13 +312,138 @@
         }
     }
 
-    function poblarFiltrosOdoo() {
+    // Agrupa variantes bajo un producto matriz estructurando sus columnas (Casting vs Spinning, Largos y Librajes)
+    function agruparPorProductoMatriz() {
+        const groups = {};
+
+        rawOdooVariants.forEach(item => {
+            // Nombre de la matriz
+            let baseName = item.nombre_matriz || item.nombre || "";
+            if (baseName.startsWith('[')) {
+                const idx = baseName.indexOf(']');
+                if (idx !== -1) baseName = baseName.substring(idx + 1).trim();
+            }
+
+            // Quitar variantes entre paréntesis para el título limpio
+            let cleanTitle = baseName.replace(/\(.*?\)/g, '').split(' - ')[0].trim().toUpperCase();
+            const groupKey = item.tmpl_id ? `TMPL_${item.tmpl_id}` : `${cleanTitle}_${item.categ_id}`;
+
+            if (!groups[groupKey]) {
+                let baseSku = item.sku || "";
+                if (baseSku.includes('.')) baseSku = baseSku.split('.')[0];
+                if (baseSku.includes('-')) baseSku = baseSku.split('-')[0];
+
+                groups[groupKey] = {
+                    id: groupKey,
+                    titulo: cleanTitle,
+                    skuPrincipal: baseSku || item.sku || 'S/N',
+                    categ_id: item.categ_id || 'General',
+                    foto: item.foto,
+                    tramos: new Set(),
+                    castingLargos: new Set(),
+                    castingLibrajes: new Set(),
+                    spinningLargos: new Set(),
+                    spinningLibrajes: new Set(),
+                    skusHijos: new Set(),
+                    variantesGenericas: new Set()
+                };
+            }
+
+            if (item.sku) groups[groupKey].skusHijos.add(item.sku.trim().toUpperCase());
+
+            const attrs = item.atributos || {};
+
+            // 1. Tramos
+            if (attrs['Tramos']) {
+                let tr = attrs['Tramos'].toString().trim();
+                groups[groupKey].tramos.add(tr.toUpperCase().includes('TRAMO') ? tr.toUpperCase() : `${tr} TRAMOS`);
+            }
+
+            // 2. Tipo De Caña (Casting vs Spinning)
+            const tipo = (attrs['Tipo De Caña'] || "").toUpperCase();
+            const largo = attrs['Largo Cañas'] ? attrs['Largo Cañas'].trim() : "";
+            const libraje = attrs['Libraje Cañas'] ? attrs['Libraje Cañas'].trim() : "";
+
+            if (tipo.includes('CASTING')) {
+                if (largo) groups[groupKey].castingLargos.add(largo);
+                if (libraje) groups[groupKey].castingLibrajes.add(libraje);
+            } else if (tipo.includes('SPINNING')) {
+                if (largo) groups[groupKey].spinningLargos.add(largo);
+                if (libraje) groups[groupKey].spinningLibrajes.add(libraje);
+            } else {
+                // Si no es caña, recolectar cualquier otro atributo existente
+                Object.entries(attrs).forEach(([k, v]) => {
+                    if (v) groups[groupKey].variantesGenericas.add(`${k}: ${v}`);
+                });
+            }
+        });
+
+        productTemplates = Object.values(groups).map(g => {
+            // Estructurar columna Izquierda (Casting)
+            let colLeft = [];
+            if (g.castingLargos.size > 0 || g.castingLibrajes.size > 0) {
+                colLeft.push("CASTING");
+                if (g.castingLargos.size > 0) colLeft.push(Array.from(g.castingLargos).join(' | '));
+                
+                // Formatear librajes en pares de a 2 por línea
+                const libs = Array.from(g.castingLibrajes);
+                for (let i = 0; i < libs.length; i += 2) {
+                    colLeft.push(libs.slice(i, i + 2).join('   '));
+                }
+            }
+
+            // Estructurar columna Derecha (Spinning)
+            let colRight = [];
+            if (g.spinningLargos.size > 0 || g.spinningLibrajes.size > 0) {
+                colRight.push("SPINNING");
+                if (g.spinningLargos.size > 0) colRight.push(Array.from(g.spinningLargos).join(' | '));
+                
+                const libs = Array.from(g.spinningLibrajes);
+                for (let i = 0; i < libs.length; i += 2) {
+                    colRight.push(libs.slice(i, i + 2).join('   '));
+                }
+            }
+
+            // Si el producto no es caña, usar variantes genéricas
+            let colGeneral = [];
+            if (colLeft.length === 0 && colRight.length === 0 && g.variantesGenericas.size > 0) {
+                colGeneral = Array.from(g.variantesGenericas);
+            }
+
+            return {
+                id: g.id,
+                titulo: g.titulo,
+                skuPrincipal: g.skuPrincipal,
+                categ_id: g.categ_id,
+                foto: g.foto,
+                tramos: Array.from(g.tramos).join(' / ') || "",
+                colLeft: colLeft.join('\n'),
+                colRight: colRight.join('\n'),
+                colGeneral: colGeneral.join('\n'),
+                skusHijos: Array.from(g.skusHijos)
+            };
+        });
+    }
+
+    function poblarCategorias() {
         const catSelect = document.getElementById('filtro-categoria');
         const categorias = new Set();
-        odooCatalog.forEach(p => { if (p.categ_id) categorias.add(p.categ_id); });
+        productTemplates.forEach(p => { if (p.categ_id) categorias.add(p.categ_id); });
         categorias.forEach(cat => {
             catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
         });
+    }
+
+    function alCambiarCategoria() {
+        const cat = document.getElementById('filtro-categoria').value;
+        const btnCat = document.getElementById('btn-cat-completa');
+        if (cat !== 'all') {
+            btnCat.classList.remove('hidden');
+            btnCat.textContent = `➕ Seleccionar toda la categoría (${cat})`;
+        } else {
+            btnCat.classList.add('hidden');
+        }
+        filtrarCatalogoOdoo();
     }
 
     function filtrarCatalogoOdoo() {
@@ -307,14 +451,18 @@
         const cat = document.getElementById('filtro-categoria').value;
         const contenedor = document.getElementById('lista-catalogo-selector');
 
-        const filtrados = odooCatalog.filter(p => {
-            const matchTxt = (p.nombre || '').toLowerCase().includes(txt) || (p.sku || '').toLowerCase().includes(txt);
+        const disponibles = productTemplates.filter(p => !selectedTemplateIds.has(p.id));
+
+        const filtrados = disponibles.filter(p => {
+            const matchTxt = (p.titulo || '').toLowerCase().includes(txt) || 
+                             (p.skuPrincipal || '').toLowerCase().includes(txt) ||
+                             p.skusHijos.some(s => s.toLowerCase().includes(txt));
             const matchCat = (cat === 'all' || p.categ_id === cat);
             return matchTxt && matchCat;
-        }).slice(0, 40); // Mostrar top 40 para ligereza
+        }).slice(0, 50);
 
         if (filtrados.length === 0) {
-            contenedor.innerHTML = '<p class="text-slate-400 italic">No se encontraron artículos.</p>';
+            contenedor.innerHTML = '<p class="text-slate-400 italic">No hay productos disponibles para seleccionar.</p>';
             return;
         }
 
@@ -324,26 +472,34 @@
             item.className = 'flex items-center justify-between p-1.5 hover:bg-sky-50 rounded cursor-pointer border-b border-slate-100 last:border-0';
             item.innerHTML = `
                 <div class="truncate mr-2">
-                    <span class="font-bold text-slate-800">[${p.sku || 'S/N'}]</span> 
-                    <span class="text-slate-600">${p.nombre}</span>
+                    <span class="font-bold text-slate-800">[${p.skuPrincipal}]</span> 
+                    <span class="text-slate-700 font-semibold">${p.titulo}</span>
+                    <span class="text-[10px] text-slate-400 block truncate">${p.tramos ? p.tramos + ' | ' : ''}${p.colLeft ? 'Casting / Spinning' : ''}</span>
                 </div>
-                <button onclick="agregarProductoPorSku('${p.sku}')" class="text-sky-600 hover:text-sky-800 font-extrabold text-xs px-2 py-0.5 bg-sky-100 rounded">+</button>
+                <button onclick="seleccionarProductoId('${p.id}')" class="text-sky-600 hover:text-sky-800 font-extrabold text-xs px-2.5 py-1 bg-sky-100 hover:bg-sky-200 rounded transition-colors">+</button>
             `;
             contenedor.appendChild(item);
         });
     }
 
-    // Funciones de selección
-    function agregarProductoPorSku(sku) {
-        if (!sku) return;
-        const normSku = sku.trim().toUpperCase();
-        if (selectedProducts.some(p => p.sku && p.sku.toUpperCase() === normSku)) return;
-
-        const prod = odooCatalog.find(p => p.sku && p.sku.toUpperCase() === normSku);
-        if (prod) {
-            selectedProducts.push(prod);
-            actualizarChipsSeleccionados();
+    function seleccionarProductoId(id) {
+        if (!selectedTemplateIds.has(id)) {
+            selectedTemplateIds.add(id);
+            actualizarSeleccion();
         }
+    }
+
+    function seleccionarCategoriaCompleta() {
+        const cat = document.getElementById('filtro-categoria').value;
+        if (cat === 'all') return;
+
+        productTemplates.forEach(p => {
+            if (p.categ_id === cat && !selectedTemplateIds.has(p.id)) {
+                selectedTemplateIds.add(p.id);
+            }
+        });
+
+        actualizarSeleccion();
     }
 
     function seleccionarPorListaSkus() {
@@ -351,205 +507,146 @@
         if (!raw.trim()) return;
 
         const skus = raw.split(/[\n, ]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
-        let encontrados = 0;
 
         skus.forEach(sku => {
-            if (!selectedProducts.some(p => p.sku && p.sku.toUpperCase() === sku)) {
-                const prod = odooCatalog.find(p => p.sku && p.sku.toUpperCase() === sku);
-                if (prod) {
-                    selectedProducts.push(prod);
-                    encontrados++;
-                }
-            }
+            const prod = productTemplates.find(p => 
+                p.skuPrincipal.toUpperCase() === sku || 
+                p.titulo.toUpperCase().includes(sku) ||
+                p.skusHijos.some(sh => sh === sku)
+            );
+            if (prod) selectedTemplateIds.add(prod.id);
         });
 
-        actualizarChipsSeleccionados();
-        if (encontrados === 0) {
-            alert("No se encontraron productos con esos SKUs o ya estaban en la lista.");
-        }
+        actualizarSeleccion();
     }
 
-    function eliminarSeleccion(sku) {
-        selectedProducts = selectedProducts.filter(p => p.sku !== sku);
-        actualizarChipsSeleccionados();
+    function deseleccionarProductoId(id) {
+        selectedTemplateIds.delete(id);
+        actualizarSeleccion();
     }
 
     function limpiarSeleccion() {
-        selectedProducts = [];
-        actualizarChipsSeleccionados();
+        selectedTemplateIds.clear();
+        actualizarSeleccion();
     }
 
-    function actualizarChipsSeleccionados() {
+    function actualizarSeleccion() {
         const contador = document.getElementById('contador-seleccionados');
         const chipsContainer = document.getElementById('chips-seleccionados');
-        contador.textContent = selectedProducts.length;
+        contador.textContent = selectedTemplateIds.size;
 
-        if (selectedProducts.length === 0) {
+        if (selectedTemplateIds.size === 0) {
             chipsContainer.innerHTML = '<span class="text-xs text-slate-400 italic">No hay productos seleccionados aún.</span>';
-            return;
-        }
-
-        chipsContainer.innerHTML = '';
-        selectedProducts.forEach(p => {
-            const chip = document.createElement('div');
-            chip.className = 'bg-white border border-sky-300 text-slate-800 text-[11px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm';
-            chip.innerHTML = `
-                <span class="text-sky-600 font-mono">${p.sku}</span>
-                <span class="truncate max-w-[120px]">${p.nombre}</span>
-                <button onclick="eliminarSeleccion('${p.sku}')" class="text-slate-400 hover:text-rose-500 font-bold ml-1">&times;</button>
-            `;
-            chipsContainer.appendChild(chip);
-        });
-    }
-
-    // Desglose de Nombre, Atributo/Variante y Código Principal
-    function desglosarDatosProducto(prod) {
-        let display = prod.nombre || "";
-        let codigo = prod.sku ? `COD: ${prod.sku}` : "";
-        let variante = "";
-        let tituloPrincipal = display;
-
-        // Si Odoo incluye el SKU entre corchetes ej: "[ALPINE.L] Reel Huevito (Izquierdo)"
-        if (tituloPrincipal.startsWith('[')) {
-            const idxCierre = tituloPrincipal.indexOf(']');
-            if (idxCierre !== -1) {
-                tituloPrincipal = tituloPrincipal.substring(idxCierre + 1).trim();
-            }
-        }
-
-        // Si Odoo especifica variante entre paréntesis ej: "Reel Huevito (Izquierdo)" o con guión
-        const parentesisMatch = tituloPrincipal.match(/\((.*?)\)/);
-        if (parentesisMatch) {
-            variante = parentesisMatch[1];
-            tituloPrincipal = tituloPrincipal.replace(/\(.*?\)/, '').trim();
-        } else if (tituloPrincipal.includes(' - ')) {
-            const partes = tituloPrincipal.split(' - ');
-            tituloPrincipal = partes[0].trim();
-            variante = partes.slice(1).join(' - ').trim();
-        }
-
-        return {
-            titulo: tituloPrincipal,
-            variante: variante ? `VAR: ${variante}` : (prod.categ_id || ''),
-            codigo: codigo
-        };
-    }
-
-    // Canvas Engine y Text Wrapping
-    function getLines(ctx, text, maxWidth) {
-        if (!text) return [];
-        let lines = [];
-        text.split('\n').forEach(explicitLine => {
-            let words = explicitLine.split(" ");
-            if(words.length === 0) return;
-            let currentLine = words[0];
-            for (let i = 1; i < words.length; i++) {
-                let word = words[i];
-                if (ctx.measureText(currentLine + " " + word).width < maxWidth) {
-                    currentLine += " " + word;
-                } else {
-                    lines.push(currentLine);
-                    currentLine = word;
+        } else {
+            chipsContainer.innerHTML = '';
+            selectedTemplateIds.forEach(id => {
+                const p = productTemplates.find(item => item.id === id);
+                if (p) {
+                    const chip = document.createElement('div');
+                    chip.className = 'bg-white border border-sky-300 text-slate-800 text-[11px] font-bold px-2 py-1 rounded-lg flex items-center gap-1.5 shadow-sm';
+                    chip.innerHTML = `
+                        <span class="text-sky-600 font-mono">[${p.skuPrincipal}]</span>
+                        <span class="truncate max-w-[130px]">${p.titulo}</span>
+                        <button onclick="deseleccionarProductoId('${p.id}')" class="text-slate-400 hover:text-rose-500 font-bold ml-1">&times;</button>
+                    `;
+                    chipsContainer.appendChild(chip);
                 }
-            }
-            lines.push(currentLine);
-        });
-        return lines;
+            });
+        }
+
+        filtrarCatalogoOdoo();
     }
 
+    // 🎨 MOTOR DE RENDERIZADO CANVAS TIPO CATÁLOGO / BANNER
     function renderCanvasDataUrl(config) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = config.imgObj;
         const scaleFactor = (config.textScale || 100) / 100;
 
-        if (config.mode === 'margin') {
-            const maxDim = Math.max(img.width, img.height);
-            const margin = Math.max(maxDim * 0.22, 120);
-            const size = maxDim + (margin * 2);
-            canvas.width = size; canvas.height = size;
+        // Tamaño lienzo cuadrado
+        const maxDim = Math.max(img.width, img.height);
+        const margin = Math.max(maxDim * 0.32, 220); // Espacio superior generoso para título y columnas
+        const size = maxDim + (margin * 1.5);
+        canvas.width = size;
+        canvas.height = size;
 
-            ctx.fillStyle = '#ffffff'; 
-            ctx.fillRect(0, 0, size, size);
-            ctx.drawImage(img, (size - img.width) / 2, (size - img.height) / 2, img.width, img.height);
+        // Fondo Blanco
+        ctx.fillStyle = '#ffffff';
+        ctx.fillRect(0, 0, size, size);
 
-            ctx.fillStyle = config.textColor; 
-            ctx.textAlign = 'center'; 
-            ctx.textBaseline = 'middle';
+        // Foto centrada en la mitad inferior
+        const imgY = size - img.height - 40;
+        ctx.drawImage(img, (size - img.width) / 2, imgY, img.width, img.height);
 
-            let fontTop = (margin * 0.35) * scaleFactor;
-            let fontSub = fontTop * 0.7;
-            let lhTop = fontTop * 1.2;
-            let lhSub = fontSub * 1.2;
+        ctx.fillStyle = config.textColor || '#000000';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
 
-            ctx.font = `bold ${fontTop}px ${fontFamily}`;
-            let tLines = config.top ? getLines(ctx, config.top, size * 0.88) : [];
-            ctx.font = `normal ${fontSub}px ${fontFamily}`;
-            let sLines = config.sub ? getLines(ctx, config.sub, size * 0.88) : [];
+        // 1. TÍTULO PRINCIPAL (ej: "CAÑA PERLA BLANCA")
+        let fontTitle = Math.max(size * 0.055 * scaleFactor, 24);
+        ctx.font = `bold ${fontTitle}px ${fontFamily}`;
+        let titleY = (margin * 0.22) + config.yTop;
+        ctx.fillText(config.top || "", size / 2, titleY);
 
-            let blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
-            if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
+        // 2. SUBTÍTULO / TRAMOS (ej: "1 TRAMOS")
+        let fontSub = fontTitle * 0.72;
+        ctx.font = `bold ${fontSub}px ${fontFamily}`;
+        let subY = titleY + (fontTitle * 1.2) + config.ySub;
+        if (config.sub) {
+            ctx.fillText(config.sub, size / 2, subY);
+        }
 
-            let y = ((margin - blockH) / 2) + 30;
+        // 3. COLUMNAS DE ATRIBUTOS (CASTING & SPINNING)
+        let fontColTitle = fontTitle * 0.52;
+        let fontColData = fontColTitle * 0.90;
+        let lhCol = fontColData * 1.25;
 
-            if (tLines.length > 0) {
-                ctx.font = `bold ${fontTop}px ${fontFamily}`;
-                tLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhTop/2) + config.yTop); y += lhTop; });
-                if (sLines.length > 0) y += (fontTop * 0.2);
-            }
-            if (sLines.length > 0) {
-                ctx.font = `normal ${fontSub}px ${fontFamily}`;
-                sLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhSub/2) + config.ySub); y += lhSub; });
-            }
+        let colBaseY = subY + (fontSub * 1.3) + config.yBot;
 
-            if (config.bot) {
-                let fontBot = (margin * 0.45) * scaleFactor;
-                ctx.font = `bold ${fontBot}px ${fontFamily}`;
-                let bLines = getLines(ctx, config.bot, size * 0.88);
-                let lhBot = fontBot * 1.2;
-                let botH = bLines.length * lhBot;
-                let botY = size - (margin / 2) - (botH / 2) + (lhBot/2) + config.yBot;
-                bLines.forEach(l => { ctx.fillText(l, size / 2, botY); botY += lhBot; });
-            }
+        const colLeftLines = config.colLeft ? config.colLeft.split('\n').filter(Boolean) : [];
+        const colRightLines = config.colRight ? config.colRight.split('\n').filter(Boolean) : [];
+
+        // Si tiene columnas dobles (Casting y Spinning)
+        if (colLeftLines.length > 0 && colRightLines.length > 0) {
+            const posX_Left = size * 0.33;
+            const posX_Right = size * 0.67;
+
+            // Columna Izquierda (Casting)
+            let curY_L = colBaseY;
+            colLeftLines.forEach((l, idx) => {
+                if (idx === 0) {
+                    ctx.font = `bold ${fontColTitle}px ${fontFamily}`;
+                } else {
+                    ctx.font = `normal ${fontColData}px ${fontFamily}`;
+                }
+                ctx.fillText(l.trim(), posX_Left, curY_L);
+                curY_L += lhCol;
+            });
+
+            // Columna Derecha (Spinning)
+            let curY_R = colBaseY;
+            colRightLines.forEach((l, idx) => {
+                if (idx === 0) {
+                    ctx.font = `bold ${fontColTitle}px ${fontFamily}`;
+                } else {
+                    ctx.font = `normal ${fontColData}px ${fontFamily}`;
+                }
+                ctx.fillText(l.trim(), posX_Right, curY_R);
+                curY_R += lhCol;
+            });
 
         } else {
-            canvas.width = img.width; canvas.height = img.height;
-            ctx.drawImage(img, 0, 0, img.width, img.height);
-            ctx.fillStyle = config.textColor; 
-            ctx.textAlign = 'center'; 
-            ctx.textBaseline = 'middle';
-
-            let fontTop = (img.height * 0.08) * scaleFactor;
-            let fontSub = fontTop * 0.7;
-            let lhTop = fontTop * 1.2;
-            let lhSub = fontSub * 1.2;
-
-            ctx.font = `bold ${fontTop}px ${fontFamily}`;
-            let tLines = config.top ? getLines(ctx, config.top, img.width * 0.9) : [];
-            ctx.font = `normal ${fontSub}px ${fontFamily}`;
-            let sLines = config.sub ? getLines(ctx, config.sub, img.width * 0.9) : [];
-
-            let y = (img.height * 0.12);
-            if (tLines.length > 0) {
-                ctx.font = `bold ${fontTop}px ${fontFamily}`;
-                tLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.yTop); y += lhTop; });
-                if (sLines.length > 0) y += (fontTop * 0.2);
-            }
-            if (sLines.length > 0) {
-                ctx.font = `normal ${fontSub}px ${fontFamily}`;
-                sLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.ySub); y += lhSub; });
-            }
-
-            if (config.bot) {
-                let fontBot = (img.height * 0.08) * scaleFactor;
-                ctx.font = `bold ${fontBot}px ${fontFamily}`;
-                let bLines = getLines(ctx, config.bot, img.width * 0.9);
-                let lhBot = fontBot * 1.2;
-                let botH = bLines.length * lhBot;
-                let botY = (img.height * 0.92) - (botH / 2) + config.yBot;
-                bLines.forEach(l => { ctx.fillText(l, img.width / 2, botY); botY += lhBot; });
-            }
+            // Fila central para productos simples o genéricos
+            const generalLines = (config.colLeft || config.colRight || config.bot || "").split('\n').filter(Boolean);
+            let curY = colBaseY;
+            ctx.font = `normal ${fontColData}px ${fontFamily}`;
+            generalLines.forEach(l => {
+                ctx.fillText(l.trim(), size / 2, curY);
+                curY += lhCol;
+            });
         }
+
         return canvas.toDataURL('image/jpeg', 0.95);
     }
 
@@ -557,17 +654,17 @@
         return new Promise((resolve, reject) => {
             const img = new Image();
             img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error("Error decodificando imagen Base64"));
+            img.onerror = () => reject(new Error("Error decodificando imagen"));
             img.src = `data:image/jpeg;base64,${base64}`;
         });
     }
 
-    // Mockup en Vivo
+    // Mockup Base
     let mockupImgObj = null;
     async function generarMockupBase() {
-        if (odooCatalog.length === 0) return;
+        if (productTemplates.length === 0) return;
         try {
-            mockupImgObj = await loadImageFromBase64(odooCatalog[0].foto);
+            mockupImgObj = await loadImageFromBase64(productTemplates[0].foto);
             updateGlobalMockup();
         } catch(e) {}
     }
@@ -579,9 +676,10 @@
             mode: document.getElementById('global-mode').value,
             textColor: document.getElementById('global-color').value,
             textScale: parseInt(document.getElementById('global-scale').value),
-            top: "NOMBRE DEL PRODUCTO\nLINEA PRINCIPAL",
-            sub: "VAR: Atributo / Color / Tamaño",
-            bot: "COD: SKU-EJEMPLO",
+            top: "CAÑA PERLA BLANCA",
+            sub: "1 TRAMOS",
+            colLeft: "CASTING\n1.80m | 1.98m\n8-17lbs   15-30lbs\n10-20lbs\n12-25lbs",
+            colRight: "SPINNING\n1.98m | 2.10m\n10-20lbs   15-30lbs\n15-30lbs",
             yTop: parseInt(document.getElementById('global-y-top').value),
             ySub: parseInt(document.getElementById('global-y-sub').value),
             yBot: parseInt(document.getElementById('global-y-bot').value),
@@ -605,16 +703,16 @@
         document.getElementById(id).addEventListener('input', updateGlobalMockup);
     });
 
-    // Procesar Lote
+    // 4. Procesar Lote
     async function procesarLote() {
-        if (selectedProducts.length === 0) {
-            alert("Seleccioná al menos un artículo para generar sus fichas.");
+        if (selectedTemplateIds.size === 0) {
+            alert("Seleccioná al menos un producto matriz.");
             return;
         }
 
         generatedCards = [];
         const grid = document.getElementById('preview-grid');
-        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas en alta definición...</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas comerciales estructuradas...</p>';
         document.getElementById('results-section').classList.remove('hidden');
 
         const gMode = document.getElementById('global-mode').value;
@@ -624,19 +722,21 @@
         const gySub = parseInt(document.getElementById('global-y-sub').value);
         const gyBot = parseInt(document.getElementById('global-y-bot').value);
 
-        for (let i = 0; i < selectedProducts.length; i++) {
-            const prod = selectedProducts[i];
-            const info = desglosarDatosProducto(prod);
+        for (let id of selectedTemplateIds) {
+            const prod = productTemplates.find(p => p.id === id);
+            if (!prod) continue;
 
             try {
                 const imgObj = await loadImageFromBase64(prod.foto);
                 const config = {
-                    sku: prod.sku || `ITEM_${i+1}`,
-                    name: `${prod.sku || 'PRODUCTO'}.jpg`,
+                    sku: prod.skuPrincipal,
+                    name: `${prod.skuPrincipal}.jpg`,
                     imgObj: imgObj,
-                    top: info.titulo,
-                    sub: info.variante,
-                    bot: info.codigo,
+                    top: prod.titulo,
+                    sub: prod.tramos,
+                    colLeft: prod.colLeft,
+                    colRight: prod.colRight,
+                    bot: prod.colGeneral,
                     mode: gMode,
                     textColor: gColor,
                     textScale: gScale,
@@ -648,7 +748,7 @@
                 config.dataUrl = renderCanvasDataUrl(config);
                 generatedCards.push(config);
             } catch(e) {
-                console.error("Error procesando", prod.sku, e);
+                console.error("Error procesando", prod.skuPrincipal, e);
             }
         }
 
@@ -658,7 +758,7 @@
     function renderResultGrid() {
         const grid = document.getElementById('preview-grid');
         grid.innerHTML = '';
-        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas listas para compartir.`;
+        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales.`;
 
         generatedCards.forEach((item, index) => {
             grid.innerHTML += `
@@ -693,7 +793,8 @@
 
         document.getElementById('edit-txt-top').value = config.top;
         document.getElementById('edit-txt-sub').value = config.sub;
-        document.getElementById('edit-txt-bot').value = config.bot;
+        document.getElementById('edit-txt-col-left').value = config.colLeft || '';
+        document.getElementById('edit-txt-col-right').value = config.colRight || '';
 
         document.getElementById('edit-y-top').value = config.yTop;
         document.getElementById('edit-y-sub').value = config.ySub;
@@ -718,7 +819,8 @@
             textScale: parseInt(document.getElementById('edit-scale').value),
             top: document.getElementById('edit-txt-top').value,
             sub: document.getElementById('edit-txt-sub').value,
-            bot: document.getElementById('edit-txt-bot').value,
+            colLeft: document.getElementById('edit-txt-col-left').value,
+            colRight: document.getElementById('edit-txt-col-right').value,
             yTop: parseInt(document.getElementById('edit-y-top').value),
             ySub: parseInt(document.getElementById('edit-y-sub').value),
             yBot: parseInt(document.getElementById('edit-y-bot').value),
@@ -726,7 +828,7 @@
         document.getElementById('modal-preview-img').src = renderCanvasDataUrl(tempConfig);
     }
 
-    ['edit-mode', 'edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
+    ['edit-mode', 'edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-col-left', 'edit-txt-col-right', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
         document.getElementById(id).addEventListener('input', updateModalPreview);
     });
 
@@ -738,7 +840,8 @@
         config.textScale = parseInt(document.getElementById('edit-scale').value);
         config.top = document.getElementById('edit-txt-top').value;
         config.sub = document.getElementById('edit-txt-sub').value;
-        config.bot = document.getElementById('edit-txt-bot').value;
+        config.colLeft = document.getElementById('edit-txt-col-left').value;
+        config.colRight = document.getElementById('edit-txt-col-right').value;
         config.yTop = parseInt(document.getElementById('edit-y-top').value);
         config.ySub = parseInt(document.getElementById('edit-y-sub').value);
         config.yBot = parseInt(document.getElementById('edit-y-bot').value);
