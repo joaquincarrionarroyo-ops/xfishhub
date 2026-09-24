@@ -19,7 +19,6 @@
 </head>
 <body class="relative min-h-screen text-slate-800 pb-12">
 
-    <!-- Fondos Abstractos -->
     <div class="blob bg-indigo-200 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
     <div class="blob bg-sky-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
 
@@ -37,7 +36,6 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 space-y-6">
         
-        <!-- BUSCADOR -->
         <div class="glass-panel rounded-2xl p-6">
             <label class="block text-sm font-bold text-slate-700 mb-2">Buscá un artículo para ver su historia completa</label>
             <div class="flex gap-2">
@@ -49,10 +47,8 @@
             <p id="status-text" class="text-xs text-sky-600 mt-2 font-semibold">Cargando catálogo maestro de Odoo...</p>
         </div>
 
-        <!-- DASHBOARD (Oculto hasta buscar) -->
         <div id="dashboard" class="hidden space-y-6">
             
-            <!-- HEADER DEL PRODUCTO -->
             <div class="glass-panel rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-center md:items-start">
                 <div class="w-32 h-32 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center shrink-0 p-2">
                     <img id="prod-img" class="max-h-full object-contain" src="" alt="Foto Producto">
@@ -62,8 +58,7 @@
                     
                     <div class="flex items-center gap-3 mb-4 flex-wrap justify-center md:justify-start mt-1">
                         <p id="prod-sku" class="text-sm font-mono text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">SKU: [12345]</p>
-                        <!-- Etiquetas Reales de ICO -->
-                        <div class="flex flex-wrap gap-1" id="prod-lotes-container"></div>
+                        <div id="prod-lotes-container"></div>
                     </div>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -87,7 +82,6 @@
                 </div>
             </div>
 
-            <!-- GRÁFICOS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="glass-panel rounded-2xl p-5">
                     <h3 class="text-sm font-bold text-slate-700 mb-4">📈 Curva Histórica de Ventas</h3>
@@ -103,9 +97,7 @@
                 </div>
             </div>
 
-            <!-- TABLAS DE COMPRA Y VENTA -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <!-- Historial Compras (Costo Real) CON ICO -->
                 <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
                     <div class="bg-rose-50 border-b border-rose-100 p-4">
                         <h3 class="text-sm font-bold text-rose-800 uppercase tracking-wide">Últimas Compras (Costos)</h3>
@@ -125,7 +117,6 @@
                     </div>
                 </div>
 
-                <!-- Historial Ventas -->
                 <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
                     <div class="bg-sky-50 border-b border-sky-100 p-4">
                         <h3 class="text-sm font-bold text-sky-800 uppercase tracking-wide">Últimas Ventas Confirmadas</h3>
@@ -145,7 +136,6 @@
                 </div>
             </div>
 
-            <!-- TABLA DE MOVIMIENTOS A ANCHO COMPLETO MÁS GRANDE -->
             <div class="glass-panel rounded-2xl overflow-hidden flex flex-col mt-6">
                 <div class="bg-slate-100 border-b border-slate-200 p-5 flex justify-between items-center">
                     <h3 class="text-base font-bold text-slate-700 uppercase tracking-wide">Trazabilidad de Movimientos y Ajustes</h3>
@@ -155,7 +145,7 @@
                         <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
                             <tr>
                                 <th class="p-4 text-slate-500 font-semibold border-b border-slate-200">Fecha / Ref.</th>
-                                <th class="p-4 text-indigo-600 font-bold border-b border-slate-200 text-center">ICO (Recepción)</th>
+                                <th class="p-4 text-indigo-600 font-bold border-b border-slate-200 text-center">ICO</th>
                                 <th class="p-4 text-slate-500 font-semibold border-b border-slate-200">Origen → Destino</th>
                                 <th class="p-4 text-slate-500 font-semibold text-right border-b border-slate-200">Cantidad</th>
                             </tr>
@@ -235,12 +225,14 @@
             if (!res.ok) throw new Error("Fallo historial");
             const data = await res.json();
 
+            // Combinamos con la data base y el ICO directo de la ficha
             data.producto = {
                 id: productoBase.id,
                 nombre: productoBase.nombre,
                 sku: productoBase.sku,
                 foto: productoBase.foto,
-                precio_lista: productoBase.precio
+                precio_lista: productoBase.precio,
+                ico: data.producto.ico // El ICO traído del backend en la consulta de historial
             };
 
             renderizarDashboard(data);
@@ -257,7 +249,6 @@
         const compras = data.compras;
         const ventas = data.ventas;
         const movs = data.movimientos;
-        const icos = data.icos_registrados || [];
 
         // 1. Header Info
         document.getElementById('prod-img').src = prod.foto ? `data:image/jpeg;base64,${prod.foto}` : '';
@@ -265,11 +256,12 @@
         document.getElementById('prod-sku').textContent = `SKU: [${prod.sku || 'S/N'}]`;
         document.getElementById('prod-price').textContent = `$${(prod.precio_lista || 0).toLocaleString('es-AR')}`;
 
+        // Mostrar ICO principal del producto
         const lotesContainer = document.getElementById('prod-lotes-container');
-        if (icos.length > 0) {
-            lotesContainer.innerHTML = icos.map(ico => `<span class="bg-indigo-100 text-indigo-800 font-mono text-sm font-bold px-2.5 py-1 rounded border border-indigo-200 shadow-sm">🏷️ ICO: ${ico}</span>`).join('');
+        if (prod.ico && prod.ico !== '-') {
+            lotesContainer.innerHTML = `<span class="bg-indigo-100 text-indigo-800 font-mono text-sm font-bold px-3 py-1 rounded border border-indigo-200 shadow-sm">🏷️ ICO: ${prod.ico}</span>`;
         } else {
-            lotesContainer.innerHTML = `<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded border border-slate-200">Sin ICOs registrados</span>`;
+            lotesContainer.innerHTML = `<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded border border-slate-200">Sin ICO asignado</span>`;
         }
 
         let ultimoCosto = 0;
@@ -284,18 +276,15 @@
         let totalVentas = ventas.reduce((acc, v) => acc + v.product_uom_qty, 0);
         document.getElementById('prod-ventas').textContent = `${totalVentas} unid.`;
 
-        // 2. Tablas de Compras y Ventas
-        document.getElementById('tabla-compras').innerHTML = compras.map(c => {
-            const icoCompra = (c.ico && c.ico !== '-') ? c.ico : '-';
-            return `
+        // 2. Tablas
+        document.getElementById('tabla-compras').innerHTML = compras.map(c => `
             <tr class="hover:bg-slate-50 transition-colors text-sm">
                 <td class="p-3 border-b border-slate-100 whitespace-nowrap">${c.create_date ? c.create_date.split(' ')[0] : '-'}</td>
-                <td class="p-3 border-b border-slate-100 font-mono font-bold text-indigo-600">${icoCompra !== '-' ? `🛒 ${icoCompra}` : '-'}</td>
+                <td class="p-3 border-b border-slate-100 font-mono font-bold text-indigo-600">${prod.ico !== '-' ? `📥 ${prod.ico}` : '-'}</td>
                 <td class="p-3 border-b border-slate-100 font-bold">${c.product_qty}</td>
                 <td class="p-3 border-b border-slate-100 text-rose-700 font-bold">$${c.price_unit.toLocaleString('es-AR')}</td>
             </tr>
-            `;
-        }).join('');
+        `).join('');
 
         document.getElementById('tabla-ventas').innerHTML = ventas.map(v => `
             <tr class="hover:bg-slate-50 transition-colors text-sm">
@@ -305,11 +294,9 @@
             </tr>
         `).join('');
 
-        // 3. Tabla de Movimientos Ampliada leyendo el campo "m.ico"
         document.getElementById('tabla-movimientos').innerHTML = movs.map(m => {
             const locOrigen = m.location_id ? m.location_id[1] : '';
             const locDest = m.location_dest_id ? m.location_dest_id[1] : '';
-            const loteIco = (m.ico && m.ico !== '-') ? m.ico : '';
             
             const esAjusteOBaja = locDest.toLowerCase().includes('scrap') || 
                                   locDest.toLowerCase().includes('inventory adjustment') || 
@@ -327,7 +314,7 @@
                     <span class="block font-mono text-xs font-bold text-slate-400 mt-1">${m.reference || ''}</span>
                 </td>
                 <td class="p-4 border-b border-slate-100 text-center font-mono text-sm font-black text-indigo-700 bg-indigo-50/50">
-                    ${loteIco !== '' ? `📥 ${loteIco}` : '<span class="text-slate-300">-</span>'}
+                    ${prod.ico !== '-' ? `📥 ${prod.ico}` : '<span class="text-slate-300">-</span>'}
                 </td>
                 <td class="p-4 border-b border-slate-100 truncate max-w-[300px]" title="${locOrigen} → ${locDest}">
                     <span class="text-slate-500">${locOrigen.split('/').pop()}</span> <span class="mx-2 text-slate-300">→</span> <span class="font-semibold text-slate-700">${displayDestino}</span>
@@ -337,7 +324,6 @@
             `;
         }).join('');
 
-        // 4. Gráficos
         renderizarGraficos(ventas, compras);
     }
 
@@ -346,7 +332,7 @@
             const result = {};
             arr.forEach(item => {
                 if (!item.create_date) return;
-                const month = item.create_date.substring(0, 7); // YYYY-MM
+                const month = item.create_date.substring(0, 7);
                 result[month] = (result[month] || 0) + item[qtyField];
             });
             return result;
