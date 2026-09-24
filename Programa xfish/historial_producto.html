@@ -12,9 +12,6 @@
         .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); }
         .blob { position: fixed; filter: blur(80px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 pb-12">
@@ -90,7 +87,8 @@
                     
                     <div class="flex items-center gap-3 mb-4 flex-wrap justify-center md:justify-start mt-1">
                         <p id="prod-sku" class="text-sm font-mono text-slate-500 font-bold bg-slate-100 px-2 py-0.5 rounded">SKU: [12345]</p>
-                        <div id="prod-lotes-container"></div>
+                        <!-- Aquí van los ICOs encontrados -->
+                        <div id="prod-lotes-container" class="flex flex-wrap gap-1"></div>
                     </div>
                     
                     <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
@@ -126,18 +124,18 @@
                 </div>
             </div>
 
-            <!-- TABLAS DE COMPRA Y VENTA (SIN SCROLLBAR INTERNO) -->
+            <!-- TABLAS DE COMPRA Y VENTA -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="glass-panel rounded-2xl flex flex-col">
-                    <div class="bg-rose-50 border-b border-rose-100 p-4 rounded-t-2xl"><h3 class="text-sm font-bold text-rose-800 uppercase tracking-wide">Últimas Compras (Costos)</h3></div>
+                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col h-full">
+                    <div class="bg-rose-50 border-b border-rose-100 p-4"><h3 class="text-sm font-bold text-rose-800 uppercase tracking-wide">Últimas Compras (Costos)</h3></div>
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-50 border-b border-slate-200"><tr><th class="p-3">Fecha</th><th class="p-3">ICO</th><th class="p-3">Cant.</th><th class="p-3">Costo Real</th></tr></thead>
                         <tbody id="tabla-compras" class="divide-y divide-slate-100 bg-white"></tbody>
                     </table>
                 </div>
 
-                <div class="glass-panel rounded-2xl flex flex-col">
-                    <div class="bg-sky-50 border-b border-sky-100 p-4 rounded-t-2xl"><h3 class="text-sm font-bold text-sky-800 uppercase tracking-wide">Últimas Ventas Confirmadas</h3></div>
+                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col h-full">
+                    <div class="bg-sky-50 border-b border-sky-100 p-4"><h3 class="text-sm font-bold text-sky-800 uppercase tracking-wide">Últimas Ventas Confirmadas</h3></div>
                     <table class="w-full text-left text-sm">
                         <thead class="bg-slate-50 border-b border-slate-200"><tr><th class="p-3">Fecha</th><th class="p-3">Cant.</th><th class="p-3">Precio Venta</th></tr></thead>
                         <tbody id="tabla-ventas" class="divide-y divide-slate-100 bg-white"></tbody>
@@ -145,9 +143,9 @@
                 </div>
             </div>
 
-            <!-- TABLA DE MOVIMIENTOS A ANCHO COMPLETO (SIN SCROLLBAR INTERNO) -->
-            <div class="glass-panel rounded-2xl flex flex-col mt-6">
-                <div class="bg-slate-100 border-b border-slate-200 p-5 rounded-t-2xl"><h3 class="text-base font-bold text-slate-700 uppercase tracking-wide">Trazabilidad de Movimientos y Ajustes</h3></div>
+            <!-- TABLA DE MOVIMIENTOS A ANCHO COMPLETO -->
+            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col mt-6">
+                <div class="bg-slate-100 border-b border-slate-200 p-5"><h3 class="text-base font-bold text-slate-700 uppercase tracking-wide">Trazabilidad de Movimientos y Ajustes</h3></div>
                 <table class="w-full text-left text-sm">
                     <thead class="bg-slate-50 border-b border-slate-200">
                         <tr>
@@ -171,7 +169,6 @@
     const urlBackend = 'https://xfish-odoo-api.onrender.com';
 
     async function init() {
-        // Establecer fechas default (mes actual)
         const date = new Date();
         const primerDia = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
         const hoy = date.toISOString().split('T')[0];
@@ -220,7 +217,6 @@
         const text = document.getElementById('buscador-global').value.toLowerCase();
         const tabla = document.getElementById('tabla-global');
         
-        // Filtrar catálogo: solo los que tengan resumenMovimientos > 0 (entradas o salidas) Y coincidan con buscador
         const filtrados = catalogoGeneral.filter(p => {
             const movs = resumenMovimientos[p.id];
             if (!movs || (movs.entradas === 0 && movs.salidas === 0)) return false;
@@ -247,7 +243,7 @@
                 <td class="p-4 border-b border-slate-100 text-center font-bold text-emerald-600 text-base">+${movs.entradas}</td>
                 <td class="p-4 border-b border-slate-100 text-center font-bold text-rose-600 text-base">-${movs.salidas}</td>
                 <td class="p-4 border-b border-slate-100 text-right">
-                    <button onclick="buscarHistorial(${p.id})" class="bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white font-bold py-2 px-4 rounded-lg text-xs transition shadow-sm border border-sky-200">Ver Historial Completo</button>
+                    <button onclick="buscarHistorial(${p.id})" class="bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white font-bold py-2 px-4 rounded-lg text-xs transition shadow-sm border border-sky-200">Ver Historial</button>
                 </td>
             </tr>
             `;
@@ -267,7 +263,7 @@
             const data = await res.json();
 
             data.producto = {
-                id: productoBase.id, nombre: productoBase.nombre, sku: productoBase.sku, foto: productoBase.foto, precio_lista: productoBase.precio, ico: data.producto.ico
+                id: productoBase.id, nombre: productoBase.nombre, sku: productoBase.sku, foto: productoBase.foto, precio_lista: productoBase.precio
             };
 
             renderizarDashboard(data);
@@ -286,6 +282,7 @@
 
     function renderizarDashboard(data) {
         const prod = data.producto; const compras = data.compras; const ventas = data.ventas; const movs = data.movimientos;
+        const icos = data.icos_registrados || [];
 
         document.getElementById('prod-img').src = prod.foto ? `data:image/jpeg;base64,${prod.foto}` : '';
         document.getElementById('prod-name').textContent = prod.nombre;
@@ -293,10 +290,10 @@
         document.getElementById('prod-price').textContent = `$${(prod.precio_lista || 0).toLocaleString('es-AR')}`;
 
         const lotesContainer = document.getElementById('prod-lotes-container');
-        if (prod.ico && prod.ico !== '-') {
-            lotesContainer.innerHTML = `<span class="bg-indigo-100 text-indigo-800 font-mono text-sm font-bold px-3 py-1 rounded border border-indigo-200 shadow-sm">🏷️ ICO: ${prod.ico}</span>`;
+        if (icos.length > 0) {
+            lotesContainer.innerHTML = icos.map(ico => `<span class="bg-indigo-100 text-indigo-800 font-mono text-sm font-bold px-3 py-1 rounded border border-indigo-200 shadow-sm">🏷️ ICO: ${ico}</span>`).join('');
         } else {
-            lotesContainer.innerHTML = `<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded border border-slate-200">Sin ICO asignado</span>`;
+            lotesContainer.innerHTML = `<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded border border-slate-200">Sin ICOs registrados</span>`;
         }
 
         let ultimoCosto = 0; let totalCompras = 0;
@@ -311,7 +308,7 @@
         document.getElementById('prod-ventas').textContent = `${totalVentas} unid.`;
 
         document.getElementById('tabla-compras').innerHTML = compras.map(c => `
-            <tr class="hover:bg-slate-50 text-sm"><td class="p-3 border-b border-slate-100 whitespace-nowrap">${c.create_date ? c.create_date.split(' ')[0] : '-'}</td><td class="p-3 border-b border-slate-100 font-mono font-bold text-indigo-600">${prod.ico !== '-' ? `📥 ${prod.ico}` : '-'}</td><td class="p-3 border-b border-slate-100 font-bold">${c.product_qty}</td><td class="p-3 border-b border-slate-100 text-rose-700 font-bold">$${c.price_unit.toLocaleString('es-AR')}</td></tr>
+            <tr class="hover:bg-slate-50 text-sm"><td class="p-3 border-b border-slate-100 whitespace-nowrap">${c.create_date ? c.create_date.split(' ')[0] : '-'}</td><td class="p-3 border-b border-slate-100 font-mono font-bold text-indigo-600">${c.ico !== '-' ? `📥 ${c.ico}` : '-'}</td><td class="p-3 border-b border-slate-100 font-bold">${c.product_qty}</td><td class="p-3 border-b border-slate-100 text-rose-700 font-bold">$${c.price_unit.toLocaleString('es-AR')}</td></tr>
         `).join('');
 
         document.getElementById('tabla-ventas').innerHTML = ventas.map(v => `
@@ -326,7 +323,7 @@
             return `
             <tr class="hover:bg-slate-50 text-base">
                 <td class="p-4 border-b border-slate-100"><span class="block text-slate-800 font-semibold">${m.date ? m.date.split(' ')[0] : '-'}</span><span class="block font-mono text-xs font-bold text-slate-400 mt-1">${m.reference || ''}</span></td>
-                <td class="p-4 border-b border-slate-100 text-center font-mono text-sm font-black text-indigo-700 bg-indigo-50/30">${prod.ico !== '-' ? `📥 ${prod.ico}` : '<span class="text-slate-300">-</span>'}</td>
+                <td class="p-4 border-b border-slate-100 text-center font-mono text-sm font-black text-indigo-700 bg-indigo-50/30">${m.ico !== '-' ? `📥 ${m.ico}` : '<span class="text-slate-300">-</span>'}</td>
                 <td class="p-4 border-b border-slate-100 truncate max-w-[300px]" title="${locOrigen} → ${locDest}"><span class="text-slate-500">${locOrigen.split('/').pop()}</span> <span class="mx-2 text-slate-300">→</span> <span class="font-semibold text-slate-700">${displayDestino}</span></td>
                 <td class="p-4 border-b border-slate-100 text-right font-black text-lg ${esAjusteOBaja ? 'text-rose-600' : 'text-slate-800'}">${m.qty_done}</td>
             </tr>
