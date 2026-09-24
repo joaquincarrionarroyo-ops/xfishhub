@@ -49,28 +49,26 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-6 border-b border-slate-200/60 gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Productos Matrices</h2>
-                    <p class="text-xs text-slate-500 font-medium">Al seleccionar un producto matriz, agrupa sus tipos (Casting/Spinning), tramos, medidas y librajes en columnas.</p>
+                    <p class="text-xs text-slate-500 font-medium">Cañas, Reels y demás líneas con atributos consolidados, tipografía limpia y código inferior.</p>
                 </div>
                 <div id="odoo-sync-status" class="text-xs font-bold text-slate-500 bg-white/70 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Sincronizando catálogo y atributos...
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Sincronizando catálogo con Odoo...
                 </div>
             </div>
 
             <!-- CONTROLES DE BÚSQUEDA Y CATEGORÍAS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <!-- Entrada de SKUs por lote -->
                 <div class="bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
                     <div>
-                        <label class="block text-sm font-bold text-slate-700 mb-1">📋 Pegar Lista de Códigos o SKUs</label>
-                        <p class="text-xs text-slate-500 mb-2">Pega códigos base o variantes (separados por renglón o coma).</p>
-                        <textarea id="input-sku-list" class="custom-input text-xs font-mono h-24" placeholder="Ej: CAST17&#10;CAÑA PERLA BLANCA&#10;AD80"></textarea>
+                        <label class="block text-sm font-bold text-slate-700 mb-1">📋 Pegar Lista de Códigos o Nombres</label>
+                        <p class="text-xs text-slate-500 mb-2">Ingresá SKUs o nombres de artículos (separados por enter o coma).</p>
+                        <textarea id="input-sku-list" class="custom-input text-xs font-mono h-24" placeholder="Ej: TRICO&#10;X21 BLACK&#10;PERLA BLANCA"></textarea>
                     </div>
                     <button onclick="seleccionarPorListaSkus()" class="mt-3 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors shadow-sm">
                         🔍 Buscar y Agregar a la Selección
                     </button>
                 </div>
 
-                <!-- Buscador de Catálogo con botón de Categoría Completa -->
                 <div class="bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
                     <div>
                         <div class="flex items-center justify-between mb-1">
@@ -97,7 +95,7 @@
             <div class="bg-sky-50/60 border border-sky-200 p-4 rounded-2xl mb-6">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-xs font-bold uppercase tracking-wider text-sky-800">
-                        Productos Matrices Seleccionados: <span id="contador-seleccionados" class="text-sky-600 font-extrabold text-sm">0</span>
+                        Productos Seleccionados: <span id="contador-seleccionados" class="text-sky-600 font-extrabold text-sm">0</span>
                     </span>
                     <button onclick="limpiarSeleccion()" class="text-[11px] font-bold text-rose-600 hover:underline">Limpiar selección completa</button>
                 </div>
@@ -108,7 +106,6 @@
 
             <!-- AJUSTES GLOBALES Y MOCKUP EN VIVO -->
             <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
-                <!-- Controles -->
                 <div class="w-full lg:w-1/2 space-y-4">
                     <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales de Diseño</h3>
                     
@@ -128,7 +125,7 @@
 
                     <div>
                         <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
-                            <span>Escala de Tipografía</span>
+                            <span>Escala de Tipografía General</span>
                             <span id="val-global-scale" class="text-sky-600 font-bold">100%</span>
                         </label>
                         <input type="range" id="global-scale" min="30" max="250" value="100">
@@ -137,29 +134,27 @@
                     <div class="space-y-3 pt-2 border-t border-slate-200">
                         <div>
                             <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
-                                <span>Altura TÍTULO (Nombre)</span><span id="val-global-y-top">0px</span>
+                                <span>Posición TÍTULO</span><span id="val-global-y-top">0px</span>
                             </label>
                             <input type="range" id="global-y-top" min="-300" max="300" value="0">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-amber-600 uppercase flex justify-between">
-                                <span>Altura TRAMOS (Cabecera)</span><span id="val-global-y-sub">0px</span>
+                                <span>Posición SUBTÍTULO / VARIANTES</span><span id="val-global-y-sub">0px</span>
                             </label>
                             <input type="range" id="global-y-sub" min="-300" max="300" value="0">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-emerald-600 uppercase flex justify-between">
-                                <span>Altura COLUMNAS DE ATRIBUTOS</span><span id="val-global-y-bot">0px</span>
+                                <span>Posición CÓDIGO INFERIOR</span><span id="val-global-y-bot">0px</span>
                             </label>
                             <input type="range" id="global-y-bot" min="-300" max="300" value="0">
                         </div>
                     </div>
                 </div>
 
-                <!-- Previsualización en Vivo del Mockup -->
                 <div class="w-full lg:w-1/2 flex flex-col">
                     <h3 class="text-sm font-bold text-sky-800 border-b border-sky-200 pb-2 mb-3">👁️ Previsualización del Formato</h3>
-                    
                     <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[260px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
                         <img id="global-mockup-img" class="max-h-[260px] w-auto object-contain drop-shadow-md rounded bg-white" />
                     </div>
@@ -176,7 +171,7 @@
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500 gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Fichas Generadas</h3>
-                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá cada ficha, editá individualmente los textos o posiciones y descargá.</p>
+                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá cada ficha, editá individualmente textos o posiciones y descargá.</p>
                 </div>
                 <button onclick="descargarTodoZip()" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -231,29 +226,28 @@
 
                     <div class="space-y-3">
                         <div>
-                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Nombre Principal (Título)</label>
+                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Título Principal (Nombre)</label>
                             <textarea id="edit-txt-top" class="custom-input text-xs" rows="1"></textarea>
                             <input type="range" id="edit-y-top" min="-300" max="300" value="0">
                         </div>
                         <div>
-                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Tramos / Subtítulo</label>
+                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Subtítulo (Tipo / Tramos)</label>
                             <textarea id="edit-txt-sub" class="custom-input text-xs" rows="1"></textarea>
                             <input type="range" id="edit-y-sub" min="-300" max="300" value="0">
                         </div>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Izq (Casting)</label>
-                                <textarea id="edit-txt-col-left" class="custom-input text-xs font-mono" rows="6"></textarea>
+                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Izq / Medidas</label>
+                                <textarea id="edit-txt-col-left" class="custom-input text-xs font-mono" rows="5"></textarea>
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Der (Spinning)</label>
-                                <textarea id="edit-txt-col-right" class="custom-input text-xs font-mono" rows="6"></textarea>
+                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Der / Librajes</label>
+                                <textarea id="edit-txt-col-right" class="custom-input text-xs font-mono" rows="5"></textarea>
                             </div>
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase flex justify-between">
-                                <span>Altura Columnas</span>
-                            </label>
+                            <label class="text-[11px] font-bold text-emerald-600 uppercase mb-1 block">Código Inferior</label>
+                            <textarea id="edit-txt-bot" class="custom-input text-xs" rows="1"></textarea>
                             <input type="range" id="edit-y-bot" min="-300" max="300" value="0">
                         </div>
                     </div>
@@ -276,7 +270,7 @@
     let activeEditIndex = -1;
     const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
 
-    // 🎨 Tipografía fiel al estampador
+    // 🎨 Tipografía fiel al estampador (sin forzar negrita por defecto)
     const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
     async function sincronizarOdoo() {
@@ -312,19 +306,17 @@
         }
     }
 
-    // Agrupa variantes bajo un producto matriz estructurando sus columnas (Casting vs Spinning, Largos y Librajes)
+    // Agrupa variantes por producto matriz con soporte completo para Cañas, Reels y demás líneas
     function agruparPorProductoMatriz() {
         const groups = {};
 
         rawOdooVariants.forEach(item => {
-            // Nombre de la matriz
             let baseName = item.nombre_matriz || item.nombre || "";
             if (baseName.startsWith('[')) {
                 const idx = baseName.indexOf(']');
                 if (idx !== -1) baseName = baseName.substring(idx + 1).trim();
             }
 
-            // Quitar variantes entre paréntesis para el título limpio
             let cleanTitle = baseName.replace(/\(.*?\)/g, '').split(' - ')[0].trim().toUpperCase();
             const groupKey = item.tmpl_id ? `TMPL_${item.tmpl_id}` : `${cleanTitle}_${item.categ_id}`;
 
@@ -340,12 +332,18 @@
                     categ_id: item.categ_id || 'General',
                     foto: item.foto,
                     tramos: new Set(),
+                    // Cañas
                     castingLargos: new Set(),
                     castingLibrajes: new Set(),
                     spinningLargos: new Set(),
                     spinningLibrajes: new Set(),
-                    skusHijos: new Set(),
-                    variantesGenericas: new Set()
+                    // Reels
+                    tiposReel: new Set(),
+                    manosReel: new Set(),
+                    tamanosReel: new Set(),
+                    // Genéricos
+                    variantesGenericas: new Set(),
+                    skusHijos: new Set()
                 };
             }
 
@@ -353,62 +351,84 @@
 
             const attrs = item.atributos || {};
 
-            // 1. Tramos
+            // CAÑAS: Tramos
             if (attrs['Tramos']) {
                 let tr = attrs['Tramos'].toString().trim();
                 groups[groupKey].tramos.add(tr.toUpperCase().includes('TRAMO') ? tr.toUpperCase() : `${tr} TRAMOS`);
             }
 
-            // 2. Tipo De Caña (Casting vs Spinning)
-            const tipo = (attrs['Tipo De Caña'] || "").toUpperCase();
+            // CAÑAS: Casting vs Spinning
+            const tipoCana = (attrs['Tipo De Caña'] || "").toUpperCase();
             const largo = attrs['Largo Cañas'] ? attrs['Largo Cañas'].trim() : "";
             const libraje = attrs['Libraje Cañas'] ? attrs['Libraje Cañas'].trim() : "";
 
-            if (tipo.includes('CASTING')) {
+            if (tipoCana.includes('CASTING')) {
                 if (largo) groups[groupKey].castingLargos.add(largo);
                 if (libraje) groups[groupKey].castingLibrajes.add(libraje);
-            } else if (tipo.includes('SPINNING')) {
+            } else if (tipoCana.includes('SPINNING')) {
                 if (largo) groups[groupKey].spinningLargos.add(largo);
                 if (libraje) groups[groupKey].spinningLibrajes.add(libraje);
-            } else {
-                // Si no es caña, recolectar cualquier otro atributo existente
-                Object.entries(attrs).forEach(([k, v]) => {
-                    if (v) groups[groupKey].variantesGenericas.add(`${k}: ${v}`);
-                });
             }
+
+            // REELS: Tipo de Reel, Mano Reel, Tamaño Reel
+            if (attrs['Tipo de Reel']) groups[groupKey].tiposReel.add(attrs['Tipo de Reel'].trim());
+            if (attrs['Mano Reel']) groups[groupKey].manosReel.add(attrs['Mano Reel'].trim());
+            if (attrs['Tamaño Reel']) groups[groupKey].tamanosReel.add(attrs['Tamaño Reel'].trim());
+
+            // Otros atributos genéricos
+            Object.entries(attrs).forEach(([k, v]) => {
+                if (!['Tramos', 'Tipo De Caña', 'Largo Cañas', 'Libraje Cañas', 'Tipo de Reel', 'Mano Reel', 'Tamaño Reel'].includes(k) && v) {
+                    groups[groupKey].variantesGenericas.add(`${k}: ${v}`);
+                }
+            });
         });
 
         productTemplates = Object.values(groups).map(g => {
-            // Estructurar columna Izquierda (Casting)
+            let subtitulo = "";
             let colLeft = [];
-            if (g.castingLargos.size > 0 || g.castingLibrajes.size > 0) {
-                colLeft.push("CASTING");
-                if (g.castingLargos.size > 0) colLeft.push(Array.from(g.castingLargos).join(' | '));
-                
-                // Formatear librajes en pares de a 2 por línea
-                const libs = Array.from(g.castingLibrajes);
-                for (let i = 0; i < libs.length; i += 2) {
-                    colLeft.push(libs.slice(i, i + 2).join('   '));
-                }
-            }
-
-            // Estructurar columna Derecha (Spinning)
             let colRight = [];
-            if (g.spinningLargos.size > 0 || g.spinningLibrajes.size > 0) {
-                colRight.push("SPINNING");
-                if (g.spinningLargos.size > 0) colRight.push(Array.from(g.spinningLargos).join(' | '));
-                
-                const libs = Array.from(g.spinningLibrajes);
-                for (let i = 0; i < libs.length; i += 2) {
-                    colRight.push(libs.slice(i, i + 2).join('   '));
+
+            // 1. Caso CAÑAS
+            if (g.castingLargos.size > 0 || g.spinningLargos.size > 0 || g.tramos.size > 0) {
+                subtitulo = Array.from(g.tramos).join(' / ');
+
+                if (g.castingLargos.size > 0 || g.castingLibrajes.size > 0) {
+                    colLeft.push("CASTING");
+                    if (g.castingLargos.size > 0) colLeft.push(Array.from(g.castingLargos).join(' | '));
+                    const libs = Array.from(g.castingLibrajes);
+                    for (let i = 0; i < libs.length; i += 2) colLeft.push(libs.slice(i, i + 2).join('   '));
+                }
+
+                if (g.spinningLargos.size > 0 || g.spinningLibrajes.size > 0) {
+                    colRight.push("SPINNING");
+                    if (g.spinningLargos.size > 0) colRight.push(Array.from(g.spinningLargos).join(' | '));
+                    const libs = Array.from(g.spinningLibrajes);
+                    for (let i = 0; i < libs.length; i += 2) colRight.push(libs.slice(i, i + 2).join('   '));
+                }
+            } 
+            // 2. Caso REELS
+            else if (g.tiposReel.size > 0 || g.manosReel.size > 0 || g.tamanosReel.size > 0) {
+                if (g.tiposReel.size > 0) subtitulo = Array.from(g.tiposReel).join(' / ').toUpperCase();
+
+                if (g.tamanosReel.size > 0) {
+                    colLeft.push("TAMAÑOS");
+                    colLeft.push(Array.from(g.tamanosReel).join(' | '));
+                }
+
+                if (g.manosReel.size > 0) {
+                    colRight.push("MANO");
+                    colRight.push(Array.from(g.manosReel).join(' | '));
+                }
+            } 
+            // 3. Caso Genérico
+            else {
+                if (g.variantesGenericas.size > 0) {
+                    colLeft = Array.from(g.variantesGenericas);
                 }
             }
 
-            // Si el producto no es caña, usar variantes genéricas
-            let colGeneral = [];
-            if (colLeft.length === 0 && colRight.length === 0 && g.variantesGenericas.size > 0) {
-                colGeneral = Array.from(g.variantesGenericas);
-            }
+            // Código representativo al pie
+            const codigoFinal = `COD: ${g.skuPrincipal}`;
 
             return {
                 id: g.id,
@@ -416,10 +436,10 @@
                 skuPrincipal: g.skuPrincipal,
                 categ_id: g.categ_id,
                 foto: g.foto,
-                tramos: Array.from(g.tramos).join(' / ') || "",
+                subtitulo: subtitulo,
                 colLeft: colLeft.join('\n'),
                 colRight: colRight.join('\n'),
-                colGeneral: colGeneral.join('\n'),
+                codigoPie: codigoFinal,
                 skusHijos: Array.from(g.skusHijos)
             };
         });
@@ -474,7 +494,7 @@
                 <div class="truncate mr-2">
                     <span class="font-bold text-slate-800">[${p.skuPrincipal}]</span> 
                     <span class="text-slate-700 font-semibold">${p.titulo}</span>
-                    <span class="text-[10px] text-slate-400 block truncate">${p.tramos ? p.tramos + ' | ' : ''}${p.colLeft ? 'Casting / Spinning' : ''}</span>
+                    <span class="text-[10px] text-slate-400 block truncate">${p.subtitulo ? p.subtitulo + ' | ' : ''}${p.colLeft ? 'Variantes listas' : ''}</span>
                 </div>
                 <button onclick="seleccionarProductoId('${p.id}')" class="text-sky-600 hover:text-sky-800 font-extrabold text-xs px-2.5 py-1 bg-sky-100 hover:bg-sky-200 rounded transition-colors">+</button>
             `;
@@ -557,94 +577,140 @@
         filtrarCatalogoOdoo();
     }
 
-    // 🎨 MOTOR DE RENDERIZADO CANVAS TIPO CATÁLOGO / BANNER
+    // Motor de saltos de línea para evitar desbordes
+    function getWrappedLines(ctx, text, maxWidth) {
+        if (!text) return [];
+        let lines = [];
+        text.split('\n').forEach(explicitLine => {
+            let words = explicitLine.split(" ");
+            if (words.length === 0) return;
+            let currentLine = words[0];
+            for (let i = 1; i < words.length; i++) {
+                let word = words[i];
+                if (ctx.measureText(currentLine + " " + word).width <= maxWidth) {
+                    currentLine += " " + word;
+                } else {
+                    lines.push(currentLine);
+                    currentLine = word;
+                }
+            }
+            lines.push(currentLine);
+        });
+        return lines;
+    }
+
+    // 🎨 MOTOR DE RENDERIZADO CANVAS: FOTO PROTAGÓNICA + TEXTO SUPERPUESTO NO FORZADO A NEGRITA
     function renderCanvasDataUrl(config) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = config.imgObj;
         const scaleFactor = (config.textScale || 100) / 100;
 
-        // Tamaño lienzo cuadrado
-        const maxDim = Math.max(img.width, img.height);
-        const margin = Math.max(maxDim * 0.32, 220); // Espacio superior generoso para título y columnas
-        const size = maxDim + (margin * 1.5);
-        canvas.width = size;
-        canvas.height = size;
+        let size, imgX, imgY, imgW, imgH;
 
-        // Fondo Blanco
-        ctx.fillStyle = '#ffffff';
-        ctx.fillRect(0, 0, size, size);
+        if (config.mode === 'margin') {
+            // Lienzo cuadrado proporcional
+            const maxDim = Math.max(img.width, img.height);
+            size = Math.round(maxDim * 1.25);
+            canvas.width = size;
+            canvas.height = size;
 
-        // Foto centrada en la mitad inferior
-        const imgY = size - img.height - 40;
-        ctx.drawImage(img, (size - img.width) / 2, imgY, img.width, img.height);
+            // Fondo Blanco
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+
+            // La foto ocupa el 85% del lienzo centrada (superponiéndose naturalmente con textos)
+            const ratio = Math.min((size * 0.85) / img.width, (size * 0.85) / img.height);
+            imgW = img.width * ratio;
+            imgH = img.height * ratio;
+            imgX = (size - imgW) / 2;
+            imgY = (size - imgH) / 2 + (size * 0.05); // Ligeramente desplazada hacia abajo para dejar aire al título
+
+            ctx.drawImage(img, imgX, imgY, imgW, imgH);
+        } else {
+            // Modo Superpuesto sobre la foto original
+            size = Math.max(img.width, img.height);
+            canvas.width = img.width;
+            canvas.height = img.height;
+            imgX = 0; imgY = 0; imgW = img.width; imgH = img.height;
+            ctx.drawImage(img, 0, 0, img.width, img.height);
+        }
 
         ctx.fillStyle = config.textColor || '#000000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
 
-        // 1. TÍTULO PRINCIPAL (ej: "CAÑA PERLA BLANCA")
-        let fontTitle = Math.max(size * 0.055 * scaleFactor, 24);
-        ctx.font = `bold ${fontTitle}px ${fontFamily}`;
-        let titleY = (margin * 0.22) + config.yTop;
-        ctx.fillText(config.top || "", size / 2, titleY);
+        const maxWidth = (canvas.width * 0.90);
 
-        // 2. SUBTÍTULO / TRAMOS (ej: "1 TRAMOS")
-        let fontSub = fontTitle * 0.72;
-        ctx.font = `bold ${fontSub}px ${fontFamily}`;
-        let subY = titleY + (fontTitle * 1.2) + config.ySub;
+        // 1. TÍTULO PRINCIPAL (ej: "REEL FRONT METALICO X21 BLACK 3+1R")
+        // Fuente limpia normal (no bold pesada) para que no desborde
+        let fontTitle = Math.max(canvas.width * 0.045 * scaleFactor, 20);
+        ctx.font = `normal ${fontTitle}px ${fontFamily}`;
+        
+        let titleLines = getWrappedLines(ctx, config.top || "", maxWidth);
+        let lhTitle = fontTitle * 1.15;
+        let startYTitle = (canvas.height * 0.08) + (config.yTop || 0);
+
+        titleLines.forEach((tl, idx) => {
+            ctx.fillText(tl, canvas.width / 2, startYTitle + (idx * lhTitle));
+        });
+
+        let curY = startYTitle + (titleLines.length * lhTitle);
+
+        // 2. SUBTÍTULO (ej: "1 TRAMOS" o "FRONTAL / CAST")
         if (config.sub) {
-            ctx.fillText(config.sub, size / 2, subY);
+            let fontSub = fontTitle * 0.80;
+            ctx.font = `normal ${fontSub}px ${fontFamily}`;
+            let subY = curY + (fontSub * 0.5) + (config.ySub || 0);
+            ctx.fillText(config.sub, canvas.width / 2, subY);
+            curY = subY + (fontSub * 0.8);
         }
 
-        // 3. COLUMNAS DE ATRIBUTOS (CASTING & SPINNING)
-        let fontColTitle = fontTitle * 0.52;
-        let fontColData = fontColTitle * 0.90;
-        let lhCol = fontColData * 1.25;
-
-        let colBaseY = subY + (fontSub * 1.3) + config.yBot;
+        // 3. COLUMNAS DE ATRIBUTOS
+        let fontColHeader = fontTitle * 0.65;
+        let fontColText = fontColHeader * 0.88;
+        let lhCol = fontColText * 1.25;
+        let colBaseY = curY + (fontColHeader * 0.6) + (config.yBot || 0);
 
         const colLeftLines = config.colLeft ? config.colLeft.split('\n').filter(Boolean) : [];
         const colRightLines = config.colRight ? config.colRight.split('\n').filter(Boolean) : [];
 
-        // Si tiene columnas dobles (Casting y Spinning)
         if (colLeftLines.length > 0 && colRightLines.length > 0) {
-            const posX_Left = size * 0.33;
-            const posX_Right = size * 0.67;
+            const posX_Left = canvas.width * 0.32;
+            const posX_Right = canvas.width * 0.68;
 
-            // Columna Izquierda (Casting)
-            let curY_L = colBaseY;
+            // Columna Izquierda
+            let yL = colBaseY;
             colLeftLines.forEach((l, idx) => {
-                if (idx === 0) {
-                    ctx.font = `bold ${fontColTitle}px ${fontFamily}`;
-                } else {
-                    ctx.font = `normal ${fontColData}px ${fontFamily}`;
-                }
-                ctx.fillText(l.trim(), posX_Left, curY_L);
-                curY_L += lhCol;
+                ctx.font = (idx === 0) ? `bold ${fontColHeader}px ${fontFamily}` : `normal ${fontColText}px ${fontFamily}`;
+                ctx.fillText(l.trim(), posX_Left, yL);
+                yL += lhCol;
             });
 
-            // Columna Derecha (Spinning)
-            let curY_R = colBaseY;
+            // Columna Derecha
+            let yR = colBaseY;
             colRightLines.forEach((l, idx) => {
-                if (idx === 0) {
-                    ctx.font = `bold ${fontColTitle}px ${fontFamily}`;
-                } else {
-                    ctx.font = `normal ${fontColData}px ${fontFamily}`;
-                }
-                ctx.fillText(l.trim(), posX_Right, curY_R);
-                curY_R += lhCol;
+                ctx.font = (idx === 0) ? `bold ${fontColHeader}px ${fontFamily}` : `normal ${fontColText}px ${fontFamily}`;
+                ctx.fillText(l.trim(), posX_Right, yR);
+                yR += lhCol;
             });
-
         } else {
-            // Fila central para productos simples o genéricos
-            const generalLines = (config.colLeft || config.colRight || config.bot || "").split('\n').filter(Boolean);
-            let curY = colBaseY;
-            ctx.font = `normal ${fontColData}px ${fontFamily}`;
-            generalLines.forEach(l => {
-                ctx.fillText(l.trim(), size / 2, curY);
-                curY += lhCol;
+            // Centrado si hay una sola columna
+            let singleLines = (config.colLeft || config.colRight || "").split('\n').filter(Boolean);
+            let yS = colBaseY;
+            singleLines.forEach((l, idx) => {
+                ctx.font = (idx === 0) ? `bold ${fontColHeader}px ${fontFamily}` : `normal ${fontColText}px ${fontFamily}`;
+                ctx.fillText(l.trim(), canvas.width / 2, yS);
+                yS += lhCol;
             });
+        }
+
+        // 4. CÓDIGO AL PIE (Siempre visible y elegante)
+        if (config.bot) {
+            let fontBot = Math.max(canvas.width * 0.038 * scaleFactor, 16);
+            ctx.font = `bold ${fontBot}px ${fontFamily}`;
+            let botY = canvas.height - (canvas.height * 0.06);
+            ctx.fillText(config.bot, canvas.width / 2, botY);
         }
 
         return canvas.toDataURL('image/jpeg', 0.95);
@@ -676,10 +742,11 @@
             mode: document.getElementById('global-mode').value,
             textColor: document.getElementById('global-color').value,
             textScale: parseInt(document.getElementById('global-scale').value),
-            top: "CAÑA PERLA BLANCA",
-            sub: "1 TRAMOS",
-            colLeft: "CASTING\n1.80m | 1.98m\n8-17lbs   15-30lbs\n10-20lbs\n12-25lbs",
-            colRight: "SPINNING\n1.98m | 2.10m\n10-20lbs   15-30lbs\n15-30lbs",
+            top: "REEL FRONT METALICO X21 BLACK 3+1R",
+            sub: "FRONTAL",
+            colLeft: "TAMAÑOS\n4000 | 5000 | 6000",
+            colRight: "MANO\nDERECHO | IZQUIERDO",
+            bot: "COD: X21BLACK",
             yTop: parseInt(document.getElementById('global-y-top').value),
             ySub: parseInt(document.getElementById('global-y-sub').value),
             yBot: parseInt(document.getElementById('global-y-bot').value),
@@ -712,7 +779,7 @@
 
         generatedCards = [];
         const grid = document.getElementById('preview-grid');
-        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas comerciales estructuradas...</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas comerciales...</p>';
         document.getElementById('results-section').classList.remove('hidden');
 
         const gMode = document.getElementById('global-mode').value;
@@ -733,10 +800,10 @@
                     name: `${prod.skuPrincipal}.jpg`,
                     imgObj: imgObj,
                     top: prod.titulo,
-                    sub: prod.tramos,
+                    sub: prod.subtitulo,
                     colLeft: prod.colLeft,
                     colRight: prod.colRight,
-                    bot: prod.colGeneral,
+                    bot: prod.codigoPie,
                     mode: gMode,
                     textColor: gColor,
                     textScale: gScale,
@@ -758,7 +825,7 @@
     function renderResultGrid() {
         const grid = document.getElementById('preview-grid');
         grid.innerHTML = '';
-        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales.`;
+        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales listas.`;
 
         generatedCards.forEach((item, index) => {
             grid.innerHTML += `
@@ -795,6 +862,7 @@
         document.getElementById('edit-txt-sub').value = config.sub;
         document.getElementById('edit-txt-col-left').value = config.colLeft || '';
         document.getElementById('edit-txt-col-right').value = config.colRight || '';
+        document.getElementById('edit-txt-bot').value = config.bot || '';
 
         document.getElementById('edit-y-top').value = config.yTop;
         document.getElementById('edit-y-sub').value = config.ySub;
@@ -821,6 +889,7 @@
             sub: document.getElementById('edit-txt-sub').value,
             colLeft: document.getElementById('edit-txt-col-left').value,
             colRight: document.getElementById('edit-txt-col-right').value,
+            bot: document.getElementById('edit-txt-bot').value,
             yTop: parseInt(document.getElementById('edit-y-top').value),
             ySub: parseInt(document.getElementById('edit-y-sub').value),
             yBot: parseInt(document.getElementById('edit-y-bot').value),
@@ -828,7 +897,7 @@
         document.getElementById('modal-preview-img').src = renderCanvasDataUrl(tempConfig);
     }
 
-    ['edit-mode', 'edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-col-left', 'edit-txt-col-right', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
+    ['edit-mode', 'edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-col-left', 'edit-txt-col-right', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
         document.getElementById(id).addEventListener('input', updateModalPreview);
     });
 
@@ -842,6 +911,7 @@
         config.sub = document.getElementById('edit-txt-sub').value;
         config.colLeft = document.getElementById('edit-txt-col-left').value;
         config.colRight = document.getElementById('edit-txt-col-right').value;
+        config.bot = document.getElementById('edit-txt-bot').value;
         config.yTop = parseInt(document.getElementById('edit-y-top').value);
         config.ySub = parseInt(document.getElementById('edit-y-sub').value);
         config.yBot = parseInt(document.getElementById('edit-y-bot').value);
@@ -851,7 +921,6 @@
         closeModal();
     };
 
-    // Descargas
     window.descargarIndividual = function(index) {
         const item = generatedCards[index];
         const link = document.createElement('a');
