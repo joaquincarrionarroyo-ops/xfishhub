@@ -28,7 +28,7 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-sky-600 shadow flex items-center justify-center">
                     <svg class="w-4 h-4 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
                 </div>
-                Historial 360°
+                Historial de Movimientos 360°
             </h1>
             <a href="index.html" class="text-sm font-semibold text-sky-600 hover:text-sky-800">← Volver al Hub</a>
         </div>
@@ -36,19 +36,51 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 space-y-6">
         
-        <div class="glass-panel rounded-2xl p-6">
-            <label class="block text-sm font-bold text-slate-700 mb-2">Buscá un artículo para ver su historia completa</label>
-            <div class="flex gap-2">
-                <div class="relative w-full md:w-1/2">
-                    <input type="text" id="buscador-prod" placeholder="Ej: TRICO, ACTION..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-sky-500 outline-none text-sm font-medium bg-white" oninput="filtrarLista()" autocomplete="off">
-                    <div id="lista-resultados" class="absolute w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto hidden z-50"></div>
+        <!-- VISTA GENERAL: TABLA DE TODOS LOS PRODUCTOS -->
+        <div id="vista-general" class="space-y-6">
+            <div class="glass-panel rounded-2xl p-6">
+                <div class="flex flex-col lg:flex-row justify-between items-end gap-4">
+                    <div class="w-full lg:w-1/2">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Buscar producto específico</label>
+                        <input type="text" id="buscador-global" placeholder="Escribí código SKU o nombre..." class="w-full px-4 py-3 rounded-xl border border-slate-300 focus:border-sky-500 outline-none text-sm font-medium bg-white" oninput="renderizarGlobal()">
+                    </div>
+                    
+                    <div class="w-full lg:w-1/2 bg-slate-50 p-4 rounded-xl border border-slate-200">
+                        <label class="block text-sm font-bold text-slate-700 mb-2">Filtrar Movimientos por Fecha</label>
+                        <div class="flex gap-2 items-center">
+                            <input type="date" id="fecha-desde" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm outline-none">
+                            <span class="text-slate-400 font-bold">a</span>
+                            <input type="date" id="fecha-hasta" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm outline-none">
+                            <button onclick="cargarMovimientos()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-6 rounded-lg text-sm transition shadow">Filtrar</button>
+                        </div>
+                    </div>
                 </div>
+                <p id="status-global" class="text-xs text-sky-600 mt-3 font-semibold">Iniciando sistema...</p>
             </div>
-            <p id="status-text" class="text-xs text-sky-600 mt-2 font-semibold">Cargando catálogo maestro de Odoo...</p>
+
+            <div class="glass-panel rounded-2xl overflow-hidden shadow-sm">
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-100 border-b border-slate-200 text-slate-600">
+                        <tr>
+                            <th class="p-4 font-bold">Producto</th>
+                            <th class="p-4 font-bold text-center">Entradas</th>
+                            <th class="p-4 font-bold text-center">Salidas</th>
+                            <th class="p-4 font-bold text-right">Acción</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-global" class="divide-y divide-slate-100 bg-white/50"></tbody>
+                </table>
+            </div>
         </div>
 
+        <!-- DASHBOARD DETALLADO (Oculto inicialmente) -->
         <div id="dashboard" class="hidden space-y-6">
             
+            <button onclick="volverGlobal()" class="bg-white border border-slate-200 text-slate-700 font-bold py-2 px-6 rounded-xl hover:bg-slate-50 shadow-sm mb-2 text-sm flex items-center gap-2">
+                <span>← Volver al Listado General</span>
+            </button>
+
+            <!-- HEADER DEL PRODUCTO -->
             <div class="glass-panel rounded-2xl p-6 flex flex-col md:flex-row gap-6 items-center md:items-start">
                 <div class="w-32 h-32 bg-white rounded-xl border border-slate-200 shadow-sm flex items-center justify-center shrink-0 p-2">
                     <img id="prod-img" class="max-h-full object-contain" src="" alt="Foto Producto">
@@ -82,142 +114,151 @@
                 </div>
             </div>
 
+            <!-- GRÁFICOS -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div class="glass-panel rounded-2xl p-5">
                     <h3 class="text-sm font-bold text-slate-700 mb-4">📈 Curva Histórica de Ventas</h3>
-                    <div class="relative h-60">
-                        <canvas id="chart-ventas"></canvas>
-                    </div>
+                    <div class="relative h-60"><canvas id="chart-ventas"></canvas></div>
                 </div>
                 <div class="glass-panel rounded-2xl p-5">
                     <h3 class="text-sm font-bold text-slate-700 mb-4">🛒 Curva Histórica de Ingresos (Compras)</h3>
-                    <div class="relative h-60">
-                        <canvas id="chart-compras"></canvas>
-                    </div>
+                    <div class="relative h-60"><canvas id="chart-compras"></canvas></div>
                 </div>
             </div>
 
+            <!-- TABLAS DE COMPRA Y VENTA (SIN SCROLLBAR INTERNO) -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
-                    <div class="bg-rose-50 border-b border-rose-100 p-4">
-                        <h3 class="text-sm font-bold text-rose-800 uppercase tracking-wide">Últimas Compras (Costos)</h3>
-                    </div>
-                    <div class="p-0 max-h-80 overflow-y-auto text-sm">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 sticky top-0 shadow-sm">
-                                <tr>
-                                    <th class="p-3 text-slate-500 font-semibold border-b border-slate-200">Fecha</th>
-                                    <th class="p-3 text-indigo-600 font-semibold border-b border-slate-200">ICO</th>
-                                    <th class="p-3 text-slate-500 font-semibold border-b border-slate-200">Cant.</th>
-                                    <th class="p-3 text-slate-500 font-semibold border-b border-slate-200">Costo Real</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-compras" class="divide-y divide-slate-100 bg-white"></tbody>
-                        </table>
-                    </div>
-                </div>
-
-                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
-                    <div class="bg-sky-50 border-b border-sky-100 p-4">
-                        <h3 class="text-sm font-bold text-sky-800 uppercase tracking-wide">Últimas Ventas Confirmadas</h3>
-                    </div>
-                    <div class="p-0 max-h-80 overflow-y-auto text-sm">
-                        <table class="w-full text-left">
-                            <thead class="bg-slate-50 sticky top-0 shadow-sm">
-                                <tr>
-                                    <th class="p-3 text-slate-500 font-semibold border-b border-slate-200">Fecha</th>
-                                    <th class="p-3 text-slate-500 font-semibold border-b border-slate-200">Cant.</th>
-                                    <th class="p-3 text-slate-500 font-semibold border-b border-slate-200">Precio Venta</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-ventas" class="divide-y divide-slate-100 bg-white"></tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-
-            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col mt-6">
-                <div class="bg-slate-100 border-b border-slate-200 p-5 flex justify-between items-center">
-                    <h3 class="text-base font-bold text-slate-700 uppercase tracking-wide">Trazabilidad de Movimientos y Ajustes</h3>
-                </div>
-                <div class="p-0 max-h-[600px] overflow-y-auto">
+                <div class="glass-panel rounded-2xl flex flex-col">
+                    <div class="bg-rose-50 border-b border-rose-100 p-4 rounded-t-2xl"><h3 class="text-sm font-bold text-rose-800 uppercase tracking-wide">Últimas Compras (Costos)</h3></div>
                     <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
-                            <tr>
-                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200">Fecha / Ref.</th>
-                                <th class="p-4 text-indigo-600 font-bold border-b border-slate-200 text-center">ICO</th>
-                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200">Origen → Destino</th>
-                                <th class="p-4 text-slate-500 font-semibold text-right border-b border-slate-200">Cantidad</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-movimientos" class="divide-y divide-slate-100 bg-white"></tbody>
+                        <thead class="bg-slate-50 border-b border-slate-200"><tr><th class="p-3">Fecha</th><th class="p-3">ICO</th><th class="p-3">Cant.</th><th class="p-3">Costo Real</th></tr></thead>
+                        <tbody id="tabla-compras" class="divide-y divide-slate-100 bg-white"></tbody>
+                    </table>
+                </div>
+
+                <div class="glass-panel rounded-2xl flex flex-col">
+                    <div class="bg-sky-50 border-b border-sky-100 p-4 rounded-t-2xl"><h3 class="text-sm font-bold text-sky-800 uppercase tracking-wide">Últimas Ventas Confirmadas</h3></div>
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 border-b border-slate-200"><tr><th class="p-3">Fecha</th><th class="p-3">Cant.</th><th class="p-3">Precio Venta</th></tr></thead>
+                        <tbody id="tabla-ventas" class="divide-y divide-slate-100 bg-white"></tbody>
                     </table>
                 </div>
             </div>
 
+            <!-- TABLA DE MOVIMIENTOS A ANCHO COMPLETO (SIN SCROLLBAR INTERNO) -->
+            <div class="glass-panel rounded-2xl flex flex-col mt-6">
+                <div class="bg-slate-100 border-b border-slate-200 p-5 rounded-t-2xl"><h3 class="text-base font-bold text-slate-700 uppercase tracking-wide">Trazabilidad de Movimientos y Ajustes</h3></div>
+                <table class="w-full text-left text-sm">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="p-4">Fecha / Ref.</th>
+                            <th class="p-4 text-center">ICO</th>
+                            <th class="p-4">Origen → Destino</th>
+                            <th class="p-4 text-right">Cantidad</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tabla-movimientos" class="divide-y divide-slate-100 bg-white"></tbody>
+                </table>
+            </div>
         </div>
     </main>
 
 <script>
     let catalogoGeneral = [];
+    let resumenMovimientos = {};
     let chartVentasRef = null;
     let chartComprasRef = null;
     const urlBackend = 'https://xfish-odoo-api.onrender.com';
 
-    async function cargarCatalogo() {
+    async function init() {
+        // Establecer fechas default (mes actual)
+        const date = new Date();
+        const primerDia = new Date(date.getFullYear(), date.getMonth(), 1).toISOString().split('T')[0];
+        const hoy = date.toISOString().split('T')[0];
+        document.getElementById('fecha-desde').value = primerDia;
+        document.getElementById('fecha-hasta').value = hoy;
+
+        document.getElementById('status-global').innerHTML = `⏳ Descargando catálogo maestro...`;
+        
         try {
             const pwd = sessionStorage.getItem('odoo_pwd');
-            if (!pwd) {
-                alert("Debes iniciar sesión en el Hub.");
-                window.location.href = 'index.html';
-                return;
-            }
+            if (!pwd) { alert("Debes iniciar sesión."); window.location.href = 'index.html'; return; }
+            
             const res = await fetch(`${urlBackend}/api/productos`, { headers: { 'x-odoo-password': pwd } });
             if (!res.ok) throw new Error("Error en Odoo");
             catalogoGeneral = await res.json();
-            document.getElementById('status-text').innerHTML = `✅ Catálogo cargado (${catalogoGeneral.length} artículos). Buscá un producto.`;
+            
+            await cargarMovimientos();
         } catch (e) {
-            document.getElementById('status-text').innerHTML = `❌ Error cargando catálogo.`;
+            document.getElementById('status-global').innerHTML = `❌ Error iniciando sistema.`;
         }
     }
 
-    function filtrarLista() {
-        const input = document.getElementById('buscador-prod').value.toLowerCase();
-        const lista = document.getElementById('lista-resultados');
+    async function cargarMovimientos() {
+        document.getElementById('status-global').innerHTML = `⏳ Analizando movimientos...`;
+        document.getElementById('tabla-global').innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">Calculando movimientos...</td></tr>`;
         
-        if (input.length < 2) {
-            lista.classList.add('hidden');
+        const fDesde = document.getElementById('fecha-desde').value;
+        const fHasta = document.getElementById('fecha-hasta').value;
+        
+        try {
+            const pwd = sessionStorage.getItem('odoo_pwd');
+            const res = await fetch(`${urlBackend}/api/movimientos-resumen`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'x-odoo-password': pwd },
+                body: JSON.stringify({ fecha_desde: fDesde, fecha_hasta: fHasta })
+            });
+            resumenMovimientos = await res.json();
+            document.getElementById('status-global').innerHTML = `✅ Listado actualizado.`;
+            renderizarGlobal();
+        } catch (e) {
+            document.getElementById('status-global').innerHTML = `❌ Error analizando movimientos.`;
+        }
+    }
+
+    function renderizarGlobal() {
+        const text = document.getElementById('buscador-global').value.toLowerCase();
+        const tabla = document.getElementById('tabla-global');
+        
+        // Filtrar catálogo: solo los que tengan resumenMovimientos > 0 (entradas o salidas) Y coincidan con buscador
+        const filtrados = catalogoGeneral.filter(p => {
+            const movs = resumenMovimientos[p.id];
+            if (!movs || (movs.entradas === 0 && movs.salidas === 0)) return false;
+            if (text && !p.nombre.toLowerCase().includes(text) && !(p.sku && p.sku.toLowerCase().includes(text))) return false;
+            return true;
+        });
+
+        if (filtrados.length === 0) {
+            tabla.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-500 font-bold">No hay artículos con movimientos en estas fechas o búsqueda.</td></tr>`;
             return;
         }
 
-        const resultados = catalogoGeneral.filter(p => 
-            p.nombre.toLowerCase().includes(input) || 
-            (p.sku && p.sku.toLowerCase().includes(input))
-        ).slice(0, 10);
-
-        if (resultados.length === 0) {
-            lista.innerHTML = '<div class="p-4 text-sm text-slate-500">Sin resultados</div>';
-        } else {
-            lista.innerHTML = resultados.map(p => `
-                <div onclick="buscarHistorial(${p.id})" class="p-4 border-b border-slate-100 hover:bg-sky-50 cursor-pointer flex items-center gap-3">
-                    ${p.foto ? `<img src="data:image/jpeg;base64,${p.foto}" class="w-10 h-10 object-contain rounded">` : `<div class="w-10 h-10 bg-slate-100 rounded"></div>`}
+        tabla.innerHTML = filtrados.map(p => {
+            const movs = resumenMovimientos[p.id];
+            return `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="p-4 border-b border-slate-100 flex items-center gap-4">
+                    ${p.foto ? `<img src="data:image/jpeg;base64,${p.foto}" class="w-12 h-12 object-contain bg-white rounded shadow-sm border border-slate-200">` : `<div class="w-12 h-12 bg-slate-100 rounded"></div>`}
                     <div>
-                        <p class="text-sm font-bold text-slate-800">[${p.sku || 'S/N'}]</p>
-                        <p class="text-sm text-slate-600 truncate">${p.nombre}</p>
+                        <p class="text-xs font-black text-indigo-700 font-mono">[${p.sku || 'S/N'}]</p>
+                        <p class="text-sm font-semibold text-slate-700">${p.nombre}</p>
                     </div>
-                </div>
-            `).join('');
-        }
-        lista.classList.remove('hidden');
+                </td>
+                <td class="p-4 border-b border-slate-100 text-center font-bold text-emerald-600 text-base">+${movs.entradas}</td>
+                <td class="p-4 border-b border-slate-100 text-center font-bold text-rose-600 text-base">-${movs.salidas}</td>
+                <td class="p-4 border-b border-slate-100 text-right">
+                    <button onclick="buscarHistorial(${p.id})" class="bg-sky-50 text-sky-700 hover:bg-sky-600 hover:text-white font-bold py-2 px-4 rounded-lg text-xs transition shadow-sm border border-sky-200">Ver Historial Completo</button>
+                </td>
+            </tr>
+            `;
+        }).join('');
     }
 
     async function buscarHistorial(id) {
-        document.getElementById('lista-resultados').classList.add('hidden');
-        document.getElementById('buscador-prod').value = "";
-        
+        document.getElementById('vista-general').classList.add('hidden');
         const productoBase = catalogoGeneral.find(p => p.id === id);
 
-        document.getElementById('status-text').innerHTML = `⏳ Consultando historial profundo de ${productoBase.sku || productoBase.nombre}...`;
+        document.getElementById('status-global').innerHTML = `⏳ Consultando historial de ${productoBase.sku}...`;
 
         try {
             const pwd = sessionStorage.getItem('odoo_pwd');
@@ -225,38 +266,32 @@
             if (!res.ok) throw new Error("Fallo historial");
             const data = await res.json();
 
-            // Combinamos con la data base y el ICO directo de la ficha
             data.producto = {
-                id: productoBase.id,
-                nombre: productoBase.nombre,
-                sku: productoBase.sku,
-                foto: productoBase.foto,
-                precio_lista: productoBase.precio,
-                ico: data.producto.ico // El ICO traído del backend en la consulta de historial
+                id: productoBase.id, nombre: productoBase.nombre, sku: productoBase.sku, foto: productoBase.foto, precio_lista: productoBase.precio, ico: data.producto.ico
             };
 
             renderizarDashboard(data);
-            document.getElementById('status-text').innerHTML = `✅ Historial actualizado para ${productoBase.sku || productoBase.nombre}.`;
             document.getElementById('dashboard').classList.remove('hidden');
-
         } catch(e) {
-            document.getElementById('status-text').innerHTML = "❌ Error obteniendo historial.";
+            document.getElementById('vista-general').classList.remove('hidden');
+            alert("Error obteniendo el detalle histórico");
         }
     }
 
-    function renderizarDashboard(data) {
-        const prod = data.producto;
-        const compras = data.compras;
-        const ventas = data.ventas;
-        const movs = data.movimientos;
+    function volverGlobal() {
+        document.getElementById('dashboard').classList.add('hidden');
+        document.getElementById('vista-general').classList.remove('hidden');
+        document.getElementById('status-global').innerHTML = `✅ Listado actualizado.`;
+    }
 
-        // 1. Header Info
+    function renderizarDashboard(data) {
+        const prod = data.producto; const compras = data.compras; const ventas = data.ventas; const movs = data.movimientos;
+
         document.getElementById('prod-img').src = prod.foto ? `data:image/jpeg;base64,${prod.foto}` : '';
         document.getElementById('prod-name').textContent = prod.nombre;
         document.getElementById('prod-sku').textContent = `SKU: [${prod.sku || 'S/N'}]`;
         document.getElementById('prod-price').textContent = `$${(prod.precio_lista || 0).toLocaleString('es-AR')}`;
 
-        // Mostrar ICO principal del producto
         const lotesContainer = document.getElementById('prod-lotes-container');
         if (prod.ico && prod.ico !== '-') {
             lotesContainer.innerHTML = `<span class="bg-indigo-100 text-indigo-800 font-mono text-sm font-bold px-3 py-1 rounded border border-indigo-200 shadow-sm">🏷️ ICO: ${prod.ico}</span>`;
@@ -264,8 +299,7 @@
             lotesContainer.innerHTML = `<span class="bg-slate-100 text-slate-500 text-xs font-bold px-2 py-1 rounded border border-slate-200">Sin ICO asignado</span>`;
         }
 
-        let ultimoCosto = 0;
-        let totalCompras = 0;
+        let ultimoCosto = 0; let totalCompras = 0;
         if (compras.length > 0) {
             ultimoCosto = compras[0].price_unit;
             totalCompras = compras.reduce((acc, c) => acc + c.product_qty, 0);
@@ -276,49 +310,24 @@
         let totalVentas = ventas.reduce((acc, v) => acc + v.product_uom_qty, 0);
         document.getElementById('prod-ventas').textContent = `${totalVentas} unid.`;
 
-        // 2. Tablas
         document.getElementById('tabla-compras').innerHTML = compras.map(c => `
-            <tr class="hover:bg-slate-50 transition-colors text-sm">
-                <td class="p-3 border-b border-slate-100 whitespace-nowrap">${c.create_date ? c.create_date.split(' ')[0] : '-'}</td>
-                <td class="p-3 border-b border-slate-100 font-mono font-bold text-indigo-600">${prod.ico !== '-' ? `📥 ${prod.ico}` : '-'}</td>
-                <td class="p-3 border-b border-slate-100 font-bold">${c.product_qty}</td>
-                <td class="p-3 border-b border-slate-100 text-rose-700 font-bold">$${c.price_unit.toLocaleString('es-AR')}</td>
-            </tr>
+            <tr class="hover:bg-slate-50 text-sm"><td class="p-3 border-b border-slate-100 whitespace-nowrap">${c.create_date ? c.create_date.split(' ')[0] : '-'}</td><td class="p-3 border-b border-slate-100 font-mono font-bold text-indigo-600">${prod.ico !== '-' ? `📥 ${prod.ico}` : '-'}</td><td class="p-3 border-b border-slate-100 font-bold">${c.product_qty}</td><td class="p-3 border-b border-slate-100 text-rose-700 font-bold">$${c.price_unit.toLocaleString('es-AR')}</td></tr>
         `).join('');
 
         document.getElementById('tabla-ventas').innerHTML = ventas.map(v => `
-            <tr class="hover:bg-slate-50 transition-colors text-sm">
-                <td class="p-3 border-b border-slate-100 whitespace-nowrap">${v.create_date ? v.create_date.split(' ')[0] : '-'}</td>
-                <td class="p-3 border-b border-slate-100 font-bold">${v.product_uom_qty}</td>
-                <td class="p-3 border-b border-slate-100 text-emerald-700 font-bold">$${v.price_unit.toLocaleString('es-AR')}</td>
-            </tr>
+            <tr class="hover:bg-slate-50 text-sm"><td class="p-3 border-b border-slate-100 whitespace-nowrap">${v.create_date ? v.create_date.split(' ')[0] : '-'}</td><td class="p-3 border-b border-slate-100 font-bold">${v.product_uom_qty}</td><td class="p-3 border-b border-slate-100 text-emerald-700 font-bold">$${v.price_unit.toLocaleString('es-AR')}</td></tr>
         `).join('');
 
         document.getElementById('tabla-movimientos').innerHTML = movs.map(m => {
-            const locOrigen = m.location_id ? m.location_id[1] : '';
-            const locDest = m.location_dest_id ? m.location_dest_id[1] : '';
-            
-            const esAjusteOBaja = locDest.toLowerCase().includes('scrap') || 
-                                  locDest.toLowerCase().includes('inventory adjustment') || 
-                                  locDest.toLowerCase().includes('ajuste') ||
-                                  locDest.toLowerCase().includes('desecho');
-
-            const displayDestino = esAjusteOBaja 
-                ? `<span class="bg-rose-100 text-rose-700 font-extrabold px-3 py-1.5 rounded border border-rose-200 text-sm shadow-sm">🔴 BAJA / AJUSTE</span>` 
-                : locDest.split('/').pop();
+            const locOrigen = m.location_id ? m.location_id[1] : ''; const locDest = m.location_dest_id ? m.location_dest_id[1] : '';
+            const esAjusteOBaja = locDest.toLowerCase().includes('scrap') || locDest.toLowerCase().includes('inventory adjustment') || locDest.toLowerCase().includes('ajuste') || locDest.toLowerCase().includes('desecho');
+            const displayDestino = esAjusteOBaja ? `<span class="bg-rose-100 text-rose-700 font-extrabold px-3 py-1 rounded border border-rose-200 text-xs shadow-sm">🔴 BAJA / AJUSTE</span>` : locDest.split('/').pop();
 
             return `
-            <tr class="hover:bg-slate-50 transition-colors text-base">
-                <td class="p-4 border-b border-slate-100">
-                    <span class="block text-slate-800 font-semibold">${m.date ? m.date.split(' ')[0] : '-'}</span>
-                    <span class="block font-mono text-xs font-bold text-slate-400 mt-1">${m.reference || ''}</span>
-                </td>
-                <td class="p-4 border-b border-slate-100 text-center font-mono text-sm font-black text-indigo-700 bg-indigo-50/50">
-                    ${prod.ico !== '-' ? `📥 ${prod.ico}` : '<span class="text-slate-300">-</span>'}
-                </td>
-                <td class="p-4 border-b border-slate-100 truncate max-w-[300px]" title="${locOrigen} → ${locDest}">
-                    <span class="text-slate-500">${locOrigen.split('/').pop()}</span> <span class="mx-2 text-slate-300">→</span> <span class="font-semibold text-slate-700">${displayDestino}</span>
-                </td>
+            <tr class="hover:bg-slate-50 text-base">
+                <td class="p-4 border-b border-slate-100"><span class="block text-slate-800 font-semibold">${m.date ? m.date.split(' ')[0] : '-'}</span><span class="block font-mono text-xs font-bold text-slate-400 mt-1">${m.reference || ''}</span></td>
+                <td class="p-4 border-b border-slate-100 text-center font-mono text-sm font-black text-indigo-700 bg-indigo-50/30">${prod.ico !== '-' ? `📥 ${prod.ico}` : '<span class="text-slate-300">-</span>'}</td>
+                <td class="p-4 border-b border-slate-100 truncate max-w-[300px]" title="${locOrigen} → ${locDest}"><span class="text-slate-500">${locOrigen.split('/').pop()}</span> <span class="mx-2 text-slate-300">→</span> <span class="font-semibold text-slate-700">${displayDestino}</span></td>
                 <td class="p-4 border-b border-slate-100 text-right font-black text-lg ${esAjusteOBaja ? 'text-rose-600' : 'text-slate-800'}">${m.qty_done}</td>
             </tr>
             `;
@@ -328,51 +337,18 @@
     }
 
     function renderizarGraficos(ventas, compras) {
-        const groupByMonth = (arr, qtyField) => {
-            const result = {};
-            arr.forEach(item => {
-                if (!item.create_date) return;
-                const month = item.create_date.substring(0, 7);
-                result[month] = (result[month] || 0) + item[qtyField];
-            });
-            return result;
-        };
+        const groupByMonth = (arr, qtyField) => { const result = {}; arr.forEach(item => { if (!item.create_date) return; const month = item.create_date.substring(0, 7); result[month] = (result[month] || 0) + item[qtyField]; }); return result; };
+        const vData = groupByMonth(ventas, 'product_uom_qty'); const cData = groupByMonth(compras, 'product_qty');
+        let labelsV = Object.keys(vData).sort(); let valuesV = labelsV.map(m => vData[m]);
+        let labelsC = Object.keys(cData).sort(); let valuesC = labelsC.map(m => cData[m]);
 
-        const vData = groupByMonth(ventas, 'product_uom_qty');
-        const cData = groupByMonth(compras, 'product_qty');
+        if (chartVentasRef) chartVentasRef.destroy(); if (chartComprasRef) chartComprasRef.destroy();
 
-        let labelsV = Object.keys(vData).sort();
-        let valuesV = labelsV.map(m => vData[m]);
-        
-        let labelsC = Object.keys(cData).sort();
-        let valuesC = labelsC.map(m => cData[m]);
-
-        if (chartVentasRef) chartVentasRef.destroy();
-        if (chartComprasRef) chartComprasRef.destroy();
-
-        const ctxV = document.getElementById('chart-ventas').getContext('2d');
-        chartVentasRef = new Chart(ctxV, {
-            type: 'bar',
-            data: {
-                labels: labelsV,
-                datasets: [{ label: 'Unidades Vendidas', data: valuesV, backgroundColor: '#38bdf8', borderRadius: 4 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
-
-        const ctxC = document.getElementById('chart-compras').getContext('2d');
-        chartComprasRef = new Chart(ctxC, {
-            type: 'bar',
-            data: {
-                labels: labelsC,
-                datasets: [{ label: 'Unidades Compradas', data: valuesC, backgroundColor: '#fb7185', borderRadius: 4 }]
-            },
-            options: { responsive: true, maintainAspectRatio: false }
-        });
+        chartVentasRef = new Chart(document.getElementById('chart-ventas').getContext('2d'), { type: 'bar', data: { labels: labelsV, datasets: [{ label: 'Unidades Vendidas', data: valuesV, backgroundColor: '#38bdf8', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
+        chartComprasRef = new Chart(document.getElementById('chart-compras').getContext('2d'), { type: 'bar', data: { labels: labelsC, datasets: [{ label: 'Unidades Compradas', data: valuesC, backgroundColor: '#fb7185', borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false } });
     }
 
-    document.addEventListener('DOMContentLoaded', cargarCatalogo);
+    document.addEventListener('DOMContentLoaded', init);
 </script>
-
 </body>
 </html>
