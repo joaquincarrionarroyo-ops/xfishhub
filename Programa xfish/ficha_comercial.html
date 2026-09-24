@@ -105,14 +105,14 @@
                 </div>
             </div>
 
-            <!-- CONTROLES GLOBALES Y PREVIA -->
+            <!-- AJUSTES GLOBALES Y PREVIA -->
             <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
                 <div class="w-full lg:w-1/2 space-y-4">
-                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales de Diseño</h3>
+                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales</h3>
                     
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Color General de Texto</label>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Color Texto</label>
                             <input type="color" id="global-color" value="#000000" class="w-full h-[36px] rounded border border-slate-300 bg-white p-1">
                         </div>
                         <div>
@@ -128,23 +128,23 @@
                         <div>
                             <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
                                 <span>Tamaño Foto</span>
-                                <span id="val-global-img-scale" class="text-sky-600 font-bold">85%</span>
+                                <span id="val-global-img-scale" class="text-sky-600 font-bold">90%</span>
                             </label>
-                            <input type="range" id="global-img-scale" min="30" max="140" value="85">
+                            <input type="range" id="global-img-scale" min="30" max="150" value="90">
                         </div>
                         <div>
                             <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
                                 <span>Posición Foto Y</span>
-                                <span id="val-global-img-y" class="text-sky-600 font-bold">120px</span>
+                                <span id="val-global-img-y" class="text-sky-600 font-bold">80px</span>
                             </label>
-                            <input type="range" id="global-img-y" min="-300" max="400" value="120">
+                            <input type="range" id="global-img-y" min="-300" max="400" value="80">
                         </div>
                     </div>
 
                     <div class="space-y-3 pt-2 border-t border-slate-200">
                         <div>
                             <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
-                                <span>Desplazamiento Título (Y)</span><span id="val-global-y-top">0px</span>
+                                <span>Posición Vertical Título (Y)</span><span id="val-global-y-top">0px</span>
                             </label>
                             <input type="range" id="global-y-top" min="-200" max="200" value="0">
                         </div>
@@ -152,7 +152,7 @@
                 </div>
 
                 <div class="w-full lg:w-1/2 flex flex-col">
-                    <h3 class="text-sm font-bold text-sky-800 border-b border-sky-200 pb-2 mb-3">👁️ Previsualización en Vivo</h3>
+                    <h3 class="text-sm font-bold text-sky-800 border-b border-sky-200 pb-2 mb-3">👁️ Previsualización Dinámica</h3>
                     <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[280px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
                         <img id="global-mockup-img" class="max-h-[300px] w-auto object-contain drop-shadow-md rounded bg-white" />
                     </div>
@@ -168,7 +168,7 @@
         <div id="results-section" class="hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500 gap-4">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800">Fichas Generadas (Ultra HD)</h3>
+                    <h3 class="text-lg font-bold text-slate-800">Fichas Generadas</h3>
                     <p class="text-sm text-slate-500 font-medium" id="results-subtext">Edita posición X/Y, textos o tamaño de imagen individualmente.</p>
                 </div>
                 <button onclick="descargarTodoZip()" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
@@ -184,7 +184,7 @@
 
     </main>
 
-    <!-- MODAL EDITOR INDIVIDUAL CON CONTROL X/Y Y FOTO -->
+    <!-- MODAL EDITOR INDIVIDUAL -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[92vh] flex flex-col md:flex-row overflow-hidden relative">
             
@@ -218,15 +218,15 @@
                         <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200">
                             <div>
                                 <label class="text-[10px] font-bold text-slate-600 flex justify-between uppercase">
-                                    <span>Zoom Foto</span><span id="val-edit-img-scale" class="text-sky-600">85%</span>
+                                    <span>Zoom Foto</span><span id="val-edit-img-scale" class="text-sky-600">90%</span>
                                 </label>
-                                <input type="range" id="edit-img-scale" min="30" max="140" value="85">
+                                <input type="range" id="edit-img-scale" min="30" max="150" value="90">
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-slate-600 flex justify-between uppercase">
-                                    <span>Posición Foto Y</span><span id="val-edit-img-y" class="text-sky-600">120px</span>
+                                    <span>Posición Foto Y</span><span id="val-edit-img-y" class="text-sky-600">80px</span>
                                 </label>
-                                <input type="range" id="edit-img-y" min="-300" max="400" value="120">
+                                <input type="range" id="edit-img-y" min="-300" max="400" value="80">
                             </div>
                         </div>
                     </div>
@@ -625,13 +625,13 @@
         return lines;
     }
 
-    // 🎨 RENDERIZADO EN ALTA DEFINICIÓN (2000x2000)
+    // 🎨 RENDERIZADO CANVAS EN ALTA DEFINICIÓN (2000x2000)
     function renderCanvasDataUrl(config, isExportHD = false) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = config.imgObj;
         const scaleFactor = (config.textScale || 100) / 100;
-        const imgZoom = (config.imgScale || 85) / 100;
+        const imgZoom = (config.imgScale || 90) / 100;
 
         const size = isExportHD ? 2000 : 1000;
         canvas.width = size;
@@ -649,7 +649,7 @@
         const imgW = img.width * ratio;
         const imgH = img.height * ratio;
         const imgX = (size - imgW) / 2;
-        const imgY = (size - imgH) / 2 + ((config.imgY || 120) * scaleRef);
+        const imgY = (size - imgH) / 2 + ((config.imgY || 80) * scaleRef);
 
         ctx.drawImage(img, imgX, imgY, imgW, imgH);
 
@@ -658,13 +658,13 @@
         ctx.textBaseline = 'middle';
         const maxWidth = size * 0.90;
 
-        // 1. TÍTULO PRINCIPAL
+        // 1. TÍTULO PRINCIPAL (Normal, no bold)
         let fontTitle = Math.round(48 * scaleRef * scaleFactor);
         ctx.font = `normal ${fontTitle}px ${fontFamily}`;
         
         let titleLines = getWrappedLines(ctx, config.top || "", maxWidth);
         let lhTitle = fontTitle * 1.25;
-        let startYTitle = (90 * scaleRef) + ((config.yTop || 0) * scaleRef);
+        let startYTitle = (80 * scaleRef) + ((config.yTop || 0) * scaleRef);
         let posX_Title = (size / 2) + ((config.xTop || 0) * scaleRef);
 
         titleLines.forEach((tl, idx) => {
@@ -729,7 +729,7 @@
             ctx.fillText(config.bot, posX_Code, botY);
         }
 
-        return canvas.toDataURL('image/png'); // Exportación PNG de máxima nitidez
+        return canvas.toDataURL('image/png');
     }
 
     function loadImageFromBase64(base64) {
@@ -800,7 +800,7 @@
 
     document.getElementById('global-color').addEventListener('input', renderizarMockupPreview);
 
-    // Consulta de Foto en Alta Calidad (image_1920)
+    // Consulta de Foto en Alta Calidad (image_1920) al backend
     async function obtenerFotoHD(prodId) {
         const pwd = sessionStorage.getItem('odoo_pwd');
         try {
@@ -828,7 +828,7 @@
 
         generatedCards = [];
         const grid = document.getElementById('preview-grid');
-        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas en Alta Calidad...</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas comerciales...</p>';
         document.getElementById('results-section').classList.remove('hidden');
 
         const gColor = document.getElementById('global-color').value;
@@ -842,9 +842,7 @@
             if (!prod) continue;
 
             try {
-                // Traer foto HD de Odoo si está disponible
-                let imgObj = await obtenerFotoHD(prod.rawProdId);
-                if (!imgObj) imgObj = await loadImageFromBase64(prod.foto);
+                const imgObj = await loadImageFromBase64(prod.foto);
 
                 const config = {
                     rawProdId: prod.rawProdId,
@@ -879,7 +877,7 @@
     function renderResultGrid() {
         const grid = document.getElementById('preview-grid');
         grid.innerHTML = '';
-        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales en HD.`;
+        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales.`;
 
         generatedCards.forEach((item, index) => {
             grid.innerHTML += `
@@ -910,10 +908,10 @@
         document.getElementById('edit-scale').value = config.textScale;
         document.getElementById('val-edit-scale').textContent = config.textScale + '%';
 
-        document.getElementById('edit-img-scale').value = config.imgScale || 85;
-        document.getElementById('val-edit-img-scale').textContent = (config.imgScale || 85) + '%';
-        document.getElementById('edit-img-y').value = config.imgY || 120;
-        document.getElementById('val-edit-img-y').textContent = (config.imgY || 120) + 'px';
+        document.getElementById('edit-img-scale').value = config.imgScale || 90;
+        document.getElementById('val-edit-img-scale').textContent = (config.imgScale || 90) + '%';
+        document.getElementById('edit-img-y').value = config.imgY || 80;
+        document.getElementById('val-edit-img-y').textContent = (config.imgY || 80) + 'px';
 
         document.getElementById('edit-txt-top').value = config.top;
         document.getElementById('edit-x-top').value = config.xTop || 0;
@@ -1012,9 +1010,18 @@
         closeModal();
     };
 
-    window.descargarIndividualHD = function(index) {
+    // 🚀 Descarga individual: busca la foto image_1920 nativa antes de exportar
+    window.descargarIndividualHD = async function(index) {
         const item = generatedCards[index];
-        const dataUrlHD = renderCanvasDataUrl(item, true); // Genera a 2000x2000 en PNG sin pérdida
+        let originalImg = item.imgObj;
+
+        if (item.rawProdId) {
+            const hdImg = await obtenerFotoHD(item.rawProdId);
+            if (hdImg) item.imgObj = hdImg;
+        }
+
+        const dataUrlHD = renderCanvasDataUrl(item, true);
+        item.imgObj = originalImg;
 
         const link = document.createElement('a');
         link.href = dataUrlHD;
@@ -1024,16 +1031,24 @@
         document.body.removeChild(link);
     };
 
+    // 🚀 Descarga masiva ZIP con todas las imágenes en 1920/2000px nítidas
     window.descargarTodoZip = async function() {
         if (generatedCards.length === 0) return;
         const zip = new JSZip();
         const folder = zip.folder("Fichas_Comerciales_HD");
 
-        generatedCards.forEach(item => {
+        for (let item of generatedCards) {
+            let originalImg = item.imgObj;
+            if (item.rawProdId) {
+                const hdImg = await obtenerFotoHD(item.rawProdId);
+                if (hdImg) item.imgObj = hdImg;
+            }
             const dataUrlHD = renderCanvasDataUrl(item, true);
+            item.imgObj = originalImg;
+
             const base64Data = dataUrlHD.split(',')[1];
             folder.file(item.name, base64Data, {base64: true});
-        });
+        }
 
         const content = await zip.generateAsync({type:"blob"});
         const link = document.createElement('a');
