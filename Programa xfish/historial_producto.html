@@ -303,13 +303,11 @@
             </tr>
         `).join('');
 
-        // 3. Tabla de Movimientos Ampliada leyendo el campo "m.ico" del servidor
+        // 3. Tabla de Movimientos Ampliada leyendo el campo Lote
         document.getElementById('tabla-movimientos').innerHTML = movs.map(m => {
             const locOrigen = m.location_id ? m.location_id[1] : '';
             const locDest = m.location_dest_id ? m.location_dest_id[1] : '';
-            
-            // LECTURA DIRECTA DEL CAMPO ICO TRAÍDO DEL SERVIDOR
-            const loteIco = (m.ico && m.ico !== '-') ? m.ico : '-';
+            const loteIco = m.lot_id && m.lot_id[1] ? m.lot_id[1] : '-'; // <--- ACA LEE EL CAMPO LOTE ESTÁNDAR
             
             const esAjusteOBaja = locDest.toLowerCase().includes('scrap') || 
                                   locDest.toLowerCase().includes('inventory adjustment') || 
