@@ -303,11 +303,13 @@
             </tr>
         `).join('');
 
-        // 3. Tabla de Movimientos Ampliada con Lote ICO
+        // 3. Tabla de Movimientos Ampliada leyendo el campo "m.ico" del servidor
         document.getElementById('tabla-movimientos').innerHTML = movs.map(m => {
             const locOrigen = m.location_id ? m.location_id[1] : '';
             const locDest = m.location_dest_id ? m.location_dest_id[1] : '';
-            const loteIco = m.lot_id ? m.lot_id[1] : '-';
+            
+            // LECTURA DIRECTA DEL CAMPO ICO TRAÍDO DEL SERVIDOR
+            const loteIco = (m.ico && m.ico !== '-') ? m.ico : '-';
             
             const esAjusteOBaja = locDest.toLowerCase().includes('scrap') || 
                                   locDest.toLowerCase().includes('inventory adjustment') || 
@@ -325,7 +327,7 @@
                     <span class="block font-mono text-[11px] font-bold text-slate-400 mt-1">${m.reference || ''}</span>
                 </td>
                 <td class="p-4 border-b border-slate-100 font-mono text-xs font-extrabold text-indigo-600 bg-indigo-50/30">
-                    ${loteIco !== '-' ? `🏷️ ${loteIco}` : '-'}
+                    ${loteIco !== '-' ? `📥 ${loteIco}` : '-'}
                 </td>
                 <td class="p-4 border-b border-slate-100 text-sm truncate max-w-[300px]" title="${locOrigen} → ${locDest}">
                     ${locOrigen.split('/').pop()} → ${displayDestino}
