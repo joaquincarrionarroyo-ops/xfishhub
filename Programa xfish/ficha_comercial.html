@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Generador de Fichas Comerciales | X-Fish</title>
+    <title>Generador de Fichas Comerciales HD | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 
@@ -37,7 +37,7 @@
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30 flex items-center justify-center shrink-0">
                     <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
-                Fichas Comerciales de Producto
+                Fichas Comerciales Ultra HD
             </h1>
             <a href="index.html" class="text-sm font-semibold text-sky-600 hover:text-sky-800 transition-colors">← Volver al Hub</a>
         </div>
@@ -50,7 +50,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-6 border-b border-slate-200/60 gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Artículos</h2>
-                    <p class="text-xs text-slate-500 font-medium">Textos con espaciado inteligente sin superposiciones, tipografía Berlin y exportación HD (2000x2000).</p>
+                    <p class="text-xs text-slate-500 font-medium">Exportación en alta calidad HD 2000x2000 px con imagen nítida original de Odoo.</p>
                 </div>
                 <div id="odoo-sync-status" class="text-xs font-bold text-slate-500 bg-white/70 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Sincronizando con Odoo...
@@ -168,12 +168,12 @@
         <div id="results-section" class="hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500 gap-4">
                 <div>
-                    <h3 class="text-lg font-bold text-slate-800">Fichas Generadas</h3>
-                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá, editá individualmente posiciones o textos y descargá.</p>
+                    <h3 class="text-lg font-bold text-slate-800">Fichas Generadas (Ultra HD)</h3>
+                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Edita posición X/Y, textos o tamaño de imagen individualmente.</p>
                 </div>
                 <button onclick="descargarTodoZip()" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Descargar Lote en ZIP (HD)
+                    Descargar Lote en ZIP (HD 2000px)
                 </button>
             </div>
 
@@ -184,7 +184,7 @@
 
     </main>
 
-    <!-- MODAL EDITOR INDIVIDUAL CON CONTROL TOTAL X/Y Y FOTO -->
+    <!-- MODAL EDITOR INDIVIDUAL CON CONTROL X/Y Y FOTO -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[92vh] flex flex-col md:flex-row overflow-hidden relative">
             
@@ -224,7 +224,7 @@
                             </div>
                             <div>
                                 <label class="text-[10px] font-bold text-slate-600 flex justify-between uppercase">
-                                    <span>Posición Foto Y</span><span id="val-edit-img-y">120px</span>
+                                    <span>Posición Foto Y</span><span id="val-edit-img-y" class="text-sky-600">120px</span>
                                 </label>
                                 <input type="range" id="edit-img-y" min="-300" max="400" value="120">
                             </div>
@@ -334,7 +334,6 @@
         }
     }
 
-    // 🧹 Limpiador que elimina del título los atributos repetitivos
     function limpiarTituloMatriz(rawName) {
         let name = rawName || "";
         if (name.startsWith('[')) {
@@ -343,7 +342,6 @@
         }
         name = name.replace(/\(.*?\)/g, '').trim();
 
-        // Si el título contiene palabras que luego se dibujan en el subtítulo o columnas, las quitamos
         const palabrasAEliminar = [
             /\bCASTING\b/gi, /\bSPINNING\b/gi,
             /\b\d+\s*TRAMOS?\b/gi,
@@ -372,6 +370,7 @@
 
                 groups[groupKey] = {
                     id: groupKey,
+                    rawProdId: item.id,
                     titulo: cleanTitle,
                     skuPrincipal: baseSku || item.sku || 'S/N',
                     categ_id: item.categ_id || 'General',
@@ -426,7 +425,6 @@
             let colLeft = [];
             let colRight = [];
 
-            // Cañas
             if (g.castingLargos.size > 0 || g.spinningLargos.size > 0 || g.tramos.size > 0) {
                 subtitulo = Array.from(g.tramos).join(' / ');
 
@@ -443,9 +441,7 @@
                     const libs = Array.from(g.spinningLibrajes);
                     for (let i = 0; i < libs.length; i += 2) colRight.push(libs.slice(i, i + 2).join('   '));
                 }
-            } 
-            // Reels
-            else if (g.tiposReel.size > 0 || g.manosReel.size > 0 || g.tamanosReel.size > 0) {
+            } else if (g.tiposReel.size > 0 || g.manosReel.size > 0 || g.tamanosReel.size > 0) {
                 if (g.tiposReel.size > 0) subtitulo = Array.from(g.tiposReel).join(' / ').toUpperCase();
 
                 if (g.manosReel.size > 0) {
@@ -454,14 +450,13 @@
                 if (g.tamanosReel.size > 0) {
                     colRight.push(Array.from(g.tamanosReel).map(t => `Tamaño: ${t}`).join('\n'));
                 }
-            } 
-            // Genérico
-            else {
+            } else {
                 if (g.variantesGenericas.size > 0) colLeft = Array.from(g.variantesGenericas);
             }
 
             return {
                 id: g.id,
+                rawProdId: g.rawProdId,
                 titulo: g.titulo,
                 skuPrincipal: g.skuPrincipal,
                 categ_id: g.categ_id,
@@ -630,7 +625,7 @@
         return lines;
     }
 
-    // 🎨 MOTOR DE RENDERIZADO CANVAS (2000x2000 px HD) CON FLUJO VERTICAL DINÁMICO
+    // 🎨 RENDERIZADO EN ALTA DEFINICIÓN (2000x2000)
     function renderCanvasDataUrl(config, isExportHD = false) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -638,17 +633,14 @@
         const scaleFactor = (config.textScale || 100) / 100;
         const imgZoom = (config.imgScale || 85) / 100;
 
-        // Resolución Ultra HD 2000px al descargar, 1000px para vista previa veloz
         const size = isExportHD ? 2000 : 1000;
         canvas.width = size;
         canvas.height = size;
         const scaleRef = size / 1000;
 
-        // Fondo Blanco
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, size, size);
 
-        // Renderizado de Foto
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
@@ -666,7 +658,7 @@
         ctx.textBaseline = 'middle';
         const maxWidth = size * 0.90;
 
-        // 1. TÍTULO PRINCIPAL (Normal, no bold)
+        // 1. TÍTULO PRINCIPAL
         let fontTitle = Math.round(48 * scaleRef * scaleFactor);
         ctx.font = `normal ${fontTitle}px ${fontFamily}`;
         
@@ -679,7 +671,6 @@
             ctx.fillText(tl, posX_Title, startYTitle + (idx * lhTitle));
         });
 
-        // 📏 curY se calcula dinámicamente sumando la altura real del título
         let curY = startYTitle + (titleLines.length * lhTitle) + (15 * scaleRef);
 
         // 2. SUBTÍTULO
@@ -692,7 +683,7 @@
             curY = subY + (fontSub * 0.9) + (20 * scaleRef);
         }
 
-        // 3. COLUMNAS DE ATRIBUTOS
+        // 3. COLUMNAS
         let fontColHead = Math.round(28 * scaleRef * scaleFactor);
         let fontColBody = Math.round(24 * scaleRef * scaleFactor);
         let lhCol = fontColBody * 1.35;
@@ -703,7 +694,6 @@
         const colRightLines = config.colRight ? config.colRight.split('\n').filter(Boolean) : [];
 
         if (colLeftLines.length > 0 && colRightLines.length > 0) {
-            // Separación simétrica amplia (28% y 72%) para que no choquen
             const posX_Left = (size * 0.28) - (sepX / 2);
             const posX_Right = (size * 0.72) + (sepX / 2);
 
@@ -739,7 +729,7 @@
             ctx.fillText(config.bot, posX_Code, botY);
         }
 
-        return canvas.toDataURL('image/jpeg', isExportHD ? 1.0 : 0.92);
+        return canvas.toDataURL('image/png'); // Exportación PNG de máxima nitidez
     }
 
     function loadImageFromBase64(base64) {
@@ -810,6 +800,25 @@
 
     document.getElementById('global-color').addEventListener('input', renderizarMockupPreview);
 
+    // Consulta de Foto en Alta Calidad (image_1920)
+    async function obtenerFotoHD(prodId) {
+        const pwd = sessionStorage.getItem('odoo_pwd');
+        try {
+            const res = await fetch(`${urlBackend}/api/producto-foto-hd/${prodId}`, {
+                headers: { 'x-odoo-password': pwd }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.foto_hd) {
+                    return await loadImageFromBase64(data.foto_hd);
+                }
+            }
+        } catch(e) {
+            console.warn("No se pudo obtener imagen HD, usando estándar:", e);
+        }
+        return null;
+    }
+
     // 4. Procesar Lote
     async function procesarLote() {
         if (selectedTemplateIds.size === 0) {
@@ -819,7 +828,7 @@
 
         generatedCards = [];
         const grid = document.getElementById('preview-grid');
-        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas comerciales...</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas en Alta Calidad...</p>';
         document.getElementById('results-section').classList.remove('hidden');
 
         const gColor = document.getElementById('global-color').value;
@@ -833,10 +842,14 @@
             if (!prod) continue;
 
             try {
-                const imgObj = await loadImageFromBase64(prod.foto);
+                // Traer foto HD de Odoo si está disponible
+                let imgObj = await obtenerFotoHD(prod.rawProdId);
+                if (!imgObj) imgObj = await loadImageFromBase64(prod.foto);
+
                 const config = {
+                    rawProdId: prod.rawProdId,
                     sku: prod.skuPrincipal,
-                    name: `${prod.skuPrincipal}_HD.jpg`,
+                    name: `${prod.skuPrincipal}_HD.png`,
                     imgObj: imgObj,
                     top: prod.titulo,
                     sub: prod.subtitulo,
@@ -866,7 +879,7 @@
     function renderResultGrid() {
         const grid = document.getElementById('preview-grid');
         grid.innerHTML = '';
-        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales.`;
+        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales en HD.`;
 
         generatedCards.forEach((item, index) => {
             grid.innerHTML += `
@@ -889,7 +902,6 @@
         });
     }
 
-    // Modal Editor Individual
     window.openEditor = function(index) {
         activeEditIndex = index;
         const config = generatedCards[index];
@@ -1000,10 +1012,9 @@
         closeModal();
     };
 
-    // Descarga individual HD a 2000x2000 con calidad máxima (1.0)
     window.descargarIndividualHD = function(index) {
         const item = generatedCards[index];
-        const dataUrlHD = renderCanvasDataUrl(item, true);
+        const dataUrlHD = renderCanvasDataUrl(item, true); // Genera a 2000x2000 en PNG sin pérdida
 
         const link = document.createElement('a');
         link.href = dataUrlHD;
@@ -1013,7 +1024,6 @@
         document.body.removeChild(link);
     };
 
-    // Descarga ZIP completa en resolución 2000x2000
     window.descargarTodoZip = async function() {
         if (generatedCards.length === 0) return;
         const zip = new JSZip();
