@@ -12,17 +12,17 @@
         .glass-panel { background: rgba(255, 255, 255, 0.75); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
         .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
         @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
-        .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background-color: rgba(255, 255, 255, 0.85); outline: none; transition: all 0.2s; font-weight: 600; color: #334155; }
+        .custom-select, .custom-input { width: 100%; padding: 7px 10px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 12px; background-color: rgba(255, 255, 255, 0.9); outline: none; transition: all 0.2s; font-weight: 600; color: #334155; }
         .custom-select:focus, .custom-input:focus { border-color: #0284c7; box-shadow: 0 0 0 3px rgba(2, 132, 199, 0.2); background-color: #fff; }
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-        .modal-overlay { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 100; }
+        .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); z-index: 100; }
         .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
         input[type=range] { width: 100%; accent-color: #0284c7; touch-action: none; cursor: pointer; }
         input[type=color] { border: none; border-radius: 4px; padding: 0; cursor: pointer; }
-        textarea.custom-input { resize: vertical; min-height: 50px; }
+        textarea.custom-input { resize: vertical; min-height: 40px; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 selection:bg-sky-500 selection:text-white pb-12">
@@ -35,7 +35,7 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-blue-600 shadow-lg shadow-sky-500/30 flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
                 </div>
                 Fichas Comerciales de Producto
             </h1>
@@ -45,25 +45,25 @@
 
     <main class="max-w-7xl mx-auto w-full px-4 md:px-6 space-y-6 relative z-10">
 
-        <!-- 1. SELECCIÓN DE PRODUCTOS MATRICES -->
+        <!-- 1. SELECCIÓN DE PRODUCTOS -->
         <div class="glass-panel rounded-3xl p-6 md:p-8">
             <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-6 border-b border-slate-200/60 gap-3">
                 <div>
-                    <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Productos Matrices</h2>
-                    <p class="text-xs text-slate-500 font-medium">Foto grande en alta resolución con todo el texto en tipografía Berlin unificada.</p>
+                    <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Artículos</h2>
+                    <p class="text-xs text-slate-500 font-medium">Textos con espaciado inteligente sin superposiciones, tipografía Berlin y exportación HD (2000x2000).</p>
                 </div>
                 <div id="odoo-sync-status" class="text-xs font-bold text-slate-500 bg-white/70 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
-                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Sincronizando catálogo con Odoo...
+                    <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Sincronizando con Odoo...
                 </div>
             </div>
 
-            <!-- CONTROLES DE BÚSQUEDA Y CATEGORÍAS -->
+            <!-- BUSCADORES -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
                 <div class="bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm flex flex-col justify-between">
                     <div>
                         <label class="block text-sm font-bold text-slate-700 mb-1">📋 Pegar Lista de Códigos o Nombres</label>
-                        <p class="text-xs text-slate-500 mb-2">Ingresá SKUs o nombres de artículos (separados por enter o coma).</p>
-                        <textarea id="input-sku-list" class="custom-input text-xs font-mono h-24" placeholder="Ej: TRICO&#10;X21 BLACK&#10;PERLA BLANCA"></textarea>
+                        <p class="text-xs text-slate-500 mb-2">Ingresá SKUs o palabras clave (separados por enter o coma).</p>
+                        <textarea id="input-sku-list" class="custom-input text-xs font-mono h-24" placeholder="Ej: ACTION&#10;TRICO&#10;PERLA BLANCA"></textarea>
                     </div>
                     <button onclick="seleccionarPorListaSkus()" class="mt-3 bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold py-2 px-4 rounded-xl text-xs transition-colors shadow-sm">
                         🔍 Buscar y Agregar a la Selección
@@ -92,7 +92,7 @@
                 </div>
             </div>
 
-            <!-- CHIPS DE PRODUCTOS SELECCIONADOS -->
+            <!-- CHIPS SELECCIONADOS -->
             <div class="bg-sky-50/60 border border-sky-200 p-4 rounded-2xl mb-6">
                 <div class="flex items-center justify-between mb-2">
                     <span class="text-xs font-bold uppercase tracking-wider text-sky-800">
@@ -105,7 +105,7 @@
                 </div>
             </div>
 
-            <!-- AJUSTES GLOBALES Y MOCKUP EN VIVO -->
+            <!-- CONTROLES GLOBALES Y PREVIA -->
             <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
                 <div class="w-full lg:w-1/2 space-y-4">
                     <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales de Diseño</h3>
@@ -120,36 +120,41 @@
                                 <span>Escala Tipografía</span>
                                 <span id="val-global-scale" class="text-sky-600 font-bold">100%</span>
                             </label>
-                            <input type="range" id="global-scale" min="40" max="200" value="100">
+                            <input type="range" id="global-scale" min="40" max="180" value="100">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                                <span>Tamaño Foto</span>
+                                <span id="val-global-img-scale" class="text-sky-600 font-bold">85%</span>
+                            </label>
+                            <input type="range" id="global-img-scale" min="30" max="140" value="85">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                                <span>Posición Foto Y</span>
+                                <span id="val-global-img-y" class="text-sky-600 font-bold">120px</span>
+                            </label>
+                            <input type="range" id="global-img-y" min="-300" max="400" value="120">
                         </div>
                     </div>
 
                     <div class="space-y-3 pt-2 border-t border-slate-200">
                         <div>
                             <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
-                                <span>Posición TÍTULO</span><span id="val-global-y-top">0px</span>
+                                <span>Desplazamiento Título (Y)</span><span id="val-global-y-top">0px</span>
                             </label>
                             <input type="range" id="global-y-top" min="-200" max="200" value="0">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-amber-600 uppercase flex justify-between">
-                                <span>Posición SUBTÍTULO / VARIANTES</span><span id="val-global-y-sub">0px</span>
-                            </label>
-                            <input type="range" id="global-y-sub" min="-200" max="200" value="0">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-emerald-600 uppercase flex justify-between">
-                                <span>Posición CÓDIGO INFERIOR</span><span id="val-global-y-bot">0px</span>
-                            </label>
-                            <input type="range" id="global-y-bot" min="-200" max="200" value="0">
                         </div>
                     </div>
                 </div>
 
                 <div class="w-full lg:w-1/2 flex flex-col">
-                    <h3 class="text-sm font-bold text-sky-800 border-b border-sky-200 pb-2 mb-3">👁️ Previsualización Dinámica</h3>
-                    <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[260px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
-                        <img id="global-mockup-img" class="max-h-[280px] w-auto object-contain drop-shadow-md rounded bg-white" />
+                    <h3 class="text-sm font-bold text-sky-800 border-b border-sky-200 pb-2 mb-3">👁️ Previsualización en Vivo</h3>
+                    <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[280px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
+                        <img id="global-mockup-img" class="max-h-[300px] w-auto object-contain drop-shadow-md rounded bg-white" />
                     </div>
                 </div>
             </div>
@@ -159,16 +164,16 @@
             </button>
         </div>
 
-        <!-- 2. RESULTADOS Y GRILLA DE FICHAS -->
+        <!-- 2. RESULTADOS -->
         <div id="results-section" class="hidden space-y-6">
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500 gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Fichas Generadas</h3>
-                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá cada ficha, editá individualmente textos o posiciones y descargá.</p>
+                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Revisá, editá individualmente posiciones o textos y descargá.</p>
                 </div>
                 <button onclick="descargarTodoZip()" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Descargar Lote en ZIP
+                    Descargar Lote en ZIP (HD)
                 </button>
             </div>
 
@@ -179,9 +184,9 @@
 
     </main>
 
-    <!-- MODAL EDITOR INDIVIDUAL -->
+    <!-- MODAL EDITOR INDIVIDUAL CON CONTROL TOTAL X/Y Y FOTO -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[95vh] md:h-auto md:max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[92vh] flex flex-col md:flex-row overflow-hidden relative">
             
             <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/80 backdrop-blur w-8 h-8 flex items-center justify-center rounded-full text-red-500 font-bold shadow">&times;</button>
 
@@ -190,56 +195,94 @@
             </div>
 
             <div class="w-full md:w-1/2 p-4 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
-                <div class="hidden md:flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Individual de Ficha</h2>
+                <div class="hidden md:flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Individual (X / Y y Foto)</h2>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl">&times;</button>
                 </div>
 
                 <div class="space-y-4 ios-scroll flex-grow pr-2 pb-6">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200 flex justify-between gap-4">
-                        <div class="w-1/2">
-                            <label class="text-[11px] font-bold text-slate-700 uppercase mb-1 block">Color</label>
-                            <input type="color" id="edit-color" class="w-full h-[36px] rounded cursor-pointer border border-slate-300 bg-white p-1">
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-700 uppercase mb-1 block">Color Texto</label>
+                                <input type="color" id="edit-color" class="w-full h-[32px] rounded border border-slate-300 bg-white p-1">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-700 uppercase flex justify-between mb-1">
+                                    <span>Escala Texto</span><span id="val-edit-scale" class="text-sky-600">100%</span>
+                                </label>
+                                <input type="range" id="edit-scale" min="40" max="180" value="100">
+                            </div>
                         </div>
-                        <div class="w-1/2">
-                            <label class="text-[11px] font-bold text-slate-700 uppercase flex justify-between mb-1">
-                                <span>Tamaño</span><span id="val-edit-scale" class="text-sky-600">100%</span>
-                            </label>
-                            <input type="range" id="edit-scale" min="40" max="200" value="100">
+
+                        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-600 flex justify-between uppercase">
+                                    <span>Zoom Foto</span><span id="val-edit-img-scale" class="text-sky-600">85%</span>
+                                </label>
+                                <input type="range" id="edit-img-scale" min="30" max="140" value="85">
+                            </div>
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-600 flex justify-between uppercase">
+                                    <span>Posición Foto Y</span><span id="val-edit-img-y">120px</span>
+                                </label>
+                                <input type="range" id="edit-img-y" min="-300" max="400" value="120">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="space-y-3">
-                        <div>
-                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Título Principal</label>
-                            <textarea id="edit-txt-top" class="custom-input text-xs" rows="1"></textarea>
-                            <input type="range" id="edit-y-top" min="-200" max="200" value="0">
+                    <!-- Título -->
+                    <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
+                        <label class="text-[10px] font-bold text-blue-700 uppercase block">Título Principal (Limpio)</label>
+                        <textarea id="edit-txt-top" class="custom-input" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>Posición X</span><input type="range" id="edit-x-top" min="-300" max="300" value="0"></div>
+                            <div><span>Posición Y</span><input type="range" id="edit-y-top" min="-200" max="200" value="0"></div>
                         </div>
-                        <div>
-                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Subtítulo (Tramos / Tipo)</label>
-                            <textarea id="edit-txt-sub" class="custom-input text-xs" rows="1"></textarea>
-                            <input type="range" id="edit-y-sub" min="-200" max="200" value="0">
+                    </div>
+
+                    <!-- Subtítulo -->
+                    <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100 space-y-2">
+                        <label class="text-[10px] font-bold text-amber-700 uppercase block">Subtítulo (Tramos / Tipo)</label>
+                        <textarea id="edit-txt-sub" class="custom-input" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>Posición X</span><input type="range" id="edit-x-sub" min="-300" max="300" value="0"></div>
+                            <div><span>Posición Y</span><input type="range" id="edit-y-sub" min="-200" max="200" value="0"></div>
                         </div>
+                    </div>
+
+                    <!-- Columnas -->
+                    <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
+                        <label class="text-[10px] font-bold text-slate-700 uppercase block">Columnas de Atributos</label>
                         <div class="grid grid-cols-2 gap-2">
                             <div>
-                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Izq / Medidas / Mano</label>
-                                <textarea id="edit-txt-col-left" class="custom-input text-xs font-mono" rows="4"></textarea>
+                                <span class="text-[9px] font-bold text-slate-500 uppercase">Columna Izquierda</span>
+                                <textarea id="edit-txt-col-left" class="custom-input font-mono" rows="3"></textarea>
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Columna Der / Librajes / Tamaños</label>
-                                <textarea id="edit-txt-col-right" class="custom-input text-xs font-mono" rows="4"></textarea>
+                                <span class="text-[9px] font-bold text-slate-500 uppercase">Columna Derecha</span>
+                                <textarea id="edit-txt-col-right" class="custom-input font-mono" rows="3"></textarea>
                             </div>
                         </div>
-                        <div>
-                            <label class="text-[11px] font-bold text-emerald-600 uppercase mb-1 block">Código Inferior</label>
-                            <textarea id="edit-txt-bot" class="custom-input text-xs" rows="1"></textarea>
-                            <input type="range" id="edit-y-bot" min="-200" max="200" value="0">
+                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase pt-1">
+                            <div><span>Separación X</span><input type="range" id="edit-x-bot" min="-200" max="200" value="0"></div>
+                            <div><span>Posición Y</span><input type="range" id="edit-y-bot" min="-200" max="200" value="0"></div>
+                        </div>
+                    </div>
+
+                    <!-- Código Inferior -->
+                    <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-2">
+                        <label class="text-[10px] font-bold text-emerald-700 uppercase block">Código Inferior</label>
+                        <textarea id="edit-txt-bot" class="custom-input" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>Posición X</span><input type="range" id="edit-x-code" min="-300" max="300" value="0"></div>
+                            <div><span>Posición Y</span><input type="range" id="edit-y-code" min="-200" max="200" value="0"></div>
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-slate-200 shrink-0 bg-white">
-                    <button onclick="saveModalChanges()" class="w-full bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors text-sm">
+                <div class="mt-3 pt-3 border-t border-slate-200 shrink-0 bg-white">
+                    <button onclick="saveModalChanges()" class="w-full bg-sky-600 hover:bg-sky-700 active:bg-sky-800 text-white font-bold py-2.5 px-6 rounded-xl shadow-lg transition-colors text-sm">
                         ✅ Aplicar Cambios a la Ficha
                     </button>
                 </div>
@@ -253,9 +296,9 @@
     let selectedTemplateIds = new Set();
     let generatedCards = [];
     let activeEditIndex = -1;
-    const urlBackend = 'https://xfish-odoo-api.onrender.com/api/productos';
+    const urlBackend = 'https://xfish-odoo-api.onrender.com';
 
-    // 🎨 TIPOGRAFÍA UNIFICADA: Berlin en todo el texto (normal, no bold para que no desborde)
+    // 🎨 Tipografía Berlin unificada
     const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
     async function sincronizarOdoo() {
@@ -267,7 +310,7 @@
                 return;
             }
 
-            const res = await fetch(urlBackend, { headers: { 'x-odoo-password': pwd } });
+            const res = await fetch(`${urlBackend}/api/productos`, { headers: { 'x-odoo-password': pwd } });
             if (!res.ok) throw new Error("Fallo al conectar con Odoo");
 
             const data = await res.json();
@@ -291,18 +334,34 @@
         }
     }
 
+    // 🧹 Limpiador que elimina del título los atributos repetitivos
+    function limpiarTituloMatriz(rawName) {
+        let name = rawName || "";
+        if (name.startsWith('[')) {
+            const idx = name.indexOf(']');
+            if (idx !== -1) name = name.substring(idx + 1).trim();
+        }
+        name = name.replace(/\(.*?\)/g, '').trim();
+
+        // Si el título contiene palabras que luego se dibujan en el subtítulo o columnas, las quitamos
+        const palabrasAEliminar = [
+            /\bCASTING\b/gi, /\bSPINNING\b/gi,
+            /\b\d+\s*TRAMOS?\b/gi,
+            /\b\d+-\d+\s*LBS?\b/gi,
+            /\b\d+\.\d+\s*M\b/gi,
+            /\s*-\s*$/g
+        ];
+        palabrasAEliminar.forEach(rgx => { name = name.replace(rgx, ''); });
+        
+        return name.replace(/\s+/g, ' ').replace(/\s*-\s*$/, '').trim().toUpperCase();
+    }
+
     function agruparPorProductoMatriz() {
         const groups = {};
 
         rawOdooVariants.forEach(item => {
             let baseName = item.nombre_matriz || item.nombre || "";
-            if (baseName.startsWith('[')) {
-                const idx = baseName.indexOf(']');
-                if (idx !== -1) baseName = baseName.substring(idx + 1).trim();
-            }
-
-            let cleanTitle = baseName.replace(/\(.*?\)/g, '').trim();
-            cleanTitle = cleanTitle.replace(/\s*-\s*$/, '').trim().toUpperCase();
+            let cleanTitle = limpiarTituloMatriz(baseName);
 
             const groupKey = item.tmpl_id ? `TMPL_${item.tmpl_id}` : `${cleanTitle}_${item.categ_id}`;
 
@@ -367,6 +426,7 @@
             let colLeft = [];
             let colRight = [];
 
+            // Cañas
             if (g.castingLargos.size > 0 || g.spinningLargos.size > 0 || g.tramos.size > 0) {
                 subtitulo = Array.from(g.tramos).join(' / ');
 
@@ -383,20 +443,21 @@
                     const libs = Array.from(g.spinningLibrajes);
                     for (let i = 0; i < libs.length; i += 2) colRight.push(libs.slice(i, i + 2).join('   '));
                 }
-            } else if (g.tiposReel.size > 0 || g.manosReel.size > 0 || g.tamanosReel.size > 0) {
+            } 
+            // Reels
+            else if (g.tiposReel.size > 0 || g.manosReel.size > 0 || g.tamanosReel.size > 0) {
                 if (g.tiposReel.size > 0) subtitulo = Array.from(g.tiposReel).join(' / ').toUpperCase();
 
                 if (g.manosReel.size > 0) {
                     colLeft.push(Array.from(g.manosReel).map(m => `Mano: ${m}`).join('\n'));
                 }
-
                 if (g.tamanosReel.size > 0) {
                     colRight.push(Array.from(g.tamanosReel).map(t => `Tamaño: ${t}`).join('\n'));
                 }
-            } else {
-                if (g.variantesGenericas.size > 0) {
-                    colLeft = Array.from(g.variantesGenericas);
-                }
+            } 
+            // Genérico
+            else {
+                if (g.variantesGenericas.size > 0) colLeft = Array.from(g.variantesGenericas);
             }
 
             return {
@@ -464,7 +525,7 @@
                 <div class="truncate mr-2">
                     <span class="font-bold text-slate-800">[${p.skuPrincipal}]</span> 
                     <span class="text-slate-700 font-semibold">${p.titulo}</span>
-                    <span class="text-[10px] text-slate-400 block truncate">${p.subtitulo ? p.subtitulo + ' | ' : ''}${p.colLeft ? 'Atributos cargados' : ''}</span>
+                    <span class="text-[10px] text-slate-400 block truncate">${p.subtitulo ? p.subtitulo + ' | ' : ''}${p.colLeft ? 'Atributos listos' : ''}</span>
                 </div>
                 <button onclick="seleccionarProductoId('${p.id}')" class="text-sky-600 hover:text-sky-800 font-extrabold text-xs px-2.5 py-1 bg-sky-100 hover:bg-sky-200 rounded transition-colors">+</button>
             `;
@@ -569,73 +630,83 @@
         return lines;
     }
 
-    // 🎨 MOTOR DE RENDERIZADO CANVAS: FOTO PROTAGÓNICA + BERLIN NORMAL SIN DESBORDES
-    function renderCanvasDataUrl(config) {
+    // 🎨 MOTOR DE RENDERIZADO CANVAS (2000x2000 px HD) CON FLUJO VERTICAL DINÁMICO
+    function renderCanvasDataUrl(config, isExportHD = false) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
         const img = config.imgObj;
         const scaleFactor = (config.textScale || 100) / 100;
+        const imgZoom = (config.imgScale || 85) / 100;
 
-        const size = 1080;
+        // Resolución Ultra HD 2000px al descargar, 1000px para vista previa veloz
+        const size = isExportHD ? 2000 : 1000;
         canvas.width = size;
         canvas.height = size;
+        const scaleRef = size / 1000;
 
-        // Fondo Blanco Puro
+        // Fondo Blanco
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, size, size);
 
-        // Foto en tamaño completo superponiéndose naturalmente con el texto
-        const maxImgDim = size * 0.90;
+        // Renderizado de Foto
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+
+        const maxImgDim = size * imgZoom;
         const ratio = Math.min(maxImgDim / img.width, maxImgDim / img.height);
         const imgW = img.width * ratio;
         const imgH = img.height * ratio;
         const imgX = (size - imgW) / 2;
-        const imgY = (size - imgH) / 2 + 50;
+        const imgY = (size - imgH) / 2 + ((config.imgY || 120) * scaleRef);
 
         ctx.drawImage(img, imgX, imgY, imgW, imgH);
 
         ctx.fillStyle = config.textColor || '#000000';
         ctx.textAlign = 'center';
         ctx.textBaseline = 'middle';
-        const maxWidth = size * 0.92;
+        const maxWidth = size * 0.90;
 
-        // 1. TÍTULO PRINCIPAL: BERLIN NORMAL (NO BOLD)
-        let fontTitle = Math.round(52 * scaleFactor);
+        // 1. TÍTULO PRINCIPAL (Normal, no bold)
+        let fontTitle = Math.round(48 * scaleRef * scaleFactor);
         ctx.font = `normal ${fontTitle}px ${fontFamily}`;
         
         let titleLines = getWrappedLines(ctx, config.top || "", maxWidth);
-        let lhTitle = fontTitle * 1.18;
-        let startYTitle = 100 + (config.yTop || 0);
+        let lhTitle = fontTitle * 1.25;
+        let startYTitle = (90 * scaleRef) + ((config.yTop || 0) * scaleRef);
+        let posX_Title = (size / 2) + ((config.xTop || 0) * scaleRef);
 
         titleLines.forEach((tl, idx) => {
-            ctx.fillText(tl, size / 2, startYTitle + (idx * lhTitle));
+            ctx.fillText(tl, posX_Title, startYTitle + (idx * lhTitle));
         });
 
-        let curY = startYTitle + (titleLines.length * lhTitle);
+        // 📏 curY se calcula dinámicamente sumando la altura real del título
+        let curY = startYTitle + (titleLines.length * lhTitle) + (15 * scaleRef);
 
-        // 2. SUBTÍTULO: BERLIN NORMAL
+        // 2. SUBTÍTULO
         if (config.sub) {
-            let fontSub = Math.round(44 * scaleFactor);
+            let fontSub = Math.round(38 * scaleRef * scaleFactor);
             ctx.font = `normal ${fontSub}px ${fontFamily}`;
-            let subY = curY + 15 + (config.ySub || 0);
-            ctx.fillText(config.sub, size / 2, subY);
-            curY = subY + 25;
+            let posX_Sub = (size / 2) + ((config.xSub || 0) * scaleRef);
+            let subY = curY + ((config.ySub || 0) * scaleRef);
+            ctx.fillText(config.sub, posX_Sub, subY);
+            curY = subY + (fontSub * 0.9) + (20 * scaleRef);
         }
 
-        // 3. COLUMNAS DE VARIANTES / ATRIBUTOS: BERLIN NORMAL
-        let fontColHead = Math.round(30 * scaleFactor);
-        let fontColBody = Math.round(26 * scaleFactor);
+        // 3. COLUMNAS DE ATRIBUTOS
+        let fontColHead = Math.round(28 * scaleRef * scaleFactor);
+        let fontColBody = Math.round(24 * scaleRef * scaleFactor);
         let lhCol = fontColBody * 1.35;
-        let colBaseY = curY + 20 + (config.yBot || 0);
+        let colBaseY = curY + ((config.yBot || 0) * scaleRef);
+        let sepX = ((config.xBot || 0) * scaleRef);
 
         const colLeftLines = config.colLeft ? config.colLeft.split('\n').filter(Boolean) : [];
         const colRightLines = config.colRight ? config.colRight.split('\n').filter(Boolean) : [];
 
         if (colLeftLines.length > 0 && colRightLines.length > 0) {
-            const posX_Left = size * 0.35;
-            const posX_Right = size * 0.65;
+            // Separación simétrica amplia (28% y 72%) para que no choquen
+            const posX_Left = (size * 0.28) - (sepX / 2);
+            const posX_Right = (size * 0.72) + (sepX / 2);
 
-            // Columna Izquierda
             let yL = colBaseY;
             colLeftLines.forEach((l, idx) => {
                 ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
@@ -643,7 +714,6 @@
                 yL += lhCol;
             });
 
-            // Columna Derecha
             let yR = colBaseY;
             colRightLines.forEach((l, idx) => {
                 ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
@@ -655,20 +725,21 @@
             let yS = colBaseY;
             singleLines.forEach((l, idx) => {
                 ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
-                ctx.fillText(l.trim(), size / 2, yS);
+                ctx.fillText(l.trim(), (size / 2) + sepX, yS);
                 yS += lhCol;
             });
         }
 
-        // 4. CÓDIGO INFERIOR: BERLIN NORMAL
+        // 4. CÓDIGO INFERIOR
         if (config.bot) {
-            let fontBot = Math.round(28 * scaleFactor);
+            let fontBot = Math.round(26 * scaleRef * scaleFactor);
             ctx.font = `normal ${fontBot}px ${fontFamily}`;
-            let botY = size - 45;
-            ctx.fillText(config.bot, size / 2, botY);
+            let posX_Code = (size / 2) + ((config.xCode || 0) * scaleRef);
+            let botY = size - (45 * scaleRef) + ((config.yCode || 0) * scaleRef);
+            ctx.fillText(config.bot, posX_Code, botY);
         }
 
-        return canvas.toDataURL('image/jpeg', 0.95);
+        return canvas.toDataURL('image/jpeg', isExportHD ? 1.0 : 0.92);
     }
 
     function loadImageFromBase64(base64) {
@@ -713,16 +784,17 @@
             imgObj: mockupImgObj,
             textColor: document.getElementById('global-color').value,
             textScale: parseInt(document.getElementById('global-scale').value),
+            imgScale: parseInt(document.getElementById('global-img-scale').value),
+            imgY: parseInt(document.getElementById('global-img-y').value),
             top: mockupProductObj.titulo,
             sub: mockupProductObj.subtitulo,
             colLeft: mockupProductObj.colLeft,
             colRight: mockupProductObj.colRight,
             bot: mockupProductObj.codigoPie,
             yTop: parseInt(document.getElementById('global-y-top').value),
-            ySub: parseInt(document.getElementById('global-y-sub').value),
-            yBot: parseInt(document.getElementById('global-y-bot').value),
+            xTop: 0, xSub: 0, ySub: 0, xBot: 0, yBot: 0, xCode: 0, yCode: 0
         };
-        document.getElementById('global-mockup-img').src = renderCanvasDataUrl(config);
+        document.getElementById('global-mockup-img').src = renderCanvasDataUrl(config, false);
     }
 
     const updateSlider = (id, suffix) => {
@@ -732,17 +804,16 @@
         });
     };
     updateSlider('global-scale', '%');
+    updateSlider('global-img-scale', '%');
+    updateSlider('global-img-y', 'px');
     updateSlider('global-y-top', 'px');
-    updateSlider('global-y-sub', 'px');
-    updateSlider('global-y-bot', 'px');
-    updateSlider('edit-scale', '%');
 
     document.getElementById('global-color').addEventListener('input', renderizarMockupPreview);
 
     // 4. Procesar Lote
     async function procesarLote() {
         if (selectedTemplateIds.size === 0) {
-            alert("Seleccioná al menos un producto matriz.");
+            alert("Seleccioná al menos un producto.");
             return;
         }
 
@@ -753,9 +824,9 @@
 
         const gColor = document.getElementById('global-color').value;
         const gScale = parseInt(document.getElementById('global-scale').value);
+        const gImgScale = parseInt(document.getElementById('global-img-scale').value);
+        const gImgY = parseInt(document.getElementById('global-img-y').value);
         const gyTop = parseInt(document.getElementById('global-y-top').value);
-        const gySub = parseInt(document.getElementById('global-y-sub').value);
-        const gyBot = parseInt(document.getElementById('global-y-bot').value);
 
         for (let id of selectedTemplateIds) {
             const prod = productTemplates.find(p => p.id === id);
@@ -765,7 +836,7 @@
                 const imgObj = await loadImageFromBase64(prod.foto);
                 const config = {
                     sku: prod.skuPrincipal,
-                    name: `${prod.skuPrincipal}.jpg`,
+                    name: `${prod.skuPrincipal}_HD.jpg`,
                     imgObj: imgObj,
                     top: prod.titulo,
                     sub: prod.subtitulo,
@@ -774,12 +845,15 @@
                     bot: prod.codigoPie,
                     textColor: gColor,
                     textScale: gScale,
-                    yTop: gyTop,
-                    ySub: gySub,
-                    yBot: gyBot
+                    imgScale: gImgScale,
+                    imgY: gImgY,
+                    xTop: 0, yTop: gyTop,
+                    xSub: 0, ySub: 0,
+                    xBot: 0, yBot: 0,
+                    xCode: 0, yCode: 0
                 };
 
-                config.dataUrl = renderCanvasDataUrl(config);
+                config.dataUrl = renderCanvasDataUrl(config, false);
                 generatedCards.push(config);
             } catch(e) {
                 console.error("Error procesando", prod.skuPrincipal, e);
@@ -792,7 +866,7 @@
     function renderResultGrid() {
         const grid = document.getElementById('preview-grid');
         grid.innerHTML = '';
-        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales en alta definición.`;
+        document.getElementById('results-subtext').textContent = `Se armaron ${generatedCards.length} fichas comerciales.`;
 
         generatedCards.forEach((item, index) => {
             grid.innerHTML += `
@@ -806,8 +880,8 @@
                             <span class="text-xs font-semibold text-slate-700" title="${item.top}">${item.top}</span>
                         </div>
                         <div class="flex gap-2 w-full pt-1">
-                            <button onclick="openEditor(${index})" class="flex-1 text-xs font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 py-1.5 rounded-lg transition-colors text-center active:scale-95 shadow-sm">✏️ Editar</button>
-                            <button onclick="descargarIndividual(${index})" class="flex-1 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-lg transition-colors text-center active:scale-95 shadow-sm">⬇️ Bajar</button>
+                            <button onclick="openEditor(${index})" class="flex-1 text-xs font-bold bg-sky-50 text-sky-700 hover:bg-sky-100 py-1.5 rounded-lg transition-colors text-center active:scale-95 shadow-sm">✏️ Ajustar</button>
+                            <button onclick="descargarIndividualHD(${index})" class="flex-1 text-xs font-bold bg-emerald-50 text-emerald-700 hover:bg-emerald-100 py-1.5 rounded-lg transition-colors text-center active:scale-95 shadow-sm">⬇️ Bajar HD</button>
                         </div>
                     </div>
                 </div>
@@ -824,15 +898,27 @@
         document.getElementById('edit-scale').value = config.textScale;
         document.getElementById('val-edit-scale').textContent = config.textScale + '%';
 
+        document.getElementById('edit-img-scale').value = config.imgScale || 85;
+        document.getElementById('val-edit-img-scale').textContent = (config.imgScale || 85) + '%';
+        document.getElementById('edit-img-y').value = config.imgY || 120;
+        document.getElementById('val-edit-img-y').textContent = (config.imgY || 120) + 'px';
+
         document.getElementById('edit-txt-top').value = config.top;
+        document.getElementById('edit-x-top').value = config.xTop || 0;
+        document.getElementById('edit-y-top').value = config.yTop || 0;
+
         document.getElementById('edit-txt-sub').value = config.sub;
+        document.getElementById('edit-x-sub').value = config.xSub || 0;
+        document.getElementById('edit-y-sub').value = config.ySub || 0;
+
         document.getElementById('edit-txt-col-left').value = config.colLeft || '';
         document.getElementById('edit-txt-col-right').value = config.colRight || '';
-        document.getElementById('edit-txt-bot').value = config.bot || '';
+        document.getElementById('edit-x-bot').value = config.xBot || 0;
+        document.getElementById('edit-y-bot').value = config.yBot || 0;
 
-        document.getElementById('edit-y-top').value = config.yTop;
-        document.getElementById('edit-y-sub').value = config.ySub;
-        document.getElementById('edit-y-bot').value = config.yBot;
+        document.getElementById('edit-txt-bot').value = config.bot || '';
+        document.getElementById('edit-x-code').value = config.xCode || 0;
+        document.getElementById('edit-y-code').value = config.yCode || 0;
 
         updateModalPreview();
         document.getElementById('editor-modal').classList.remove('hidden');
@@ -850,19 +936,37 @@
             ...generatedCards[activeEditIndex],
             textColor: document.getElementById('edit-color').value,
             textScale: parseInt(document.getElementById('edit-scale').value),
+            imgScale: parseInt(document.getElementById('edit-img-scale').value),
+            imgY: parseInt(document.getElementById('edit-img-y').value),
             top: document.getElementById('edit-txt-top').value,
+            xTop: parseInt(document.getElementById('edit-x-top').value),
+            yTop: parseInt(document.getElementById('edit-y-top').value),
             sub: document.getElementById('edit-txt-sub').value,
+            xSub: parseInt(document.getElementById('edit-x-sub').value),
+            ySub: parseInt(document.getElementById('edit-y-sub').value),
             colLeft: document.getElementById('edit-txt-col-left').value,
             colRight: document.getElementById('edit-txt-col-right').value,
-            bot: document.getElementById('edit-txt-bot').value,
-            yTop: parseInt(document.getElementById('edit-y-top').value),
-            ySub: parseInt(document.getElementById('edit-y-sub').value),
+            xBot: parseInt(document.getElementById('edit-x-bot').value),
             yBot: parseInt(document.getElementById('edit-y-bot').value),
+            bot: document.getElementById('edit-txt-bot').value,
+            xCode: parseInt(document.getElementById('edit-x-code').value),
+            yCode: parseInt(document.getElementById('edit-y-code').value)
         };
-        document.getElementById('modal-preview-img').src = renderCanvasDataUrl(tempConfig);
+        document.getElementById('modal-preview-img').src = renderCanvasDataUrl(tempConfig, false);
     }
 
-    ['edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-col-left', 'edit-txt-col-right', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
+    ['edit-img-scale', 'edit-img-y', 'edit-scale'].forEach(id => {
+        document.getElementById(id).addEventListener('input', (e) => {
+            const suf = id === 'edit-img-y' ? 'px' : '%';
+            document.getElementById(`val-${id}`).textContent = e.target.value + suf;
+        });
+    });
+
+    ['edit-color', 'edit-scale', 'edit-img-scale', 'edit-img-y', 
+     'edit-txt-top', 'edit-x-top', 'edit-y-top', 
+     'edit-txt-sub', 'edit-x-sub', 'edit-y-sub', 
+     'edit-txt-col-left', 'edit-txt-col-right', 'edit-x-bot', 'edit-y-bot', 
+     'edit-txt-bot', 'edit-x-code', 'edit-y-code'].forEach(id => {
         document.getElementById(id).addEventListener('input', updateModalPreview);
     });
 
@@ -871,44 +975,60 @@
         const config = generatedCards[activeEditIndex];
         config.textColor = document.getElementById('edit-color').value;
         config.textScale = parseInt(document.getElementById('edit-scale').value);
+        config.imgScale = parseInt(document.getElementById('edit-img-scale').value);
+        config.imgY = parseInt(document.getElementById('edit-img-y').value);
+
         config.top = document.getElementById('edit-txt-top').value;
+        config.xTop = parseInt(document.getElementById('edit-x-top').value);
+        config.yTop = parseInt(document.getElementById('edit-y-top').value);
+
         config.sub = document.getElementById('edit-txt-sub').value;
+        config.xSub = parseInt(document.getElementById('edit-x-sub').value);
+        config.ySub = parseInt(document.getElementById('edit-y-sub').value);
+
         config.colLeft = document.getElementById('edit-txt-col-left').value;
         config.colRight = document.getElementById('edit-txt-col-right').value;
-        config.bot = document.getElementById('edit-txt-bot').value;
-        config.yTop = parseInt(document.getElementById('edit-y-top').value);
-        config.ySub = parseInt(document.getElementById('edit-y-sub').value);
+        config.xBot = parseInt(document.getElementById('edit-x-bot').value);
         config.yBot = parseInt(document.getElementById('edit-y-bot').value);
 
-        config.dataUrl = renderCanvasDataUrl(config);
+        config.bot = document.getElementById('edit-txt-bot').value;
+        config.xCode = parseInt(document.getElementById('edit-x-code').value);
+        config.yCode = parseInt(document.getElementById('edit-y-code').value);
+
+        config.dataUrl = renderCanvasDataUrl(config, false);
         document.getElementById(`grid-img-${activeEditIndex}`).src = config.dataUrl;
         closeModal();
     };
 
-    window.descargarIndividual = function(index) {
+    // Descarga individual HD a 2000x2000 con calidad máxima (1.0)
+    window.descargarIndividualHD = function(index) {
         const item = generatedCards[index];
+        const dataUrlHD = renderCanvasDataUrl(item, true);
+
         const link = document.createElement('a');
-        link.href = item.dataUrl;
+        link.href = dataUrlHD;
         link.download = item.name;
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
     };
 
+    // Descarga ZIP completa en resolución 2000x2000
     window.descargarTodoZip = async function() {
         if (generatedCards.length === 0) return;
         const zip = new JSZip();
-        const folder = zip.folder("Fichas_Comerciales_XFish");
+        const folder = zip.folder("Fichas_Comerciales_HD");
 
         generatedCards.forEach(item => {
-            const base64Data = item.dataUrl.split(',')[1];
+            const dataUrlHD = renderCanvasDataUrl(item, true);
+            const base64Data = dataUrlHD.split(',')[1];
             folder.file(item.name, base64Data, {base64: true});
         });
 
         const content = await zip.generateAsync({type:"blob"});
         const link = document.createElement('a');
         link.href = URL.createObjectURL(content);
-        link.download = "Fichas_Comerciales_XFish.zip";
+        link.download = "Fichas_Comerciales_HD_XFish.zip";
         link.click();
     };
 
