@@ -15,7 +15,8 @@
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         .tab-active { border-bottom-color: #0d9488; color: #0f766e; }
-        .tab-inactive { border-bottom-color: transparent; color: #64748b; hover:text-slate-700; hover:border-slate-300; }
+        .tab-inactive { border-bottom-color: transparent; color: #64748b; }
+        .tab-inactive:hover { color: #334155; border-bottom-color: #cbd5e1; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 pb-12">
@@ -41,7 +42,7 @@
         <div id="panel-carga" class="glass-panel rounded-2xl p-10 text-center space-y-4">
             <i class="fa-brands fa-google text-5xl text-teal-500 mb-2"></i>
             <h2 class="text-2xl font-black text-slate-800">Analizador SEO y Calidad de Catálogo</h2>
-            <p class="text-slate-500 max-w-lg mx-auto">Este módulo auditará tus productos en stock y analizará la arquitectura de tu sitio web en Odoo para darte recomendaciones de posicionamiento en buscadores.</p>
+            <p class="text-slate-500 max-w-lg mx-auto">Este módulo auditará tus productos en stock, evaluará tu arquitectura y te generará los archivos automáticos (Sitemap de stock y Robots.txt) para posicionar tu web.</p>
             <button onclick="iniciarAuditoria()" id="btn-iniciar" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 mt-4">
                 Comenzar Auditoría <i class="fa-solid fa-search ml-2"></i>
             </button>
@@ -57,13 +58,12 @@
                     <i class="fa-solid fa-box-open"></i> Fichas de Producto
                 </button>
                 <button onclick="cambiarPestana('seo')" id="tab-seo" class="pb-3 border-b-4 tab-inactive flex items-center gap-2 transition-all">
-                    <i class="fa-solid fa-globe"></i> SEO General del Sitio
+                    <i class="fa-solid fa-globe"></i> Herramientas SEO y Sitemap
                 </button>
             </div>
 
             <!-- PESTAÑA 1: PRODUCTOS -->
             <div id="vista-productos" class="space-y-6 block">
-                <!-- KPIs -->
                 <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
                     <div class="glass-panel rounded-xl p-5 border-l-4 border-slate-700">
                         <p class="text-[11px] uppercase font-bold text-slate-500 mb-1">En Stock (Auditados)</p>
@@ -83,7 +83,6 @@
                     </div>
                 </div>
 
-                <!-- Filtros -->
                 <div class="glass-panel rounded-xl p-4 flex flex-wrap gap-2 items-center bg-white/60">
                     <span class="text-sm font-bold text-slate-700 mr-2">Filtros:</span>
                     <button onclick="renderizarTabla('todos')" class="bg-slate-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow-sm">Todos</button>
@@ -113,83 +112,73 @@
                 </div>
             </div>
 
-            <!-- PESTAÑA 2: SEO DEL SITIO WEB -->
+            <!-- PESTAÑA 2: SEO Y SITEMAP ACTIVO -->
             <div id="vista-seo" class="space-y-6 hidden">
                 
-                <!-- Diagnóstico de Arquitectura -->
-                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                    <div class="lg:col-span-1 glass-panel rounded-2xl p-6 flex flex-col items-center justify-center text-center">
-                        <div class="relative w-32 h-32 mb-4">
-                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
-                                <path class="text-slate-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
-                                <path id="seo-circle" class="text-teal-500 transition-all duration-1000 ease-out" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
-                            </svg>
-                            <div class="absolute inset-0 flex items-center justify-center flex-col">
-                                <span id="seo-score-text" class="text-3xl font-black text-slate-800">0</span>
-                                <span class="text-[10px] uppercase font-bold text-slate-400">/ 100</span>
-                            </div>
+                <!-- Diagnóstico Arquitectura -->
+                <div class="glass-panel rounded-2xl p-6 flex flex-col md:flex-row items-center gap-6">
+                    <div class="relative w-32 h-32 flex-shrink-0">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
+                            <path id="seo-circle" class="text-teal-500 transition-all duration-1000 ease-out" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
+                        </svg>
+                        <div class="absolute inset-0 flex items-center justify-center flex-col">
+                            <span id="seo-score-text" class="text-3xl font-black text-slate-800">0</span>
+                            <span class="text-[10px] uppercase font-bold text-slate-400">/ 100</span>
                         </div>
-                        <h3 class="text-lg font-bold text-slate-800">Arquitectura SEO</h3>
-                        <p class="text-xs text-slate-500 mt-2">Puntaje basado en la organización estructural de tus categorías y títulos para el rastreo de Google.</p>
                     </div>
-
-                    <div class="lg:col-span-2 glass-panel rounded-2xl p-6">
-                        <h3 class="text-base font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Diagnóstico de Estructura de Odoo</h3>
-                        <div class="space-y-4" id="seo-diagnostics">
+                    <div class="flex-grow">
+                        <h3 class="text-lg font-bold text-slate-800 mb-2">Arquitectura de Categorías Odoo</h3>
+                        <div id="seo-diagnostics" class="space-y-2">
                             <!-- Se llena con JS -->
                         </div>
                     </div>
                 </div>
 
-                <!-- Plan de Acción SEO (Checklist Fijo) -->
-                <div class="glass-panel rounded-2xl p-6 bg-white/80">
-                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-brands fa-google text-blue-500"></i> Plan de Posicionamiento Web (Tareas Odoo)</h3>
-                    <p class="text-sm text-slate-600 mb-6">Para posicionar X-Fish en los primeros resultados de búsqueda de Argentina, revisá esta lista de tareas maestras fuera de los productos individuales.</p>
+                <!-- HERRAMIENTAS INTERACTIVAS SITEMAP/ROBOTS -->
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <!-- Tarea 1 -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                            <div class="flex items-start gap-3">
-                                <i class="fa-solid fa-sitemap text-2xl text-teal-600 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">1. Google Search Console & Sitemap</h4>
-                                    <p class="text-xs text-slate-600 mt-1">Odoo genera tu sitemap automáticamente en <code>/sitemap.xml</code>. Debés crear una cuenta en Google Search Console y enviar este link para que Google lea todas tus URLs de pesca y camping.</p>
-                                </div>
-                            </div>
+                    <!-- Configurador de Dominio y Odoo -->
+                    <div class="glass-panel rounded-2xl p-6 border-t-4 border-blue-500">
+                        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-link text-blue-500"></i> Generador de Reglas (Robots.txt)</h3>
+                        <p class="text-xs text-slate-600 mb-4">Odoo suele indexar carritos vacíos o páginas de búsqueda que penalizan el SEO. Ingresá el dominio público de tu web para generar el código corrector.</p>
+                        
+                        <div class="mb-4">
+                            <label class="block text-xs font-bold text-slate-700 mb-1">Dominio Público de la Tienda</label>
+                            <input type="text" id="seo-dominio" placeholder="ej: https://www.midominio.com.ar" class="w-full px-3 py-2 rounded-lg border border-slate-300 text-sm outline-none focus:border-blue-500" oninput="generarArchivosSEO()">
                         </div>
-                        <!-- Tarea 2 -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                            <div class="flex items-start gap-3">
-                                <i class="fa-solid fa-tags text-2xl text-indigo-600 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">2. Meta Títulos de Categorías</h4>
-                                    <p class="text-xs text-slate-600 mt-1">Entrá al sitio web de Odoo, navegá a la categoría (Ej: Cañas), andá a "Sitio>Optimizar SEO" y cambiá el título a "Cañas de Pescar Spinning y Baitcasting | X-Fish".</p>
-                                </div>
-                            </div>
+
+                        <label class="block text-xs font-bold text-slate-700 mb-1">Código para tu archivo <code>robots.txt</code></label>
+                        <div class="relative">
+                            <textarea id="codigo-robots" readonly rows="8" class="w-full p-3 rounded-lg border border-slate-300 bg-slate-50 text-xs font-mono text-slate-700 outline-none resize-none">Esperando dominio...</textarea>
+                            <button onclick="copiarTexto('codigo-robots')" class="absolute top-2 right-2 bg-white border border-slate-200 hover:bg-slate-100 text-slate-600 text-[10px] font-bold py-1 px-2 rounded shadow-sm transition">Copiar</button>
                         </div>
-                        <!-- Tarea 3 -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                            <div class="flex items-start gap-3">
-                                <i class="fa-brands fa-google text-2xl text-amber-500 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">3. Google Merchant Center</h4>
-                                    <p class="text-xs text-slate-600 mt-1">Para aparecer en la pestaña "Shopping" de Google, debés exportar el catálogo de Odoo (Nombre, Precio, Link, Imagen) en un XML o CSV y subirlo al Merchant Center.</p>
-                                </div>
-                            </div>
+                        <p class="text-[10px] text-slate-500 mt-2"><i class="fa-solid fa-circle-info"></i> <strong>Instrucciones:</strong> En Odoo activá el Modo Desarrollador, andá a <i>Sitio Web > Configuración > Propiedades del Sitio</i> y pegá este código en la sección de Robots.</p>
+                    </div>
+
+                    <!-- Sitemap Activo (Exportador) -->
+                    <div class="glass-panel rounded-2xl p-6 border-t-4 border-emerald-500 flex flex-col">
+                        <h3 class="text-base font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-solid fa-sitemap text-emerald-500"></i> Indexación Activa de Stock</h3>
+                        <p class="text-xs text-slate-600 mb-4">El sitemap por defecto de Odoo a veces envía productos agotados. Esta herramienta extrae los links de los <strong><span id="txt-stock-count">0</span> productos auditados que tienen stock físico hoy</strong>.</p>
+                        
+                        <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-4 mb-auto">
+                            <h4 class="text-sm font-bold text-emerald-800 mb-2">Paso 1: Generar Archivo</h4>
+                            <button onclick="descargarUrlsProductos()" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition flex justify-center items-center gap-2 text-sm">
+                                <i class="fa-solid fa-download"></i> Descargar TXT (Sitemap de Stock)
+                            </button>
+                            <p class="text-[10px] text-emerald-700 mt-2 text-center">Contiene solo los artículos disponibles para venta.</p>
                         </div>
-                        <!-- Tarea 4 -->
-                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
-                            <div class="flex items-start gap-3">
-                                <i class="fa-solid fa-image text-2xl text-rose-500 mt-1"></i>
-                                <div>
-                                    <h4 class="font-bold text-slate-800">4. Optimización de Imágenes (WebP)</h4>
-                                    <p class="text-xs text-slate-600 mt-1">El peso de las imágenes ralentiza la web y penaliza el SEO. Asegurate de que Odoo esté comprimiendo las imágenes (calidad 80) o subilas en formato WebP en lugar de JPG pesados.</p>
-                                </div>
-                            </div>
+
+                        <div class="mt-4 border-t border-slate-200 pt-4">
+                            <h4 class="text-sm font-bold text-slate-800 mb-2">Paso 2: Enviar a Google</h4>
+                            <p class="text-xs text-slate-600 mb-3">Abrí Google Search Console y subí el archivo `.txt` que descargaste en la sección Sitemaps, o inspeccioná las URLs clave.</p>
+                            <a href="https://search.google.com/search-console" target="_blank" class="w-full bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 font-bold py-2 px-4 rounded-lg transition flex justify-center items-center gap-2 text-sm">
+                                Abrir Google Search Console <i class="fa-solid fa-external-link-alt text-[10px]"></i>
+                            </a>
                         </div>
                     </div>
-                </div>
 
+                </div>
             </div>
 
         </div>
@@ -204,7 +193,6 @@
     function cambiarPestana(id) {
         document.getElementById('vista-productos').classList.toggle('hidden', id !== 'productos');
         document.getElementById('vista-productos').classList.toggle('block', id === 'productos');
-        
         document.getElementById('vista-seo').classList.toggle('hidden', id !== 'seo');
         document.getElementById('vista-seo').classList.toggle('block', id === 'seo');
 
@@ -236,8 +224,8 @@
             const data = await res.json();
             
             setTimeout(() => {
-                // Solo guardamos los activos
                 const activos = data.filter(p => p.total > 0);
+                document.getElementById('txt-stock-count').innerText = activos.length;
                 
                 ejecutarReglasDeCalidad(activos);
                 analizarArquitecturaSEO(activos);
@@ -252,41 +240,20 @@
         }
     }
 
-    // --- AUDITORÍA PRODUCTO POR PRODUCTO (Read Only) ---
+    // --- AUDITORÍA PRODUCTOS ---
     function ejecutarReglasDeCalidad(productosActivos) {
         catalogoActivo = productosActivos.map(p => {
-            let fallas = [];
-            let advertencias = [];
-            let soluciones = new Set();
-            let puntaje = 100;
+            let fallas = []; let advertencias = []; let soluciones = new Set(); let puntaje = 100;
             const categName = (p.categ_id && p.categ_id[1]) ? p.categ_id[1].toLowerCase() : 'all';
 
-            // CRÍTICOS
             if (!p.foto) { fallas.push('Falta Imagen Principal'); soluciones.add('Subir foto en Odoo.'); puntaje -= 30; }
             if (!p.sku || p.sku.trim() === '') { fallas.push('Sin código SKU'); soluciones.add('Asignar Ref. Interna en Odoo.'); puntaje -= 20; }
             if (!p.precio || p.precio <= 0) { fallas.push('Precio $0.00'); soluciones.add('Asignar precio.'); puntaje -= 30; }
 
-            // ADVERTENCIAS / SEO
-            if (categName === 'all' || categName === 'general') {
-                advertencias.push('Categoría "All" no optimizada');
-                soluciones.add('Mover de "General" a una categoría web específica.');
-                puntaje -= 15;
-            }
-            if (p.nombre.length < 15) {
-                advertencias.push('Título pobre (corto)');
-                soluciones.add('Agregar Marca o Modelo al título.');
-                puntaje -= 10;
-            }
-            if (p.nombre.length > 70) {
-                advertencias.push('Título muy largo (>70 chars)');
-                soluciones.add('Resumir título para evitar que Google lo corte.');
-                puntaje -= 5;
-            }
-            if (p.nombre === p.nombre.toUpperCase() && p.nombre.length > 5) {
-                advertencias.push('TODO EN MAYÚSCULAS');
-                soluciones.add('Escribir usando Mayúsculas y minúsculas.');
-                puntaje -= 5;
-            }
+            if (categName === 'all' || categName === 'general') { advertencias.push('Categoría "All"'); soluciones.add('Asignar categoría específica.'); puntaje -= 15; }
+            if (p.nombre.length < 15) { advertencias.push('Título pobre (corto)'); soluciones.add('Agregar Marca/Modelo.'); puntaje -= 10; }
+            if (p.nombre.length > 70) { advertencias.push('Título muy largo'); soluciones.add('Resumir para Google.'); puntaje -= 5; }
+            if (p.nombre === p.nombre.toUpperCase() && p.nombre.length > 5) { advertencias.push('TODO MAYÚSCULAS'); soluciones.add('Usar minúsculas y mayúsculas.'); puntaje -= 5; }
 
             if (puntaje < 0) puntaje = 0;
 
@@ -305,18 +272,16 @@
         const total = catalogoActivo.length;
         const criticos = catalogoActivo.filter(p => p.fallas.length > 0).length;
         const warns = catalogoActivo.filter(p => p.advertencias.length > 0 && p.fallas.length === 0).length;
-        const sumaPuntajes = catalogoActivo.reduce((acc, p) => acc + p.puntaje, 0);
-        const saludMedia = total > 0 ? Math.round(sumaPuntajes / total) : 0;
+        const sum = catalogoActivo.reduce((acc, p) => acc + p.puntaje, 0);
+        const salud = total > 0 ? Math.round(sum / total) : 0;
 
         document.getElementById('kpi-total').textContent = total;
         document.getElementById('kpi-errores').textContent = criticos;
         document.getElementById('kpi-warns').textContent = warns;
         
         const kpiSalud = document.getElementById('kpi-salud');
-        kpiSalud.textContent = `${saludMedia}%`;
-        if(saludMedia < 50) kpiSalud.className = "text-3xl font-black text-rose-600";
-        else if (saludMedia < 85) kpiSalud.className = "text-3xl font-black text-amber-500";
-        else kpiSalud.className = "text-3xl font-black text-emerald-600";
+        kpiSalud.textContent = `${salud}%`;
+        kpiSalud.className = salud < 50 ? "text-3xl font-black text-rose-600" : (salud < 85 ? "text-3xl font-black text-amber-500" : "text-3xl font-black text-emerald-600");
     }
 
     function renderizarTabla(filtro) {
@@ -339,22 +304,16 @@
 
         tbody.innerHTML = filtrados.map(p => {
             let scoreColor = p.puntaje < 60 ? 'bg-rose-100 text-rose-700 border-rose-200' : (p.puntaje < 95 ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200');
-
             const badgesFallas = p.fallas.map(f => `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-xmark"></i> ${f}</span>`).join(' ');
             const badgesWarns = p.advertencias.map(w => `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-exclamation-triangle"></i> ${w}</span>`).join(' ');
 
-            let solucionesHtml = '';
-            if(p.soluciones.length > 0) {
-                solucionesHtml = `<div class="mt-2 bg-slate-50 p-2 rounded border border-slate-200"><p class="text-[10px] font-bold text-slate-700 uppercase mb-1">Acción Requerida en Odoo:</p><ul class="list-disc pl-4 text-xs text-slate-600">${p.soluciones.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
-            } else {
-                solucionesHtml = `<span class="bg-emerald-50 text-emerald-600 font-bold text-xs px-2 py-1 rounded border border-emerald-200"><i class="fa-solid fa-check-circle"></i> Optimizado</span>`;
-            }
+            let solHtml = p.soluciones.length > 0 
+                ? `<div class="mt-2 bg-slate-50 p-2 rounded border border-slate-200"><p class="text-[10px] font-bold text-slate-700 uppercase mb-1">Acción Requerida:</p><ul class="list-disc pl-4 text-xs text-slate-600">${p.soluciones.map(s => `<li>${s}</li>`).join('')}</ul></div>` 
+                : `<span class="bg-emerald-50 text-emerald-600 font-bold text-xs px-2 py-1 rounded border border-emerald-200"><i class="fa-solid fa-check-circle"></i> Optimizado</span>`;
 
             return `
             <tr class="hover:bg-slate-50 transition-colors">
-                <td class="p-4 border-b border-slate-100 text-center align-top">
-                    <div class="w-10 h-10 mx-auto rounded-full border-2 flex items-center justify-center font-black text-sm shadow-sm ${scoreColor}">${p.puntaje}</div>
-                </td>
+                <td class="p-4 border-b border-slate-100 text-center align-top"><div class="w-10 h-10 mx-auto rounded-full border-2 flex items-center justify-center font-black text-sm shadow-sm ${scoreColor}">${p.puntaje}</div></td>
                 <td class="p-4 border-b border-slate-100 align-top">
                     <div class="flex gap-3">
                         ${p.foto ? `<img src="data:image/jpeg;base64,${p.foto}" class="w-12 h-12 object-contain rounded bg-white shadow-sm border border-slate-200 flex-shrink-0">` : `<div class="w-12 h-12 bg-slate-100 rounded flex items-center justify-center text-slate-300 border border-slate-200 flex-shrink-0"><i class="fa-solid fa-image"></i></div>`}
@@ -364,10 +323,7 @@
                         </div>
                     </div>
                 </td>
-                <td class="p-4 border-b border-slate-100 align-top">
-                    <div class="flex flex-wrap gap-1.5 mb-2">${badgesFallas}${badgesWarns}</div>
-                    ${solucionesHtml}
-                </td>
+                <td class="p-4 border-b border-slate-100 align-top"><div class="flex flex-wrap gap-1.5 mb-2">${badgesFallas}${badgesWarns}</div>${solHtml}</td>
             </tr>
             `;
         }).join('');
@@ -375,75 +331,95 @@
 
     function buscarEnTabla() { renderizarTabla(); }
 
-    // --- ANÁLISIS SEO ESTRUCTURAL ---
+    // --- HERRAMIENTAS SEO Y SITEMAP ---
     function analizarArquitecturaSEO(productos) {
         const total = productos.length;
         if(total === 0) return;
 
-        // Metricas
-        let conImagen = 0;
-        let conCategoria = 0;
-        let titulosOK = 0;
-
-        const catCounts = {};
+        let conImagen = 0; let conCategoria = 0; let titulosOK = 0; const catCounts = {};
 
         productos.forEach(p => {
             if(p.foto) conImagen++;
-            
             const categName = (p.categ_id && p.categ_id[1]) ? p.categ_id[1].toLowerCase() : 'all';
-            if(categName !== 'all' && categName !== 'general') {
-                conCategoria++;
-            }
-            
+            if(categName !== 'all' && categName !== 'general') conCategoria++;
             catCounts[categName] = (catCounts[categName] || 0) + 1;
-
-            if(p.nombre.length >= 15 && p.nombre.length <= 70 && p.nombre !== p.nombre.toUpperCase()) {
-                titulosOK++;
-            }
+            if(p.nombre.length >= 15 && p.nombre.length <= 70 && p.nombre !== p.nombre.toUpperCase()) titulosOK++;
         });
 
-        const porcentajeImg = Math.round((conImagen / total) * 100);
-        const porcentajeCat = Math.round((conCategoria / total) * 100);
-        const porcentajeTitulos = Math.round((titulosOK / total) * 100);
+        const pImg = Math.round((conImagen / total) * 100);
+        const pCat = Math.round((conCategoria / total) * 100);
+        const pTit = Math.round((titulosOK / total) * 100);
+        
+        const concentracion = (Math.max(...Object.values(catCounts)) / total) * 100;
+        let penalidad = concentracion > 80 ? 20 : 0;
 
-        // Penalización si casi todo está en 1 sola categoría
-        const maxCatCount = Math.max(...Object.values(catCounts));
-        const concentracion = (maxCatCount / total) * 100;
-        let penalidadEstructura = 0;
-        if(concentracion > 80) penalidadEstructura = 20; // Si el 80% está en una sola categoría, resta 20pts.
+        let seoGlobal = Math.max(0, Math.round((pImg + pCat + pTit) / 3) - penalidad);
 
-        let seoGlobal = Math.round((porcentajeImg + porcentajeCat + porcentajeTitulos) / 3) - penalidadEstructura;
-        if (seoGlobal < 0) seoGlobal = 0;
-
-        // Pintar Score
         document.getElementById('seo-score-text').textContent = seoGlobal;
         const circle = document.getElementById('seo-circle');
         circle.setAttribute('stroke-dasharray', `${seoGlobal}, 100`);
         if(seoGlobal < 50) circle.classList.replace('text-teal-500', 'text-rose-500');
         else if(seoGlobal < 80) circle.classList.replace('text-teal-500', 'text-amber-500');
 
-        // Generar Diagnósticos Visuales
-        const diagContainer = document.getElementById('seo-diagnostics');
-        
-        // Item 1: Imágenes
-        const imgIcon = porcentajeImg > 80 ? 'fa-check text-emerald-500' : 'fa-times text-rose-500';
-        const imgText = `<strong>${porcentajeImg}%</strong> del catálogo tiene imagen. (Google Imágenes es vital para productos físicos).`;
-        
-        // Item 2: Categorización (Siloing)
-        const catIcon = porcentajeCat > 80 && concentracion < 50 ? 'fa-check text-emerald-500' : 'fa-exclamation-triangle text-amber-500';
-        const catText = concentracion > 80 
-            ? `⚠️ Alta concentración de productos. El ${Math.round(concentracion)}% del stock está en una sola categoría. Para SEO, necesitás crear más sub-categorías (Ej: Cañas -> Spinning, Bait).` 
-            : `<strong>${porcentajeCat}%</strong> de productos correctamente categorizados (Fuera de "General").`;
-
-        // Item 3: Calidad de Títulos
-        const titIcon = porcentajeTitulos > 70 ? 'fa-check text-emerald-500' : 'fa-exclamation-triangle text-amber-500';
-        const titText = `<strong>${porcentajeTitulos}%</strong> de los productos tienen nombres amigables para Google (longitud correcta, sin abusar de mayúsculas).`;
-
-        diagContainer.innerHTML = `
-            <div class="flex items-start gap-3"><i class="fa-solid ${imgIcon} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700">${imgText}</p></div>
-            <div class="flex items-start gap-3"><i class="fa-solid ${catIcon} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700">${catText}</p></div>
-            <div class="flex items-start gap-3"><i class="fa-solid ${titIcon} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700">${titText}</p></div>
+        document.getElementById('seo-diagnostics').innerHTML = `
+            <div class="flex items-start gap-3"><i class="fa-solid ${pImg > 80 ? 'fa-check text-emerald-500' : 'fa-times text-rose-500'} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700"><strong>${pImg}%</strong> del catálogo tiene imagen (vital para Google Imágenes).</p></div>
+            <div class="flex items-start gap-3"><i class="fa-solid ${pCat > 80 && concentracion < 50 ? 'fa-check text-emerald-500' : 'fa-exclamation-triangle text-amber-500'} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700">${concentracion > 80 ? `⚠️ El ${Math.round(concentracion)}% del stock está en 1 sola categoría. Creá sub-categorías.` : `<strong>${pCat}%</strong> de productos categorizados correctamente.`}</p></div>
+            <div class="flex items-start gap-3"><i class="fa-solid ${pTit > 70 ? 'fa-check text-emerald-500' : 'fa-exclamation-triangle text-amber-500'} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700"><strong>${pTit}%</strong> de los nombres son óptimos para buscadores.</p></div>
         `;
+    }
+
+    function generarArchivosSEO() {
+        let dominio = document.getElementById('seo-dominio').value.trim();
+        if (!dominio) {
+            document.getElementById('codigo-robots').value = "Esperando dominio...";
+            return;
+        }
+        
+        // Limpiar URL (quitar barra final)
+        if(dominio.endsWith('/')) dominio = dominio.slice(0, -1);
+        if(!dominio.startsWith('http')) dominio = 'https://' + dominio;
+
+        const txtRobots = `User-agent: *
+Disallow: /shop/cart
+Disallow: /shop/checkout
+Disallow: /shop/payment
+Disallow: /web
+Disallow: /*?search=
+Disallow: /*?order=
+Disallow: /my/
+Allow: /
+
+Sitemap: ${dominio}/sitemap.xml`;
+
+        document.getElementById('codigo-robots').value = txtRobots;
+    }
+
+    function descargarUrlsProductos() {
+        let dominio = document.getElementById('seo-dominio').value.trim();
+        if (!dominio) return alert("Por favor, ingresá el dominio de tu tienda primero.");
+        if(dominio.endsWith('/')) dominio = dominio.slice(0, -1);
+        if(!dominio.startsWith('http')) dominio = 'https://' + dominio;
+
+        if (catalogoActivo.length === 0) return alert("No hay productos con stock para exportar.");
+
+        // Odoo estándar usa /shop/product/[id_o_slug] - El ID directo siempre funciona como canonical
+        let urls = catalogoActivo.map(p => `${dominio}/shop/product/${p.id}`).join('\n');
+        
+        const blob = new Blob([urls], { type: 'text/plain' });
+        const urlDescarga = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = urlDescarga;
+        a.download = 'sitemap_stock_activo.txt';
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+    }
+
+    function copiarTexto(elementId) {
+        const textarea = document.getElementById(elementId);
+        textarea.select();
+        navigator.clipboard.writeText(textarea.value);
+        alert("Copiado al portapapeles");
     }
 
 </script>
