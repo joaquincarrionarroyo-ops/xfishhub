@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Auditor de Calidad y SEO Pro | X-Fish</title>
+    <title>Auditor de Calidad y SEO Global | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
@@ -14,11 +14,12 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .tab-active { border-bottom-color: #0d9488; color: #0f766e; }
+        .tab-inactive { border-bottom-color: transparent; color: #64748b; hover:text-slate-700; hover:border-slate-300; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 pb-12">
 
-    <!-- Fondos Abstractos -->
     <div class="blob bg-emerald-200 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
     <div class="blob bg-teal-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
 
@@ -26,9 +27,9 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 shadow flex items-center justify-center">
-                    <i class="fa-solid fa-stethoscope text-white text-sm"></i>
+                    <i class="fa-solid fa-chart-line text-white text-sm"></i>
                 </div>
-                Auditor de Calidad y SEO
+                Centro de Auditoría y SEO
             </h1>
             <a href="index.html" class="text-sm font-semibold text-teal-600 hover:text-teal-800">← Volver al Hub</a>
         </div>
@@ -36,194 +37,275 @@
 
     <main class="max-w-7xl mx-auto px-4 md:px-6 space-y-6">
         
-        <!-- ESTADO INICIAL -->
+        <!-- PANEL DE INICIO -->
         <div id="panel-carga" class="glass-panel rounded-2xl p-10 text-center space-y-4">
-            <i class="fa-solid fa-robot text-5xl text-teal-500 mb-2"></i>
-            <h2 class="text-2xl font-black text-slate-800">Analizador de Catálogo Activo</h2>
-            <p class="text-slate-500 max-w-lg mx-auto">El sistema auditará <strong>únicamente los productos que tienen stock físico actual</strong>. Se ignorarán los artículos agotados o discontinuados para enfocar el esfuerzo en lo que realmente se puede vender hoy.</p>
+            <i class="fa-brands fa-google text-5xl text-teal-500 mb-2"></i>
+            <h2 class="text-2xl font-black text-slate-800">Analizador SEO y Calidad de Catálogo</h2>
+            <p class="text-slate-500 max-w-lg mx-auto">Este módulo auditará tus productos en stock y analizará la arquitectura de tu sitio web en Odoo para darte recomendaciones de posicionamiento en buscadores.</p>
             <button onclick="iniciarAuditoria()" id="btn-iniciar" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 mt-4">
-                Comenzar Escaneo <i class="fa-solid fa-search ml-2"></i>
+                Comenzar Auditoría <i class="fa-solid fa-search ml-2"></i>
             </button>
-            <p id="status-text" class="text-sm font-bold text-teal-600 hidden mt-4">Conectando con Odoo y filtrando stock...</p>
+            <p id="status-text" class="text-sm font-bold text-teal-600 hidden mt-4">Analizando estructura de Odoo...</p>
         </div>
 
-        <!-- DASHBOARD DE RESULTADOS (Oculto hasta escanear) -->
+        <!-- CONTENEDOR PRINCIPAL (Oculto hasta analizar) -->
         <div id="dashboard-resultados" class="hidden space-y-6">
             
-            <!-- KPIs -->
-            <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                <div class="glass-panel rounded-xl p-5 border-l-4 border-slate-700">
-                    <p class="text-[11px] uppercase font-bold text-slate-500 mb-1">En Stock (Auditados)</p>
-                    <p id="kpi-total" class="text-3xl font-black text-slate-800">0</p>
+            <!-- NAVEGACIÓN DE PESTAÑAS -->
+            <div class="glass-panel rounded-2xl px-6 pt-4 flex gap-6 font-bold text-sm">
+                <button onclick="cambiarPestana('productos')" id="tab-productos" class="pb-3 border-b-4 tab-active flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-box-open"></i> Fichas de Producto
+                </button>
+                <button onclick="cambiarPestana('seo')" id="tab-seo" class="pb-3 border-b-4 tab-inactive flex items-center gap-2 transition-all">
+                    <i class="fa-solid fa-globe"></i> SEO General del Sitio
+                </button>
+            </div>
+
+            <!-- PESTAÑA 1: PRODUCTOS -->
+            <div id="vista-productos" class="space-y-6 block">
+                <!-- KPIs -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <div class="glass-panel rounded-xl p-5 border-l-4 border-slate-700">
+                        <p class="text-[11px] uppercase font-bold text-slate-500 mb-1">En Stock (Auditados)</p>
+                        <p id="kpi-total" class="text-3xl font-black text-slate-800">0</p>
+                    </div>
+                    <div class="glass-panel rounded-xl p-5 border-l-4 border-emerald-500">
+                        <p class="text-[11px] uppercase font-bold text-emerald-600 mb-1">Salud Fichas</p>
+                        <p id="kpi-salud" class="text-3xl font-black text-emerald-700">0%</p>
+                    </div>
+                    <div class="glass-panel rounded-xl p-5 border-l-4 border-rose-500 bg-rose-50/30">
+                        <p class="text-[11px] uppercase font-bold text-rose-600 mb-1">Errores Críticos</p>
+                        <p id="kpi-errores" class="text-3xl font-black text-rose-700">0</p>
+                    </div>
+                    <div class="glass-panel rounded-xl p-5 border-l-4 border-amber-500 bg-amber-50/30">
+                        <p class="text-[11px] uppercase font-bold text-amber-600 mb-1">Advertencias SEO</p>
+                        <p id="kpi-warns" class="text-3xl font-black text-amber-700">0</p>
+                    </div>
                 </div>
-                <div class="glass-panel rounded-xl p-5 border-l-4 border-slate-300 opacity-60">
-                    <p class="text-[11px] uppercase font-bold text-slate-500 mb-1">Agotados (Omitidos)</p>
-                    <p id="kpi-omitidos" class="text-3xl font-black text-slate-500">0</p>
+
+                <!-- Filtros -->
+                <div class="glass-panel rounded-xl p-4 flex flex-wrap gap-2 items-center bg-white/60">
+                    <span class="text-sm font-bold text-slate-700 mr-2">Filtros:</span>
+                    <button onclick="renderizarTabla('todos')" class="bg-slate-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow-sm">Todos</button>
+                    <button onclick="renderizarTabla('criticos')" class="bg-rose-100 text-rose-700 border border-rose-200 hover:bg-rose-200 text-xs font-bold py-1.5 px-3 rounded transition">Solo Errores 🔴</button>
+                    <button onclick="renderizarTabla('seo')" class="bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 text-xs font-bold py-1.5 px-3 rounded transition">Mejorar SEO 🟡</button>
+                    <button onclick="renderizarTabla('perfectos')" class="bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200 text-xs font-bold py-1.5 px-3 rounded transition">Perfectos 🟢</button>
+                    
+                    <div class="ml-auto relative w-full md:w-auto mt-2 md:mt-0">
+                        <input type="text" id="buscador-tabla" placeholder="Buscar SKU o nombre..." class="w-full pl-8 pr-4 py-1.5 rounded-lg border border-slate-300 text-sm outline-none focus:border-teal-500" oninput="buscarEnTabla()">
+                        <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                    </div>
                 </div>
-                <div class="glass-panel rounded-xl p-5 border-l-4 border-emerald-500">
-                    <p class="text-[11px] uppercase font-bold text-emerald-600 mb-1">Salud del Catálogo</p>
-                    <p id="kpi-salud" class="text-3xl font-black text-emerald-700">0%</p>
-                </div>
-                <div class="glass-panel rounded-xl p-5 border-l-4 border-rose-500 bg-rose-50/30">
-                    <p class="text-[11px] uppercase font-bold text-rose-600 mb-1">Errores Críticos</p>
-                    <p id="kpi-errores" class="text-3xl font-black text-rose-700">0</p>
-                </div>
-                <div class="glass-panel rounded-xl p-5 border-l-4 border-amber-500 bg-amber-50/30">
-                    <p class="text-[11px] uppercase font-bold text-amber-600 mb-1">Advertencias (SEO)</p>
-                    <p id="kpi-warns" class="text-3xl font-black text-amber-700">0</p>
+
+                <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
+                    <div class="p-0 max-h-[600px] overflow-y-auto">
+                        <table class="w-full text-left text-sm">
+                            <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
+                                <tr>
+                                    <th class="p-4 text-slate-500 font-semibold border-b border-slate-200 w-16 text-center">Pts</th>
+                                    <th class="p-4 text-slate-500 font-semibold border-b border-slate-200 w-1/3">Producto en Stock</th>
+                                    <th class="p-4 text-slate-500 font-semibold border-b border-slate-200">Reporte y Plan de Acción (Manual)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tabla-auditoria" class="divide-y divide-slate-100 bg-white"></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
 
-            <!-- FILTROS -->
-            <div class="glass-panel rounded-xl p-4 flex flex-wrap gap-2 items-center bg-white/60">
-                <span class="text-sm font-bold text-slate-700 mr-2">Filtros:</span>
-                <button onclick="renderizarTabla('todos')" class="bg-slate-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow-sm">Todos</button>
-                <button onclick="renderizarTabla('criticos')" class="bg-rose-100 text-rose-700 border border-rose-200 hover:bg-rose-200 text-xs font-bold py-1.5 px-3 rounded transition">Solo Errores 🔴</button>
-                <button onclick="renderizarTabla('seo')" class="bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 text-xs font-bold py-1.5 px-3 rounded transition">Mejorar SEO 🟡</button>
-                <button onclick="renderizarTabla('perfectos')" class="bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200 text-xs font-bold py-1.5 px-3 rounded transition">Perfectos 🟢</button>
+            <!-- PESTAÑA 2: SEO DEL SITIO WEB -->
+            <div id="vista-seo" class="space-y-6 hidden">
                 
-                <div class="ml-auto relative w-full md:w-auto mt-2 md:mt-0">
-                    <input type="text" id="buscador-tabla" placeholder="Buscar SKU o nombre..." class="w-full pl-8 pr-4 py-1.5 rounded-lg border border-slate-300 text-sm outline-none focus:border-teal-500" oninput="buscarEnTabla()">
-                    <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
-                </div>
-            </div>
+                <!-- Diagnóstico de Arquitectura -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="lg:col-span-1 glass-panel rounded-2xl p-6 flex flex-col items-center justify-center text-center">
+                        <div class="relative w-32 h-32 mb-4">
+                            <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                                <path class="text-slate-200" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
+                                <path id="seo-circle" class="text-teal-500 transition-all duration-1000 ease-out" stroke-dasharray="0, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="3" />
+                            </svg>
+                            <div class="absolute inset-0 flex items-center justify-center flex-col">
+                                <span id="seo-score-text" class="text-3xl font-black text-slate-800">0</span>
+                                <span class="text-[10px] uppercase font-bold text-slate-400">/ 100</span>
+                            </div>
+                        </div>
+                        <h3 class="text-lg font-bold text-slate-800">Arquitectura SEO</h3>
+                        <p class="text-xs text-slate-500 mt-2">Puntaje basado en la organización estructural de tus categorías y títulos para el rastreo de Google.</p>
+                    </div>
 
-            <!-- TABLA DE RESULTADOS -->
-            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
-                <div class="p-0 max-h-[700px] overflow-y-auto">
-                    <table class="w-full text-left text-sm">
-                        <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
-                            <tr>
-                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200 w-16 text-center">Puntaje</th>
-                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200 w-1/3">Producto en Stock</th>
-                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200 w-2/3">Reporte y Plan de Acción</th>
-                            </tr>
-                        </thead>
-                        <tbody id="tabla-auditoria" class="divide-y divide-slate-100 bg-white"></tbody>
-                    </table>
+                    <div class="lg:col-span-2 glass-panel rounded-2xl p-6">
+                        <h3 class="text-base font-bold text-slate-800 mb-4 border-b border-slate-200 pb-2">Diagnóstico de Estructura de Odoo</h3>
+                        <div class="space-y-4" id="seo-diagnostics">
+                            <!-- Se llena con JS -->
+                        </div>
+                    </div>
                 </div>
+
+                <!-- Plan de Acción SEO (Checklist Fijo) -->
+                <div class="glass-panel rounded-2xl p-6 bg-white/80">
+                    <h3 class="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2"><i class="fa-brands fa-google text-blue-500"></i> Plan de Posicionamiento Web (Tareas Odoo)</h3>
+                    <p class="text-sm text-slate-600 mb-6">Para posicionar X-Fish en los primeros resultados de búsqueda de Argentina, revisá esta lista de tareas maestras fuera de los productos individuales.</p>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Tarea 1 -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-sitemap text-2xl text-teal-600 mt-1"></i>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">1. Google Search Console & Sitemap</h4>
+                                    <p class="text-xs text-slate-600 mt-1">Odoo genera tu sitemap automáticamente en <code>/sitemap.xml</code>. Debés crear una cuenta en Google Search Console y enviar este link para que Google lea todas tus URLs de pesca y camping.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tarea 2 -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-tags text-2xl text-indigo-600 mt-1"></i>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">2. Meta Títulos de Categorías</h4>
+                                    <p class="text-xs text-slate-600 mt-1">Entrá al sitio web de Odoo, navegá a la categoría (Ej: Cañas), andá a "Sitio>Optimizar SEO" y cambiá el título a "Cañas de Pescar Spinning y Baitcasting | X-Fish".</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tarea 3 -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-brands fa-google text-2xl text-amber-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">3. Google Merchant Center</h4>
+                                    <p class="text-xs text-slate-600 mt-1">Para aparecer en la pestaña "Shopping" de Google, debés exportar el catálogo de Odoo (Nombre, Precio, Link, Imagen) en un XML o CSV y subirlo al Merchant Center.</p>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Tarea 4 -->
+                        <div class="bg-slate-50 border border-slate-200 rounded-xl p-4">
+                            <div class="flex items-start gap-3">
+                                <i class="fa-solid fa-image text-2xl text-rose-500 mt-1"></i>
+                                <div>
+                                    <h4 class="font-bold text-slate-800">4. Optimización de Imágenes (WebP)</h4>
+                                    <p class="text-xs text-slate-600 mt-1">El peso de las imágenes ralentiza la web y penaliza el SEO. Asegurate de que Odoo esté comprimiendo las imágenes (calidad 80) o subilas en formato WebP en lugar de JPG pesados.</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
         </div>
     </main>
 
 <script>
-    let catalogoAnalizado = [];
+    let catalogoActivo = [];
+    let filtroActual = 'todos';
     const urlBackend = 'https://xfish-odoo-api.onrender.com';
 
+    // --- MANEJO DE PESTAÑAS ---
+    function cambiarPestana(id) {
+        document.getElementById('vista-productos').classList.toggle('hidden', id !== 'productos');
+        document.getElementById('vista-productos').classList.toggle('block', id === 'productos');
+        
+        document.getElementById('vista-seo').classList.toggle('hidden', id !== 'seo');
+        document.getElementById('vista-seo').classList.toggle('block', id === 'seo');
+
+        const tabProds = document.getElementById('tab-productos');
+        const tabSeo = document.getElementById('tab-seo');
+
+        if (id === 'productos') {
+            tabProds.className = 'pb-3 border-b-4 tab-active flex items-center gap-2 transition-all';
+            tabSeo.className = 'pb-3 border-b-4 tab-inactive flex items-center gap-2 transition-all';
+        } else {
+            tabSeo.className = 'pb-3 border-b-4 tab-active flex items-center gap-2 transition-all';
+            tabProds.className = 'pb-3 border-b-4 tab-inactive flex items-center gap-2 transition-all';
+        }
+    }
+
+    // --- INICIO ---
     async function iniciarAuditoria() {
         const btn = document.getElementById('btn-iniciar');
         const status = document.getElementById('status-text');
-        
         btn.classList.add('hidden');
         status.classList.remove('hidden');
 
         try {
             const pwd = sessionStorage.getItem('odoo_pwd');
-            if (!pwd) { alert("Debes iniciar sesión en el Hub."); window.location.href = 'index.html'; return; }
+            if (!pwd) { alert("Debes iniciar sesión."); window.location.href = 'index.html'; return; }
             
             const res = await fetch(`${urlBackend}/api/productos`, { headers: { 'x-odoo-password': pwd } });
-            if (!res.ok) throw new Error("Error en Odoo");
+            if (!res.ok) throw new Error("Error Odoo");
             const data = await res.json();
             
-            status.innerHTML = `Aplicando filtros a ${data.length} productos...`;
-            
             setTimeout(() => {
-                ejecutarReglasDeCalidad(data);
+                // Solo guardamos los activos
+                const activos = data.filter(p => p.total > 0);
+                
+                ejecutarReglasDeCalidad(activos);
+                analizarArquitecturaSEO(activos);
+                
                 document.getElementById('panel-carga').classList.add('hidden');
                 document.getElementById('dashboard-resultados').classList.remove('hidden');
             }, 800);
 
         } catch (e) {
-            status.innerHTML = `❌ Error: No se pudo descargar el catálogo.`;
+            status.innerHTML = `❌ Error: No se pudo conectar con Odoo.`;
             btn.classList.remove('hidden');
         }
     }
 
-    function ejecutarReglasDeCalidad(productos) {
-        // 1. FILTRO MAESTRO: Ignorar lo que no tiene stock (total <= 0)
-        const productosSinStock = productos.filter(p => p.total <= 0).length;
-        document.getElementById('kpi-omitidos').textContent = productosSinStock;
-
-        const productosActivos = productos.filter(p => p.total > 0);
-
-        // 2. AUDITORÍA COMPLETA (Solo para los que tienen stock)
-        catalogoAnalizado = productosActivos.map(p => {
+    // --- AUDITORÍA PRODUCTO POR PRODUCTO (Read Only) ---
+    function ejecutarReglasDeCalidad(productosActivos) {
+        catalogoActivo = productosActivos.map(p => {
             let fallas = [];
             let advertencias = [];
-            let soluciones = new Set(); // Evita soluciones duplicadas
+            let soluciones = new Set();
             let puntaje = 100;
+            const categName = (p.categ_id && p.categ_id[1]) ? p.categ_id[1].toLowerCase() : 'all';
 
-            // --- REGLAS CRÍTICAS (Restan 20 a 30 pts) ---
-            
-            if (!p.foto) {
-                fallas.push('Falta Imagen Principal');
-                soluciones.add('Subir una foto comercial (recomendado: fondo blanco, resolución 1080x1080).');
-                puntaje -= 30;
-            }
+            // CRÍTICOS
+            if (!p.foto) { fallas.push('Falta Imagen Principal'); soluciones.add('Subir foto en Odoo.'); puntaje -= 30; }
+            if (!p.sku || p.sku.trim() === '') { fallas.push('Sin código SKU'); soluciones.add('Asignar Ref. Interna en Odoo.'); puntaje -= 20; }
+            if (!p.precio || p.precio <= 0) { fallas.push('Precio $0.00'); soluciones.add('Asignar precio.'); puntaje -= 30; }
 
-            if (!p.sku || p.sku.trim() === '') {
-                fallas.push('Falta Código SKU');
-                soluciones.add('Asignar un código Referencia Interna / SKU único para evitar problemas de integración web.');
-                puntaje -= 20;
-            }
-
-            if (!p.precio || p.precio <= 0) {
-                fallas.push('Precio en $0.00');
-                soluciones.add('Ingresar el precio de venta en la ficha del producto o actualizar la lista de precios. No se puede publicar gratis.');
-                puntaje -= 30;
-            }
-
-            // --- REGLAS DE ADVERTENCIA / SEO (Restan 5 a 15 pts) ---
-
-            if (!p.categ_id || p.categ_id.toLowerCase() === 'all' || p.categ_id.toLowerCase() === 'general') {
-                advertencias.push('Categoría Genérica ("All")');
-                soluciones.add('Asignar una categoría específica (Ej: Cañas / Spinning) para que el cliente pueda filtrarlo en la página web.');
+            // ADVERTENCIAS / SEO
+            if (categName === 'all' || categName === 'general') {
+                advertencias.push('Categoría "All" no optimizada');
+                soluciones.add('Mover de "General" a una categoría web específica.');
                 puntaje -= 15;
             }
-
             if (p.nombre.length < 15) {
-                advertencias.push('Título pobre para SEO');
-                soluciones.add('Ampliar el nombre del producto agregando la Marca, Modelo y un atributo clave (Ej: Caña Shimano Scimitar 1.80m).');
+                advertencias.push('Título pobre (corto)');
+                soluciones.add('Agregar Marca o Modelo al título.');
                 puntaje -= 10;
             }
-
             if (p.nombre.length > 70) {
-                advertencias.push('Título muy largo (>70 caracteres)');
-                soluciones.add('Resumir el título. Google y Odoo cortan los nombres que superan los 70 caracteres, perdiendo impacto.');
+                advertencias.push('Título muy largo (>70 chars)');
+                soluciones.add('Resumir título para evitar que Google lo corte.');
                 puntaje -= 5;
             }
-
             if (p.nombre === p.nombre.toUpperCase() && p.nombre.length > 5) {
-                advertencias.push('Escrito TODO EN MAYÚSCULAS');
-                soluciones.add('Reescribir el título en Formato Capitalizado (Mayúsculas y minúsculas) para facilitar la lectura en la tienda.');
+                advertencias.push('TODO EN MAYÚSCULAS');
+                soluciones.add('Escribir usando Mayúsculas y minúsculas.');
                 puntaje -= 5;
             }
 
             if (puntaje < 0) puntaje = 0;
 
             return {
-                ...p,
-                puntaje: puntaje,
-                fallas: fallas,
-                advertencias: advertencias,
-                soluciones: Array.from(soluciones),
+                ...p, puntaje, fallas, advertencias, soluciones: Array.from(soluciones),
                 estado: puntaje === 100 ? 'perfecto' : (fallas.length > 0 ? 'critico' : 'seo')
             };
         });
 
-        // Ordenar de peor a mejor puntaje
-        catalogoAnalizado.sort((a, b) => a.puntaje - b.puntaje);
-        
+        catalogoActivo.sort((a, b) => a.puntaje - b.puntaje);
         actualizarKPIs();
         renderizarTabla('todos');
     }
 
     function actualizarKPIs() {
-        const total = catalogoAnalizado.length;
-        const criticos = catalogoAnalizado.filter(p => p.fallas.length > 0).length;
-        const warns = catalogoAnalizado.filter(p => p.advertencias.length > 0 && p.fallas.length === 0).length;
-        const sumaPuntajes = catalogoAnalizado.reduce((acc, p) => acc + p.puntaje, 0);
+        const total = catalogoActivo.length;
+        const criticos = catalogoActivo.filter(p => p.fallas.length > 0).length;
+        const warns = catalogoActivo.filter(p => p.advertencias.length > 0 && p.fallas.length === 0).length;
+        const sumaPuntajes = catalogoActivo.reduce((acc, p) => acc + p.puntaje, 0);
         const saludMedia = total > 0 ? Math.round(sumaPuntajes / total) : 0;
 
         document.getElementById('kpi-total').textContent = total;
@@ -237,89 +319,133 @@
         else kpiSalud.className = "text-3xl font-black text-emerald-600";
     }
 
-    let filtroActual = 'todos';
-
     function renderizarTabla(filtro) {
         if(filtro) filtroActual = filtro;
         const textoBuscar = document.getElementById('buscador-tabla').value.toLowerCase();
         
-        const filtrados = catalogoAnalizado.filter(p => {
+        const filtrados = catalogoActivo.filter(p => {
             if (filtroActual === 'criticos' && p.estado !== 'critico') return false;
             if (filtroActual === 'seo' && p.estado !== 'seo') return false;
             if (filtroActual === 'perfectos' && p.estado !== 'perfecto') return false;
-            
             if (textoBuscar && !p.nombre.toLowerCase().includes(textoBuscar) && !(p.sku && p.sku.toLowerCase().includes(textoBuscar))) return false;
-            
             return true;
         });
 
         const tbody = document.getElementById('tabla-auditoria');
-        
         if (filtrados.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500 font-bold">No se encontraron productos con estos criterios.</td></tr>`;
+            tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500 font-bold">No se encontraron productos.</td></tr>`;
             return;
         }
 
         tbody.innerHTML = filtrados.map(p => {
-            let scoreColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
-            if (p.puntaje < 60) scoreColor = 'bg-rose-100 text-rose-700 border-rose-200';
-            else if (p.puntaje < 95) scoreColor = 'bg-amber-100 text-amber-700 border-amber-200';
+            let scoreColor = p.puntaje < 60 ? 'bg-rose-100 text-rose-700 border-rose-200' : (p.puntaje < 95 ? 'bg-amber-100 text-amber-700 border-amber-200' : 'bg-emerald-100 text-emerald-700 border-emerald-200');
 
-            const badgesFallas = p.fallas.map(f => `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm inline-flex items-center gap-1"><i class="fa-solid fa-xmark"></i> ${f}</span>`).join(' ');
-            const badgesWarns = p.advertencias.map(w => `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm inline-flex items-center gap-1"><i class="fa-solid fa-exclamation-triangle"></i> ${w}</span>`).join(' ');
+            const badgesFallas = p.fallas.map(f => `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-xmark"></i> ${f}</span>`).join(' ');
+            const badgesWarns = p.advertencias.map(w => `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold inline-flex items-center gap-1"><i class="fa-solid fa-exclamation-triangle"></i> ${w}</span>`).join(' ');
 
-            const sinProblemas = (p.fallas.length === 0 && p.advertencias.length === 0) 
-                ? `<span class="bg-emerald-50 text-emerald-600 font-bold text-xs px-3 py-1 rounded-lg border border-emerald-200"><i class="fa-solid fa-check-circle mr-1"></i> Optimizado y listo para web</span>` 
-                : '';
-
-            // Bloque de Soluciones
-            let bloqueSoluciones = '';
-            if (p.soluciones.length > 0) {
-                const listaLi = p.soluciones.map(sol => `<li>${sol}</li>`).join('');
-                bloqueSoluciones = `
-                    <div class="mt-3 bg-slate-50 p-3 rounded-lg border border-slate-200">
-                        <p class="text-[11px] font-black text-slate-700 uppercase mb-1.5 tracking-wide"><i class="fa-solid fa-wrench text-sky-500 mr-1"></i> Plan de Acción</p>
-                        <ul class="list-disc pl-5 text-xs text-slate-600 space-y-1">
-                            ${listaLi}
-                        </ul>
-                    </div>
-                `;
+            let solucionesHtml = '';
+            if(p.soluciones.length > 0) {
+                solucionesHtml = `<div class="mt-2 bg-slate-50 p-2 rounded border border-slate-200"><p class="text-[10px] font-bold text-slate-700 uppercase mb-1">Acción Requerida en Odoo:</p><ul class="list-disc pl-4 text-xs text-slate-600">${p.soluciones.map(s => `<li>${s}</li>`).join('')}</ul></div>`;
+            } else {
+                solucionesHtml = `<span class="bg-emerald-50 text-emerald-600 font-bold text-xs px-2 py-1 rounded border border-emerald-200"><i class="fa-solid fa-check-circle"></i> Optimizado</span>`;
             }
 
             return `
-            <tr class="hover:bg-slate-50/80 transition-colors">
+            <tr class="hover:bg-slate-50 transition-colors">
                 <td class="p-4 border-b border-slate-100 text-center align-top">
-                    <div class="w-12 h-12 mx-auto rounded-full border-2 flex items-center justify-center font-black text-base shadow-sm ${scoreColor}">
-                        ${p.puntaje}
-                    </div>
+                    <div class="w-10 h-10 mx-auto rounded-full border-2 flex items-center justify-center font-black text-sm shadow-sm ${scoreColor}">${p.puntaje}</div>
                 </td>
                 <td class="p-4 border-b border-slate-100 align-top">
-                    <div class="flex gap-4">
-                        ${p.foto ? `<img src="data:image/jpeg;base64,${p.foto}" class="w-16 h-16 object-contain rounded-lg bg-white shadow-sm border border-slate-200 flex-shrink-0">` : `<div class="w-16 h-16 bg-slate-100 rounded-lg flex items-center justify-center text-slate-300 border border-slate-200 flex-shrink-0"><i class="fa-solid fa-image text-xl"></i></div>`}
+                    <div class="flex gap-3">
+                        ${p.foto ? `<img src="data:image/jpeg;base64,${p.foto}" class="w-12 h-12 object-contain rounded bg-white shadow-sm border border-slate-200 flex-shrink-0">` : `<div class="w-12 h-12 bg-slate-100 rounded flex items-center justify-center text-slate-300 border border-slate-200 flex-shrink-0"><i class="fa-solid fa-image"></i></div>`}
                         <div>
-                            <p class="text-xs font-bold text-slate-500 font-mono">[${p.sku || 'S/N'}]</p>
-                            <p class="text-sm font-semibold text-slate-800 leading-tight mt-0.5">${p.nombre}</p>
-                            <p class="text-[11px] text-emerald-600 font-bold mt-1.5"><i class="fa-solid fa-box mr-1"></i> ${p.total} unidades disponibles</p>
-                            <p class="text-[11px] text-slate-500 font-medium mt-0.5"><i class="fa-solid fa-tag mr-1"></i> Precio: $${(p.precio || 0).toLocaleString('es-AR')}</p>
+                            <p class="text-[10px] font-bold text-slate-500 font-mono">[${p.sku || 'S/N'}] | 📁 ${p.categ_id ? p.categ_id[1] : 'Sin Categ'}</p>
+                            <p class="text-sm font-semibold text-slate-800 leading-tight">${p.nombre}</p>
                         </div>
                     </div>
                 </td>
                 <td class="p-4 border-b border-slate-100 align-top">
-                    <div class="flex flex-wrap gap-1.5">
-                        ${badgesFallas}
-                        ${badgesWarns}
-                        ${sinProblemas}
-                    </div>
-                    ${bloqueSoluciones}
+                    <div class="flex flex-wrap gap-1.5 mb-2">${badgesFallas}${badgesWarns}</div>
+                    ${solucionesHtml}
                 </td>
             </tr>
             `;
         }).join('');
     }
 
-    function buscarEnTabla() {
-        renderizarTabla();
+    function buscarEnTabla() { renderizarTabla(); }
+
+    // --- ANÁLISIS SEO ESTRUCTURAL ---
+    function analizarArquitecturaSEO(productos) {
+        const total = productos.length;
+        if(total === 0) return;
+
+        // Metricas
+        let conImagen = 0;
+        let conCategoria = 0;
+        let titulosOK = 0;
+
+        const catCounts = {};
+
+        productos.forEach(p => {
+            if(p.foto) conImagen++;
+            
+            const categName = (p.categ_id && p.categ_id[1]) ? p.categ_id[1].toLowerCase() : 'all';
+            if(categName !== 'all' && categName !== 'general') {
+                conCategoria++;
+            }
+            
+            catCounts[categName] = (catCounts[categName] || 0) + 1;
+
+            if(p.nombre.length >= 15 && p.nombre.length <= 70 && p.nombre !== p.nombre.toUpperCase()) {
+                titulosOK++;
+            }
+        });
+
+        const porcentajeImg = Math.round((conImagen / total) * 100);
+        const porcentajeCat = Math.round((conCategoria / total) * 100);
+        const porcentajeTitulos = Math.round((titulosOK / total) * 100);
+
+        // Penalización si casi todo está en 1 sola categoría
+        const maxCatCount = Math.max(...Object.values(catCounts));
+        const concentracion = (maxCatCount / total) * 100;
+        let penalidadEstructura = 0;
+        if(concentracion > 80) penalidadEstructura = 20; // Si el 80% está en una sola categoría, resta 20pts.
+
+        let seoGlobal = Math.round((porcentajeImg + porcentajeCat + porcentajeTitulos) / 3) - penalidadEstructura;
+        if (seoGlobal < 0) seoGlobal = 0;
+
+        // Pintar Score
+        document.getElementById('seo-score-text').textContent = seoGlobal;
+        const circle = document.getElementById('seo-circle');
+        circle.setAttribute('stroke-dasharray', `${seoGlobal}, 100`);
+        if(seoGlobal < 50) circle.classList.replace('text-teal-500', 'text-rose-500');
+        else if(seoGlobal < 80) circle.classList.replace('text-teal-500', 'text-amber-500');
+
+        // Generar Diagnósticos Visuales
+        const diagContainer = document.getElementById('seo-diagnostics');
+        
+        // Item 1: Imágenes
+        const imgIcon = porcentajeImg > 80 ? 'fa-check text-emerald-500' : 'fa-times text-rose-500';
+        const imgText = `<strong>${porcentajeImg}%</strong> del catálogo tiene imagen. (Google Imágenes es vital para productos físicos).`;
+        
+        // Item 2: Categorización (Siloing)
+        const catIcon = porcentajeCat > 80 && concentracion < 50 ? 'fa-check text-emerald-500' : 'fa-exclamation-triangle text-amber-500';
+        const catText = concentracion > 80 
+            ? `⚠️ Alta concentración de productos. El ${Math.round(concentracion)}% del stock está en una sola categoría. Para SEO, necesitás crear más sub-categorías (Ej: Cañas -> Spinning, Bait).` 
+            : `<strong>${porcentajeCat}%</strong> de productos correctamente categorizados (Fuera de "General").`;
+
+        // Item 3: Calidad de Títulos
+        const titIcon = porcentajeTitulos > 70 ? 'fa-check text-emerald-500' : 'fa-exclamation-triangle text-amber-500';
+        const titText = `<strong>${porcentajeTitulos}%</strong> de los productos tienen nombres amigables para Google (longitud correcta, sin abusar de mayúsculas).`;
+
+        diagContainer.innerHTML = `
+            <div class="flex items-start gap-3"><i class="fa-solid ${imgIcon} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700">${imgText}</p></div>
+            <div class="flex items-start gap-3"><i class="fa-solid ${catIcon} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700">${catText}</p></div>
+            <div class="flex items-start gap-3"><i class="fa-solid ${titIcon} mt-1 w-4 text-center"></i><p class="text-sm text-slate-700">${titText}</p></div>
+        `;
     }
+
 </script>
 
 </body>
