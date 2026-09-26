@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auditor de Calidad y SEO | X-Fish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); }
+        .blob { position: fixed; filter: blur(80px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-800 pb-12">
+
+    <!-- Fondos Abstractos -->
+    <div class="blob bg-emerald-200 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
+    <div class="blob bg-teal-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
+
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-400 to-teal-600 shadow flex items-center justify-center">
+                    <i class="fa-solid fa-stethoscope text-white text-sm"></i>
+                </div>
+                Auditor de Calidad y SEO
+            </h1>
+            <a href="index.html" class="text-sm font-semibold text-teal-600 hover:text-teal-800">← Volver al Hub</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-6 space-y-6">
+        
+        <!-- ESTADO INICIAL -->
+        <div id="panel-carga" class="glass-panel rounded-2xl p-10 text-center space-y-4">
+            <i class="fa-solid fa-robot text-5xl text-teal-500 mb-2"></i>
+            <h2 class="text-2xl font-black text-slate-800">Analizador de Catálogo</h2>
+            <p class="text-slate-500 max-w-lg mx-auto">Este módulo descargará tu catálogo activo de Odoo y revisará producto por producto buscando errores de carga, falta de imágenes, nombres pobres para SEO y falta de categorización.</p>
+            <button onclick="iniciarAuditoria()" id="btn-iniciar" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-8 rounded-xl shadow-lg transition-transform transform hover:scale-105 mt-4">
+                Comenzar Escaneo <i class="fa-solid fa-search ml-2"></i>
+            </button>
+            <p id="status-text" class="text-sm font-bold text-teal-600 hidden mt-4">Conectando con Odoo...</p>
+        </div>
+
+        <!-- DASHBOARD DE RESULTADOS (Oculto hasta escanear) -->
+        <div id="dashboard-resultados" class="hidden space-y-6">
+            
+            <!-- KPIs -->
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div class="glass-panel rounded-xl p-5 border-l-4 border-slate-700">
+                    <p class="text-[11px] uppercase font-bold text-slate-500 mb-1">Productos Analizados</p>
+                    <p id="kpi-total" class="text-3xl font-black text-slate-800">0</p>
+                </div>
+                <div class="glass-panel rounded-xl p-5 border-l-4 border-emerald-500">
+                    <p class="text-[11px] uppercase font-bold text-emerald-600 mb-1">Salud del Catálogo</p>
+                    <p id="kpi-salud" class="text-3xl font-black text-emerald-700">0%</p>
+                </div>
+                <div class="glass-panel rounded-xl p-5 border-l-4 border-rose-500 bg-rose-50/30">
+                    <p class="text-[11px] uppercase font-bold text-rose-600 mb-1">Errores Críticos</p>
+                    <p id="kpi-errores" class="text-3xl font-black text-rose-700">0</p>
+                </div>
+                <div class="glass-panel rounded-xl p-5 border-l-4 border-amber-500 bg-amber-50/30">
+                    <p class="text-[11px] uppercase font-bold text-amber-600 mb-1">Advertencias (SEO)</p>
+                    <p id="kpi-warns" class="text-3xl font-black text-amber-700">0</p>
+                </div>
+            </div>
+
+            <!-- FILTROS -->
+            <div class="glass-panel rounded-xl p-4 flex flex-wrap gap-2 items-center bg-white/60">
+                <span class="text-sm font-bold text-slate-700 mr-2">Filtros:</span>
+                <button onclick="renderizarTabla('todos')" class="bg-slate-800 text-white text-xs font-bold py-1.5 px-3 rounded shadow-sm">Todos</button>
+                <button onclick="renderizarTabla('criticos')" class="bg-rose-100 text-rose-700 border border-rose-200 hover:bg-rose-200 text-xs font-bold py-1.5 px-3 rounded transition">Solo Errores 🔴</button>
+                <button onclick="renderizarTabla('seo')" class="bg-amber-100 text-amber-700 border border-amber-200 hover:bg-amber-200 text-xs font-bold py-1.5 px-3 rounded transition">Mejorar SEO 🟡</button>
+                <button onclick="renderizarTabla('perfectos')" class="bg-emerald-100 text-emerald-700 border border-emerald-200 hover:bg-emerald-200 text-xs font-bold py-1.5 px-3 rounded transition">Perfectos 🟢</button>
+                
+                <div class="ml-auto relative">
+                    <input type="text" id="buscador-tabla" placeholder="Buscar SKU o nombre..." class="pl-8 pr-4 py-1.5 rounded-lg border border-slate-300 text-sm outline-none focus:border-teal-500" oninput="buscarEnTabla()">
+                    <i class="fa-solid fa-search absolute left-3 top-2.5 text-slate-400 text-xs"></i>
+                </div>
+            </div>
+
+            <!-- TABLA DE RESULTADOS -->
+            <div class="glass-panel rounded-2xl overflow-hidden flex flex-col">
+                <div class="p-0 max-h-[600px] overflow-y-auto">
+                    <table class="w-full text-left text-sm">
+                        <thead class="bg-slate-50 sticky top-0 shadow-sm z-10">
+                            <tr>
+                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200 w-16">Puntaje</th>
+                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200">Producto</th>
+                                <th class="p-4 text-slate-500 font-semibold border-b border-slate-200 w-1/2">Reporte de Auditoría</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-auditoria" class="divide-y divide-slate-100 bg-white"></tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+<script>
+    let catalogoAnalizado = [];
+    const urlBackend = 'https://xfish-odoo-api.onrender.com';
+
+    async function iniciarAuditoria() {
+        const btn = document.getElementById('btn-iniciar');
+        const status = document.getElementById('status-text');
+        
+        btn.classList.add('hidden');
+        status.classList.remove('hidden');
+
+        try {
+            const pwd = sessionStorage.getItem('odoo_pwd');
+            if (!pwd) { alert("Debes iniciar sesión en el Hub."); window.location.href = 'index.html'; return; }
+            
+            const res = await fetch(`${urlBackend}/api/productos`, { headers: { 'x-odoo-password': pwd } });
+            if (!res.ok) throw new Error("Error en Odoo");
+            const data = await res.json();
+            
+            status.innerHTML = `Analizando ${data.length} productos...`;
+            
+            // Simular un pequeño delay de análisis para que la UI respire
+            setTimeout(() => {
+                ejecutarReglasDeCalidad(data);
+                document.getElementById('panel-carga').classList.add('hidden');
+                document.getElementById('dashboard-resultados').classList.remove('hidden');
+            }, 800);
+
+        } catch (e) {
+            status.innerHTML = `❌ Error: No se pudo descargar el catálogo.`;
+            btn.classList.remove('hidden');
+        }
+    }
+
+    function ejecutarReglasDeCalidad(productos) {
+        catalogoAnalizado = productos.map(p => {
+            let fallas = [];
+            let advertencias = [];
+            let puntaje = 100;
+
+            // 1. REGLA: SIN FOTO (CRÍTICO)
+            if (!p.foto) {
+                fallas.push('Falta Imagen Principal');
+                puntaje -= 30;
+            }
+
+            // 2. REGLA: SIN SKU (CRÍTICO)
+            if (!p.sku || p.sku.trim() === '') {
+                fallas.push('Falta Código SKU');
+                puntaje -= 20;
+            }
+
+            // 3. REGLA: CATEGORÍA GENÉRICA (ADVERTENCIA/CRÍTICO)
+            if (!p.categ_id || p.categ_id.toLowerCase() === 'all' || p.categ_id.toLowerCase() === 'general') {
+                advertencias.push('Categoría no definida ("All")');
+                puntaje -= 15;
+            }
+
+            // 4. REGLA: SEO NOMBRE CORTO (ADVERTENCIA)
+            if (p.nombre.length < 15) {
+                advertencias.push('Título muy corto para SEO (<15 caracteres)');
+                puntaje -= 10;
+            }
+
+            // 5. REGLA: SEO TODO MAYÚSCULAS (ADVERTENCIA)
+            if (p.nombre === p.nombre.toUpperCase() && p.nombre.length > 5) {
+                advertencias.push('Título íntegramente en MAYÚSCULAS');
+                puntaje -= 5;
+            }
+
+            // 6. REGLA: TIENE STOCK PERO ERRORES CRÍTICOS (GRAVE)
+            if (p.total > 0 && fallas.length > 0) {
+                fallas.push('Stock físico en riesgo de no venderse online');
+                puntaje -= 10;
+            }
+
+            // Limites
+            if (puntaje < 0) puntaje = 0;
+
+            return {
+                ...p,
+                puntaje: puntaje,
+                fallas: fallas,
+                advertencias: advertencias,
+                estado: puntaje === 100 ? 'perfecto' : (fallas.length > 0 ? 'critico' : 'seo')
+            };
+        });
+
+        // Ordenar: Los peores primero
+        catalogoAnalizado.sort((a, b) => a.puntaje - b.puntaje);
+        
+        actualizarKPIs();
+        renderizarTabla('todos');
+    }
+
+    function actualizarKPIs() {
+        const total = catalogoAnalizado.length;
+        const criticos = catalogoAnalizado.filter(p => p.fallas.length > 0).length;
+        const warns = catalogoAnalizado.filter(p => p.advertencias.length > 0 && p.fallas.length === 0).length;
+        const sumaPuntajes = catalogoAnalizado.reduce((acc, p) => acc + p.puntaje, 0);
+        const saludMedia = total > 0 ? Math.round(sumaPuntajes / total) : 0;
+
+        document.getElementById('kpi-total').textContent = total;
+        document.getElementById('kpi-errores').textContent = criticos;
+        document.getElementById('kpi-warns').textContent = warns;
+        
+        const kpiSalud = document.getElementById('kpi-salud');
+        kpiSalud.textContent = `${saludMedia}%`;
+        if(saludMedia < 50) kpiSalud.className = "text-3xl font-black text-rose-600";
+        else if (saludMedia < 80) kpiSalud.className = "text-3xl font-black text-amber-500";
+        else kpiSalud.className = "text-3xl font-black text-emerald-600";
+    }
+
+    let filtroActual = 'todos';
+
+    function renderizarTabla(filtro) {
+        if(filtro) filtroActual = filtro;
+        const textoBuscar = document.getElementById('buscador-tabla').value.toLowerCase();
+        
+        const filtrados = catalogoAnalizado.filter(p => {
+            // Filtro por botones
+            if (filtroActual === 'criticos' && p.estado !== 'critico') return false;
+            if (filtroActual === 'seo' && p.estado !== 'seo') return false;
+            if (filtroActual === 'perfectos' && p.estado !== 'perfecto') return false;
+            
+            // Filtro por texto
+            if (textoBuscar && !p.nombre.toLowerCase().includes(textoBuscar) && !(p.sku && p.sku.toLowerCase().includes(textoBuscar))) return false;
+            
+            return true;
+        });
+
+        const tbody = document.getElementById('tabla-auditoria');
+        
+        if (filtrados.length === 0) {
+            tbody.innerHTML = `<tr><td colspan="3" class="p-8 text-center text-slate-500 font-bold">No se encontraron productos en esta vista.</td></tr>`;
+            return;
+        }
+
+        tbody.innerHTML = filtrados.map(p => {
+            // Color del círculo de puntaje
+            let scoreColor = 'bg-emerald-100 text-emerald-700 border-emerald-200';
+            if (p.puntaje < 60) scoreColor = 'bg-rose-100 text-rose-700 border-rose-200';
+            else if (p.puntaje < 95) scoreColor = 'bg-amber-100 text-amber-700 border-amber-200';
+
+            // Armar etiquetas de errores
+            const badgesFallas = p.fallas.map(f => `<span class="bg-rose-100 text-rose-700 border border-rose-200 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm inline-flex items-center gap-1"><i class="fa-solid fa-xmark"></i> ${f}</span>`).join(' ');
+            
+            // Armar etiquetas de advertencias
+            const badgesWarns = p.advertencias.map(w => `<span class="bg-amber-100 text-amber-800 border border-amber-200 px-2 py-0.5 rounded text-[10px] font-bold shadow-sm inline-flex items-center gap-1"><i class="fa-solid fa-exclamation-triangle"></i> ${w}</span>`).join(' ');
+
+            const sinProblemas = (p.fallas.length === 0 && p.advertencias.length === 0) 
+                ? `<span class="bg-emerald-50 text-emerald-600 font-bold text-xs px-2 py-1 rounded"><i class="fa-solid fa-check-circle mr-1"></i> Optimizado</span>` 
+                : '';
+
+            return `
+            <tr class="hover:bg-slate-50 transition-colors">
+                <td class="p-4 border-b border-slate-100 text-center">
+                    <div class="w-10 h-10 mx-auto rounded-full border-2 flex items-center justify-center font-black text-sm shadow-sm ${scoreColor}">
+                        ${p.puntaje}
+                    </div>
+                </td>
+                <td class="p-4 border-b border-slate-100">
+                    <div class="flex items-center gap-3">
+                        ${p.foto ? `<img src="data:image/jpeg;base64,${p.foto}" class="w-10 h-10 object-contain rounded bg-white shadow-sm border border-slate-200">` : `<div class="w-10 h-10 bg-slate-100 rounded flex items-center justify-center text-slate-300"><i class="fa-solid fa-image"></i></div>`}
+                        <div>
+                            <p class="text-xs font-bold text-slate-500 font-mono">[${p.sku || 'S/N'}]</p>
+                            <p class="text-sm font-semibold text-slate-800 line-clamp-1" title="${p.nombre}">${p.nombre}</p>
+                            ${p.total > 0 ? `<p class="text-[10px] text-emerald-600 font-bold mt-0.5"><i class="fa-solid fa-box mr-1"></i> ${p.total} en stock</p>` : `<p class="text-[10px] text-slate-400 mt-0.5">Sin stock</p>`}
+                        </div>
+                    </div>
+                </td>
+                <td class="p-4 border-b border-slate-100 align-middle">
+                    <div class="flex flex-wrap gap-1.5">
+                        ${badgesFallas}
+                        ${badgesWarns}
+                        ${sinProblemas}
+                    </div>
+                </td>
+            </tr>
+            `;
+        }).join('');
+    }
+
+    function buscarEnTabla() {
+        renderizarTabla();
+    }
+</script>
+
+</body>
+</html>
