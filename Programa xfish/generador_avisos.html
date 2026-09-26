@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Creador de Avisos Pro | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
         .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); }
@@ -28,7 +28,7 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 shadow flex items-center justify-center">
-                    <i class="fa fa-layer-group text-white text-sm"></i>
+                    <i class="fa-solid fa-layer-group text-white text-sm"></i>
                 </div>
                 Maquetador de Popups
             </h1>
@@ -72,13 +72,13 @@
                     <div class="p-4 bg-white border-t border-slate-200">
                         <p class="text-xs font-bold text-slate-500 mb-2 uppercase">Agregar Nuevo:</p>
                         <div class="flex flex-wrap gap-2">
-                            <button onclick="addBlock('icon')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-star mr-1"></i> Ícono</button>
-                            <button onclick="addBlock('title')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-heading mr-1"></i> Título</button>
-                            <button onclick="addBlock('text')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-align-left mr-1"></i> Texto</button>
-                            <button onclick="addBlock('alert')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-exclamation-triangle mr-1"></i> Alerta</button>
-                            <button onclick="addBlock('button')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-hand-pointer mr-1"></i> Botón</button>
-                            <button onclick="addBlock('shape')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-circle mr-1"></i> Figura</button>
-                            <button onclick="addBlock('divider')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-minus mr-1"></i> Línea</button>
+                            <button onclick="addBlock('icon')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa-solid fa-star mr-1"></i> Ícono</button>
+                            <button onclick="addBlock('title')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa-solid fa-heading mr-1"></i> Título</button>
+                            <button onclick="addBlock('text')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa-solid fa-align-left mr-1"></i> Texto</button>
+                            <button onclick="addBlock('alert')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa-solid fa-exclamation-triangle mr-1"></i> Alerta</button>
+                            <button onclick="addBlock('button')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa-solid fa-hand-pointer mr-1"></i> Botón</button>
+                            <button onclick="addBlock('shape')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa-solid fa-circle mr-1"></i> Figura</button>
+                            <button onclick="addBlock('divider')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa-solid fa-minus mr-1"></i> Línea</button>
                         </div>
                     </div>
                 </div>
@@ -109,21 +109,30 @@
         </div>
     </main>
 
-    <!-- Modal de Edición de Bloque (Oculto) -->
+    <!-- Modal de Edición de Bloque -->
     <div id="edit-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center">
-        <div class="bg-white p-6 rounded-2xl w-[400px] shadow-2xl">
+        <div class="bg-white p-6 rounded-2xl w-[450px] max-h-[90vh] overflow-y-auto shadow-2xl">
             <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-2">Editar Elemento</h3>
             <div id="edit-form" class="space-y-4 text-sm"></div>
             <div class="mt-6 flex justify-end gap-2">
-                <button onclick="closeEditModal()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg">Guardar Cambios</button>
+                <button onclick="closeEditModal()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg">Cerrar</button>
             </div>
         </div>
     </div>
 
 <script>
-    // Estado inicial: Los bloques por defecto basados en tu diseño original
+    // Librería visual de íconos
+    const iconLibrary = [
+        'fa-solid fa-info-circle', 'fa-solid fa-exclamation-triangle', 'fa-solid fa-check-circle', 
+        'fa-solid fa-times-circle', 'fa-solid fa-bell', 'fa-solid fa-bullhorn', 
+        'fa-solid fa-gift', 'fa-solid fa-truck', 'fa-solid fa-tag', 
+        'fa-solid fa-shopping-cart', 'fa-solid fa-fish', 'fa-solid fa-store',
+        'fa-solid fa-envelope', 'fa-solid fa-box-open', 'fa-solid fa-calendar-alt',
+        'fa-brands fa-whatsapp', 'fa-brands fa-instagram', 'fa-brands fa-facebook'
+    ];
+
     let blocks = [
-        { id: 1, type: 'icon', icon: 'fa-info-circle', color: '#0056b3', size: '3rem' },
+        { id: 1, type: 'icon', icon: 'fa-solid fa-info-circle', color: '#0056b3', size: '3rem' },
         { id: 2, type: 'title', text: 'Información Importante', color: '#333333', size: '1.5rem', bold: true },
         { id: 3, type: 'alert', text: 'Este Lunes 28 de septiembre nuestras oficinas permanecerán cerradas.', bg: '#fff3cd', color: '#856404', borderColor: '#ffeeba' },
         { id: 4, type: 'text', text: 'Para realizar consultas, por favor comunicate al:<br><strong style="font-size:1.5rem;color:#212529;display:block;margin-top:10px;">📞 3987-3673</strong>', color: '#555555', size: '1.1rem', align: 'center' },
@@ -137,14 +146,13 @@
         renderPreviewAndCode();
     }
 
-    // --- MANEJO DE CAPAS (UI Izquierda) ---
     function renderLayers() {
         const container = document.getElementById('layers-list');
         container.innerHTML = blocks.map((b, index) => `
             <div class="block-item bg-white border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-sm cursor-move">
                 <div class="flex items-center gap-3 overflow-hidden">
                     <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500">
-                        ${getIconForType(b.type)}
+                        ${getIconForType(b.type, b.icon)}
                     </div>
                     <div class="truncate">
                         <p class="text-xs font-bold text-slate-700 uppercase">${b.type}</p>
@@ -152,22 +160,23 @@
                     </div>
                 </div>
                 <div class="flex items-center gap-1">
-                    <button onclick="moveBlock(${index}, -1)" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400" title="Subir"><i class="fa fa-chevron-up text-[10px]"></i></button>
-                    <button onclick="moveBlock(${index}, 1)" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400" title="Bajar"><i class="fa fa-chevron-down text-[10px]"></i></button>
-                    <button onclick="openEditModal(${b.id})" class="w-6 h-6 rounded hover:bg-sky-100 text-sky-600 ml-1" title="Editar"><i class="fa fa-pen text-[10px]"></i></button>
-                    <button onclick="deleteBlock(${b.id})" class="w-6 h-6 rounded hover:bg-rose-100 text-rose-600" title="Eliminar"><i class="fa fa-trash text-[10px]"></i></button>
+                    <button onclick="moveBlock(${index}, -1)" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400" title="Subir"><i class="fa-solid fa-chevron-up text-[10px]"></i></button>
+                    <button onclick="moveBlock(${index}, 1)" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400" title="Bajar"><i class="fa-solid fa-chevron-down text-[10px]"></i></button>
+                    <button onclick="openEditModal(${b.id})" class="w-6 h-6 rounded hover:bg-sky-100 text-sky-600 ml-1" title="Editar"><i class="fa-solid fa-pen text-[10px]"></i></button>
+                    <button onclick="deleteBlock(${b.id})" class="w-6 h-6 rounded hover:bg-rose-100 text-rose-600" title="Eliminar"><i class="fa-solid fa-trash text-[10px]"></i></button>
                 </div>
             </div>
         `).join('');
     }
 
-    function getIconForType(type) {
-        const icons = { 'icon': '<i class="fa fa-star"></i>', 'title': '<i class="fa fa-heading"></i>', 'text': '<i class="fa fa-align-left"></i>', 'alert': '<i class="fa fa-exclamation-triangle"></i>', 'button': '<i class="fa fa-hand-pointer"></i>', 'shape': '<i class="fa fa-shapes"></i>', 'divider': '<i class="fa fa-minus"></i>' };
-        return icons[type] || '<i class="fa fa-cube"></i>';
+    function getIconForType(type, customIcon) {
+        if (type === 'icon' && customIcon) return `<i class="${customIcon}"></i>`;
+        const icons = { 'title': '<i class="fa-solid fa-heading"></i>', 'text': '<i class="fa-solid fa-align-left"></i>', 'alert': '<i class="fa-solid fa-exclamation-triangle"></i>', 'button': '<i class="fa-solid fa-hand-pointer"></i>', 'shape': '<i class="fa-solid fa-shapes"></i>', 'divider': '<i class="fa-solid fa-minus"></i>' };
+        return icons[type] || '<i class="fa-solid fa-cube"></i>';
     }
 
     function getPreviewText(b) {
-        if (b.text) return b.text.replace(/<[^>]*>?/gm, ''); // Quitar tags HTML
+        if (b.text) return b.text.replace(/<[^>]*>?/gm, ''); 
         if (b.type === 'shape') return 'Figura decorativa';
         if (b.type === 'divider') return 'Línea divisoria';
         if (b.type === 'icon') return b.icon;
@@ -177,7 +186,7 @@
     function addBlock(type) {
         let newBlock = { id: nextId++, type: type };
         switch(type) {
-            case 'icon': newBlock = {...newBlock, icon: 'fa-check-circle', color: '#10b981', size: '3rem'}; break;
+            case 'icon': newBlock = {...newBlock, icon: 'fa-solid fa-check-circle', color: '#10b981', size: '3rem'}; break;
             case 'title': newBlock = {...newBlock, text: 'Nuevo Título', color: '#333333', size: '1.5rem', bold: true}; break;
             case 'text': newBlock = {...newBlock, text: 'Escribe tu texto aquí...', color: '#666666', size: '1rem', align: 'center'}; break;
             case 'alert': newBlock = {...newBlock, text: 'Atención: Aviso importante.', bg: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd'}; break;
@@ -187,7 +196,6 @@
         }
         blocks.push(newBlock);
         render();
-        // Abrir modal de edición automáticamente
         openEditModal(newBlock.id);
     }
 
@@ -200,7 +208,7 @@
         render();
     }
 
-    // --- EDICIÓN DE BLOQUES (Modal) ---
+    // Modal Builder
     function openEditModal(id) {
         editingId = id;
         const b = blocks.find(x => x.id === id);
@@ -208,15 +216,23 @@
         let html = '';
 
         if (b.type === 'icon') {
-            html += field('Ícono (Clase FontAwesome)', 'icon', b.icon);
-            html += fieldColor('Color', 'color', b.color);
+            // Galería visual de iconos
+            let grid = '<div class="grid grid-cols-6 gap-2 mb-4">';
+            iconLibrary.forEach(ic => {
+                const selected = b.icon === ic ? 'border-orange-500 bg-orange-50 text-orange-600' : 'border-slate-200 text-slate-500 hover:bg-slate-50';
+                grid += `<div onclick="updateBlock('icon', '${ic}')" class="w-10 h-10 flex items-center justify-center border rounded-lg cursor-pointer transition ${selected}"><i class="${ic} text-lg"></i></div>`;
+            });
+            grid += '</div>';
+            
+            html += `<label class="block text-xs font-bold text-slate-600 mb-2">Seleccionar Ícono</label>` + grid;
+            html += fieldColor('Color del Ícono', 'color', b.color);
             html += field('Tamaño (ej. 3rem, 50px)', 'size', b.size);
         } else if (b.type === 'title' || b.type === 'text') {
-            html += fieldArea('Texto (Soporta HTML)', 'text', b.text);
+            html += fieldArea('Texto (Soporta etiquetas HTML como &lt;br&gt; o &lt;strong&gt;)', 'text', b.text);
             html += fieldColor('Color de Texto', 'color', b.color);
             html += field('Tamaño de letra (ej. 1.2rem, 16px)', 'size', b.size);
             if(b.type === 'text') {
-                html += `<div><label class="block text-xs font-bold mb-1">Alineación</label><select id="edit-align" class="w-full border rounded p-2" onchange="updateBlock('align', this.value)"><option value="left" ${b.align==='left'?'selected':''}>Izquierda</option><option value="center" ${b.align==='center'?'selected':''}>Centro</option><option value="right" ${b.align==='right'?'selected':''}>Derecha</option></select></div>`;
+                html += `<div><label class="block text-xs font-bold mb-1">Alineación</label><select class="w-full border rounded p-2" onchange="updateBlock('align', this.value)"><option value="left" ${b.align==='left'?'selected':''}>Izquierda</option><option value="center" ${b.align==='center'?'selected':''}>Centro</option><option value="right" ${b.align==='right'?'selected':''}>Derecha</option></select></div>`;
             }
         } else if (b.type === 'alert') {
             html += fieldArea('Texto de Alerta', 'text', b.text);
@@ -227,13 +243,13 @@
             html += field('Texto del Botón', 'text', b.text);
             html += fieldColor('Fondo', 'bg', b.bg);
             html += fieldColor('Texto', 'color', b.color);
-            html += `<div><label class="block text-xs font-bold mb-1">Acción al hacer click</label><select id="edit-action" class="w-full border rounded p-2" onchange="updateBlock('action', this.value)"><option value="close" ${b.action==='close'?'selected':''}>Cerrar la ventana emergente</option><option value="link" ${b.action==='link'?'selected':''}>Ir a una página (Link)</option></select></div>`;
+            html += `<div><label class="block text-xs font-bold mb-1">Acción al hacer click</label><select class="w-full border rounded p-2" onchange="updateBlock('action', this.value)"><option value="close" ${b.action==='close'?'selected':''}>Cerrar la ventana emergente</option><option value="link" ${b.action==='link'?'selected':''}>Ir a una página (Link)</option></select></div>`;
             html += field('URL (Solo si elegiste "Ir a página")', 'url', b.url || '');
         } else if (b.type === 'shape') {
             html += field('Ancho (ej. 100%, 150px)', 'width', b.width);
             html += field('Alto (ej. 2px, 150px)', 'height', b.height);
             html += fieldColor('Color', 'bg', b.bg);
-            html += field('Redondeo de bordes (ej. 0px cuadrado, 50% círculo)', 'radius', b.radius);
+            html += field('Redondeo (ej. 0px cuadrado, 50% círculo)', 'radius', b.radius);
         } else if (b.type === 'divider') {
             html += fieldColor('Color de la línea', 'color', b.color);
             html += field('Espaciado vertical (Margen)', 'margin', b.margin);
@@ -249,15 +265,18 @@
         if(!editingId) return;
         const b = blocks.find(x => x.id === editingId);
         b[key] = value;
-        render(); // Renderiza en vivo atrás
+        
+        // Si actualizamos el ícono, reabrimos el modal para que se pinte de naranja la grilla seleccionada
+        if(key === 'icon') openEditModal(editingId); 
+        
+        render(); 
     }
 
-    // Helpers para formularios
-    function field(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><input type="text" value="${val.replace(/"/g, '&quot;')}" oninput="updateBlock('${key}', this.value)" class="w-full border border-slate-300 rounded px-2 py-1.5 outline-none"></div>`; }
-    function fieldArea(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><textarea oninput="updateBlock('${key}', this.value)" class="w-full border border-slate-300 rounded px-2 py-1.5 outline-none" rows="3">${val}</textarea></div>`; }
+    function field(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><input type="text" value="${val.replace(/"/g, '&quot;')}" oninput="updateBlock('${key}', this.value)" class="w-full border border-slate-300 rounded px-2 py-1.5 outline-none focus:border-orange-500"></div>`; }
+    function fieldArea(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><textarea oninput="updateBlock('${key}', this.value)" class="w-full border border-slate-300 rounded px-2 py-1.5 outline-none focus:border-orange-500" rows="3">${val}</textarea></div>`; }
     function fieldColor(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><input type="color" value="${val}" oninput="updateBlock('${key}', this.value)" class="w-full h-8 rounded cursor-pointer"></div>`; }
 
-    // --- GENERACIÓN DE CÓDIGO ---
+    // Generador de HTML
     function renderPreviewAndCode() {
         const globalBg = document.getElementById('global-bg').value;
         const globalRadius = document.getElementById('global-radius').value;
@@ -267,7 +286,7 @@
 
         blocks.forEach(b => {
             if (b.type === 'icon') {
-                innerHtml += `<div style="margin-bottom: 1rem;"><i class="fa ${b.icon}" style="font-size: ${b.size}; color: ${b.color};"></i></div>\n`;
+                innerHtml += `<div style="margin-bottom: 1rem;"><i class="${b.icon}" style="font-size: ${b.size}; color: ${b.color};"></i></div>\n`;
             } else if (b.type === 'title') {
                 innerHtml += `<h3 style="margin-bottom: 1rem; color: ${b.color}; font-weight: ${b.bold ? 'bold' : 'normal'}; font-size: ${b.size}; margin-top: 0;">${b.text}</h3>\n`;
             } else if (b.type === 'text') {
@@ -310,7 +329,7 @@ ${hasCloseButton ? `
 <!-- FIN POPUP GENERADO -->
 `.trim();
 
-        // Actualizar preview aislando el fixed
+        // Actualizar preview aislando el CSS fixed para no romper la UI
         let previewHtml = finalHtml.replace('position: fixed;', 'position: absolute;').replace(/<script>[\s\S]*?<\/script>/, '');
         document.getElementById('preview-container').innerHTML = previewHtml;
         document.getElementById('output-code').value = finalHtml;
@@ -327,7 +346,6 @@ ${hasCloseButton ? `
         setTimeout(() => { btn.innerHTML = original; btn.classList.replace('bg-emerald-600', 'bg-slate-800'); }, 2000);
     }
 
-    // Inicializar
     document.addEventListener('DOMContentLoaded', render);
 </script>
 
