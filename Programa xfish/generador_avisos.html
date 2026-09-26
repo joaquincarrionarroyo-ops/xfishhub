@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Generador de Avisos | X-Fish</title>
+    <title>Creador de Avisos Pro | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" />
     <style>
@@ -14,6 +14,8 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        .block-item { transition: all 0.2s; }
+        .block-item:hover { transform: translateX(4px); border-color: #f97316; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 pb-12">
@@ -26,9 +28,9 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-amber-400 to-orange-500 shadow flex items-center justify-center">
-                    <i class="fa fa-bullhorn text-white text-sm"></i>
+                    <i class="fa fa-layer-group text-white text-sm"></i>
                 </div>
-                Generador de Avisos Emergentes (Popups)
+                Maquetador de Popups
             </h1>
             <a href="index.html" class="text-sm font-semibold text-orange-600 hover:text-orange-800">← Volver al Hub</a>
         </div>
@@ -37,163 +39,296 @@
     <main class="max-w-7xl mx-auto px-4 md:px-6">
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
             
-            <!-- CONTROLES -->
+            <!-- PANEL DE CONTROL (Izquierda) -->
             <div class="lg:col-span-4 space-y-6">
+                
+                <!-- Ajustes Globales -->
                 <div class="glass-panel rounded-2xl p-6">
-                    <h2 class="text-lg font-bold text-slate-800 mb-4">Textos del Aviso</h2>
-                    
-                    <div class="space-y-4 text-sm">
-                        
+                    <h2 class="text-lg font-bold text-slate-800 mb-4">Ajustes Globales</h2>
+                    <div class="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                            <label class="block font-bold text-slate-600 mb-1">Título Principal</label>
-                            <input type="text" id="ctrl-titulo" value="Información Importante" class="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none" oninput="actualizarModal()">
+                            <label class="block font-bold text-slate-600 mb-1">Fondo del Panel</label>
+                            <input type="color" id="global-bg" value="#ffffff" class="w-full h-8 rounded cursor-pointer" oninput="render()">
                         </div>
-
                         <div>
-                            <label class="block font-bold text-slate-600 mb-1">Caja de Alerta (Amarilla)</label>
-                            <textarea id="ctrl-alerta" rows="2" class="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none" oninput="actualizarModal()">Este Lunes 28 de septiembre nuestras oficinas permanecerán cerradas.</textarea>
+                            <label class="block font-bold text-slate-600 mb-1">Redondeo (px)</label>
+                            <input type="number" id="global-radius" value="12" class="w-full px-3 py-1.5 rounded-lg border border-slate-300 outline-none" oninput="render()">
                         </div>
-
-                        <hr class="border-slate-200">
-
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Teléfono de Contacto</label>
-                            <input type="text" id="ctrl-tel" value="📞 3987-3673" class="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none" oninput="actualizarModal()">
-                        </div>
-
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Horario de Atención</label>
-                            <input type="text" id="ctrl-horario" value="Lunes a Viernes de 9 a 16:30 hs" class="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none" oninput="actualizarModal()">
-                        </div>
-
-                        <hr class="border-slate-200">
-
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Texto del Botón (Cerrar)</label>
-                            <input type="text" id="ctrl-btn" value="Aceptar" class="w-full px-3 py-2 rounded-lg border border-slate-300 outline-none" oninput="actualizarModal()">
-                        </div>
-                        
-                        <div>
-                            <label class="block font-bold text-slate-600 mb-1">Color Principal (Botón e Ícono)</label>
-                            <input type="color" id="ctrl-color" value="#0056b3" class="w-full h-10 rounded-lg cursor-pointer" oninput="actualizarModal()">
-                        </div>
-
                     </div>
                 </div>
+
+                <!-- Capas (Bloques) -->
+                <div class="glass-panel rounded-2xl flex flex-col overflow-hidden max-h-[600px]">
+                    <div class="p-4 bg-slate-50 border-b border-slate-200 flex justify-between items-center">
+                        <h2 class="text-lg font-bold text-slate-800">Elementos</h2>
+                    </div>
+                    
+                    <!-- Lista de Elementos Activos -->
+                    <div id="layers-list" class="p-4 space-y-2 overflow-y-auto flex-grow bg-slate-50/50">
+                        <!-- Se llenará con JS -->
+                    </div>
+
+                    <!-- Botones para agregar -->
+                    <div class="p-4 bg-white border-t border-slate-200">
+                        <p class="text-xs font-bold text-slate-500 mb-2 uppercase">Agregar Nuevo:</p>
+                        <div class="flex flex-wrap gap-2">
+                            <button onclick="addBlock('icon')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-star mr-1"></i> Ícono</button>
+                            <button onclick="addBlock('title')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-heading mr-1"></i> Título</button>
+                            <button onclick="addBlock('text')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-align-left mr-1"></i> Texto</button>
+                            <button onclick="addBlock('alert')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-exclamation-triangle mr-1"></i> Alerta</button>
+                            <button onclick="addBlock('button')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-hand-pointer mr-1"></i> Botón</button>
+                            <button onclick="addBlock('shape')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-circle mr-1"></i> Figura</button>
+                            <button onclick="addBlock('divider')" class="bg-slate-100 hover:bg-orange-100 text-slate-700 text-xs font-bold py-1.5 px-3 rounded-lg border border-slate-200 transition"><i class="fa fa-minus mr-1"></i> Línea</button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
 
             <!-- VISTA PREVIA Y CÓDIGO -->
             <div class="lg:col-span-8 space-y-6">
                 
                 <div class="glass-panel rounded-2xl p-6">
-                    <h2 class="text-lg font-bold text-slate-800 mb-4 flex items-center justify-between">
-                        Vista Previa
-                    </h2>
-                    <!-- Vista Previa con fondo simulando tu web -->
-                    <div class="relative w-full h-[500px] border border-slate-300 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
-                        <div id="preview-container" class="w-full h-full">
-                            <!-- Inyección del modal visual -->
-                        </div>
+                    <h2 class="text-lg font-bold text-slate-800 mb-4">Vista Previa</h2>
+                    <div class="relative w-full h-[550px] border border-slate-300 rounded-xl overflow-hidden bg-slate-100 flex items-center justify-center bg-[url('https://www.transparenttextures.com/patterns/cubes.png')]">
+                        <div id="preview-container" class="w-full h-full"></div>
                     </div>
                 </div>
 
                 <div class="glass-panel rounded-2xl p-6">
                     <div class="flex justify-between items-center mb-4">
-                        <h2 class="text-lg font-bold text-slate-800">Código HTML para Odoo</h2>
+                        <h2 class="text-lg font-bold text-slate-800">Código HTML Final</h2>
                         <button onclick="copiarCodigo()" id="btn-copiar" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2 px-6 rounded-lg text-sm transition shadow">
                             📋 Copiar Código
                         </button>
                     </div>
                     <textarea id="output-code" readonly class="w-full h-48 p-4 rounded-xl border border-slate-300 bg-slate-50 text-xs font-mono text-slate-600 outline-none resize-y"></textarea>
-                    <p class="text-xs text-slate-500 mt-2">Pegá este código en un bloque "HTML personalizado" o usando el editor de código del maquetador de Odoo. Ya incluye la función para que el botón de cerrar funcione automáticamente.</p>
                 </div>
 
             </div>
         </div>
     </main>
 
-<script>
-    function actualizarModal() {
-        const titulo = document.getElementById('ctrl-titulo').value;
-        const alerta = document.getElementById('ctrl-alerta').value;
-        const tel = document.getElementById('ctrl-tel').value;
-        const horario = document.getElementById('ctrl-horario').value;
-        const btnText = document.getElementById('ctrl-btn').value;
-        const color = document.getElementById('ctrl-color').value;
-
-        // Construir HTML del Modal con los estilos exactos que pediste + función de cierre
-        const htmlModal = `
-<!-- INICIO POPUP AVISO IMPORTANTE -->
-<div id="infoBannerModal" style="display: flex; position: fixed; top: 0px; left: 0px; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10500; align-items: center; justify-content: center; backdrop-filter: blur(3px);">
-    <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 90%; width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2);">
-        <div style="margin-bottom: 1rem;">
-            <i class="fa fa-info-circle" style="font-size: 3rem; color: ${color};"></i>
-        </div>
-        <h3 style="margin-bottom: 1rem; color: #333; font-weight: bold; font-size: 1.5rem; margin-top: 0;">${titulo}</h3>
-        
-        <div style="color: #555; font-size: 1.1rem; line-height: 1.5; margin-bottom: 1.5rem;">
-            <div style="background-color: #fff3cd; color: #856404; border: 1px solid #ffeeba; border-radius: 8px; padding: 12px; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.4; text-align: left;">
-                ⚠️ <strong>Aviso:</strong> ${alerta}
+    <!-- Modal de Edición de Bloque (Oculto) -->
+    <div id="edit-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-[100] hidden items-center justify-center">
+        <div class="bg-white p-6 rounded-2xl w-[400px] shadow-2xl">
+            <h3 class="font-bold text-lg mb-4 text-slate-800 border-b pb-2">Editar Elemento</h3>
+            <div id="edit-form" class="space-y-4 text-sm"></div>
+            <div class="mt-6 flex justify-end gap-2">
+                <button onclick="closeEditModal()" class="bg-orange-500 hover:bg-orange-600 text-white font-bold py-2 px-4 rounded-lg">Guardar Cambios</button>
             </div>
-            Para realizar consultas, por favor comunicate al:
-            <br>
-            <strong style="font-size: 1.5rem; color: #212529; display: block; margin-top: 10px;">${tel}</strong>
-            <span style="display: block; font-size: 0.95rem; color: #6c757d; margin-top: 6px;">
-                Horario de atención: <strong>${horario}</strong>
-            </span>
         </div>
-        <button id="acceptInfoBanner" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; border: none; cursor: pointer; background-color: ${color}; color: white; transition: opacity 0.2s;">
-            ${btnText}
-        </button>
+    </div>
+
+<script>
+    // Estado inicial: Los bloques por defecto basados en tu diseño original
+    let blocks = [
+        { id: 1, type: 'icon', icon: 'fa-info-circle', color: '#0056b3', size: '3rem' },
+        { id: 2, type: 'title', text: 'Información Importante', color: '#333333', size: '1.5rem', bold: true },
+        { id: 3, type: 'alert', text: 'Este Lunes 28 de septiembre nuestras oficinas permanecerán cerradas.', bg: '#fff3cd', color: '#856404', borderColor: '#ffeeba' },
+        { id: 4, type: 'text', text: 'Para realizar consultas, por favor comunicate al:<br><strong style="font-size:1.5rem;color:#212529;display:block;margin-top:10px;">📞 3987-3673</strong>', color: '#555555', size: '1.1rem', align: 'center' },
+        { id: 5, type: 'button', text: 'Aceptar', bg: '#0056b3', color: '#ffffff', action: 'close', url: '' }
+    ];
+    let nextId = 6;
+    let editingId = null;
+
+    function render() {
+        renderLayers();
+        renderPreviewAndCode();
+    }
+
+    // --- MANEJO DE CAPAS (UI Izquierda) ---
+    function renderLayers() {
+        const container = document.getElementById('layers-list');
+        container.innerHTML = blocks.map((b, index) => `
+            <div class="block-item bg-white border border-slate-200 p-3 rounded-xl flex items-center justify-between shadow-sm cursor-move">
+                <div class="flex items-center gap-3 overflow-hidden">
+                    <div class="w-8 h-8 rounded bg-slate-100 flex items-center justify-center text-slate-500">
+                        ${getIconForType(b.type)}
+                    </div>
+                    <div class="truncate">
+                        <p class="text-xs font-bold text-slate-700 uppercase">${b.type}</p>
+                        <p class="text-xs text-slate-500 truncate max-w-[120px]">${getPreviewText(b)}</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-1">
+                    <button onclick="moveBlock(${index}, -1)" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400" title="Subir"><i class="fa fa-chevron-up text-[10px]"></i></button>
+                    <button onclick="moveBlock(${index}, 1)" class="w-6 h-6 rounded hover:bg-slate-100 text-slate-400" title="Bajar"><i class="fa fa-chevron-down text-[10px]"></i></button>
+                    <button onclick="openEditModal(${b.id})" class="w-6 h-6 rounded hover:bg-sky-100 text-sky-600 ml-1" title="Editar"><i class="fa fa-pen text-[10px]"></i></button>
+                    <button onclick="deleteBlock(${b.id})" class="w-6 h-6 rounded hover:bg-rose-100 text-rose-600" title="Eliminar"><i class="fa fa-trash text-[10px]"></i></button>
+                </div>
+            </div>
+        `).join('');
+    }
+
+    function getIconForType(type) {
+        const icons = { 'icon': '<i class="fa fa-star"></i>', 'title': '<i class="fa fa-heading"></i>', 'text': '<i class="fa fa-align-left"></i>', 'alert': '<i class="fa fa-exclamation-triangle"></i>', 'button': '<i class="fa fa-hand-pointer"></i>', 'shape': '<i class="fa fa-shapes"></i>', 'divider': '<i class="fa fa-minus"></i>' };
+        return icons[type] || '<i class="fa fa-cube"></i>';
+    }
+
+    function getPreviewText(b) {
+        if (b.text) return b.text.replace(/<[^>]*>?/gm, ''); // Quitar tags HTML
+        if (b.type === 'shape') return 'Figura decorativa';
+        if (b.type === 'divider') return 'Línea divisoria';
+        if (b.type === 'icon') return b.icon;
+        return '';
+    }
+
+    function addBlock(type) {
+        let newBlock = { id: nextId++, type: type };
+        switch(type) {
+            case 'icon': newBlock = {...newBlock, icon: 'fa-check-circle', color: '#10b981', size: '3rem'}; break;
+            case 'title': newBlock = {...newBlock, text: 'Nuevo Título', color: '#333333', size: '1.5rem', bold: true}; break;
+            case 'text': newBlock = {...newBlock, text: 'Escribe tu texto aquí...', color: '#666666', size: '1rem', align: 'center'}; break;
+            case 'alert': newBlock = {...newBlock, text: 'Atención: Aviso importante.', bg: '#e0f2fe', color: '#0369a1', borderColor: '#bae6fd'}; break;
+            case 'button': newBlock = {...newBlock, text: 'Click Aquí', bg: '#f97316', color: '#ffffff', action: 'link', url: 'https://'}; break;
+            case 'shape': newBlock = {...newBlock, width: '100px', height: '100px', bg: '#e2e8f0', radius: '50%'}; break;
+            case 'divider': newBlock = {...newBlock, color: '#e2e8f0', margin: '1.5rem'}; break;
+        }
+        blocks.push(newBlock);
+        render();
+        // Abrir modal de edición automáticamente
+        openEditModal(newBlock.id);
+    }
+
+    function deleteBlock(id) { blocks = blocks.filter(b => b.id !== id); render(); }
+    function moveBlock(index, direction) {
+        if (index + direction < 0 || index + direction >= blocks.length) return;
+        const temp = blocks[index];
+        blocks[index] = blocks[index + direction];
+        blocks[index + direction] = temp;
+        render();
+    }
+
+    // --- EDICIÓN DE BLOQUES (Modal) ---
+    function openEditModal(id) {
+        editingId = id;
+        const b = blocks.find(x => x.id === id);
+        const form = document.getElementById('edit-form');
+        let html = '';
+
+        if (b.type === 'icon') {
+            html += field('Ícono (Clase FontAwesome)', 'icon', b.icon);
+            html += fieldColor('Color', 'color', b.color);
+            html += field('Tamaño (ej. 3rem, 50px)', 'size', b.size);
+        } else if (b.type === 'title' || b.type === 'text') {
+            html += fieldArea('Texto (Soporta HTML)', 'text', b.text);
+            html += fieldColor('Color de Texto', 'color', b.color);
+            html += field('Tamaño de letra (ej. 1.2rem, 16px)', 'size', b.size);
+            if(b.type === 'text') {
+                html += `<div><label class="block text-xs font-bold mb-1">Alineación</label><select id="edit-align" class="w-full border rounded p-2" onchange="updateBlock('align', this.value)"><option value="left" ${b.align==='left'?'selected':''}>Izquierda</option><option value="center" ${b.align==='center'?'selected':''}>Centro</option><option value="right" ${b.align==='right'?'selected':''}>Derecha</option></select></div>`;
+            }
+        } else if (b.type === 'alert') {
+            html += fieldArea('Texto de Alerta', 'text', b.text);
+            html += fieldColor('Color de Fondo', 'bg', b.bg);
+            html += fieldColor('Color de Texto', 'color', b.color);
+            html += fieldColor('Color de Borde', 'borderColor', b.borderColor);
+        } else if (b.type === 'button') {
+            html += field('Texto del Botón', 'text', b.text);
+            html += fieldColor('Fondo', 'bg', b.bg);
+            html += fieldColor('Texto', 'color', b.color);
+            html += `<div><label class="block text-xs font-bold mb-1">Acción al hacer click</label><select id="edit-action" class="w-full border rounded p-2" onchange="updateBlock('action', this.value)"><option value="close" ${b.action==='close'?'selected':''}>Cerrar la ventana emergente</option><option value="link" ${b.action==='link'?'selected':''}>Ir a una página (Link)</option></select></div>`;
+            html += field('URL (Solo si elegiste "Ir a página")', 'url', b.url || '');
+        } else if (b.type === 'shape') {
+            html += field('Ancho (ej. 100%, 150px)', 'width', b.width);
+            html += field('Alto (ej. 2px, 150px)', 'height', b.height);
+            html += fieldColor('Color', 'bg', b.bg);
+            html += field('Redondeo de bordes (ej. 0px cuadrado, 50% círculo)', 'radius', b.radius);
+        } else if (b.type === 'divider') {
+            html += fieldColor('Color de la línea', 'color', b.color);
+            html += field('Espaciado vertical (Margen)', 'margin', b.margin);
+        }
+
+        form.innerHTML = html;
+        document.getElementById('edit-modal').style.display = 'flex';
+    }
+
+    function closeEditModal() { document.getElementById('edit-modal').style.display = 'none'; editingId = null; }
+    
+    function updateBlock(key, value) {
+        if(!editingId) return;
+        const b = blocks.find(x => x.id === editingId);
+        b[key] = value;
+        render(); // Renderiza en vivo atrás
+    }
+
+    // Helpers para formularios
+    function field(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><input type="text" value="${val.replace(/"/g, '&quot;')}" oninput="updateBlock('${key}', this.value)" class="w-full border border-slate-300 rounded px-2 py-1.5 outline-none"></div>`; }
+    function fieldArea(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><textarea oninput="updateBlock('${key}', this.value)" class="w-full border border-slate-300 rounded px-2 py-1.5 outline-none" rows="3">${val}</textarea></div>`; }
+    function fieldColor(label, key, val) { return `<div><label class="block text-xs font-bold text-slate-600 mb-1">${label}</label><input type="color" value="${val}" oninput="updateBlock('${key}', this.value)" class="w-full h-8 rounded cursor-pointer"></div>`; }
+
+    // --- GENERACIÓN DE CÓDIGO ---
+    function renderPreviewAndCode() {
+        const globalBg = document.getElementById('global-bg').value;
+        const globalRadius = document.getElementById('global-radius').value;
+        
+        let innerHtml = '';
+        let hasCloseButton = false;
+
+        blocks.forEach(b => {
+            if (b.type === 'icon') {
+                innerHtml += `<div style="margin-bottom: 1rem;"><i class="fa ${b.icon}" style="font-size: ${b.size}; color: ${b.color};"></i></div>\n`;
+            } else if (b.type === 'title') {
+                innerHtml += `<h3 style="margin-bottom: 1rem; color: ${b.color}; font-weight: ${b.bold ? 'bold' : 'normal'}; font-size: ${b.size}; margin-top: 0;">${b.text}</h3>\n`;
+            } else if (b.type === 'text') {
+                innerHtml += `<p style="margin-bottom: 1rem; color: ${b.color}; font-size: ${b.size}; text-align: ${b.align || 'center'}; line-height: 1.5; margin-top:0;">${b.text}</p>\n`;
+            } else if (b.type === 'alert') {
+                innerHtml += `<div style="background-color: ${b.bg}; color: ${b.color}; border: 1px solid ${b.borderColor}; border-radius: 8px; padding: 12px; margin-bottom: 1.5rem; font-size: 0.95rem; line-height: 1.4; text-align: left;">${b.text}</div>\n`;
+            } else if (b.type === 'button') {
+                if(b.action === 'close') {
+                    hasCloseButton = true;
+                    innerHtml += `<button class="acceptInfoBannerBtn" style="width: 100%; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; border: none; cursor: pointer; background-color: ${b.bg}; color: ${b.color}; margin-bottom: 0.5rem;">${b.text}</button>\n`;
+                } else {
+                    innerHtml += `<a href="${b.url}" style="display: block; width: 100%; box-sizing: border-box; padding: 12px; border-radius: 8px; font-weight: bold; font-size: 1.1rem; text-decoration: none; background-color: ${b.bg}; color: ${b.color}; margin-bottom: 0.5rem;">${b.text}</a>\n`;
+                }
+            } else if (b.type === 'shape') {
+                innerHtml += `<div style="width: ${b.width}; height: ${b.height}; background-color: ${b.bg}; border-radius: ${b.radius}; margin: 1rem auto;"></div>\n`;
+            } else if (b.type === 'divider') {
+                innerHtml += `<hr style="border: none; border-top: 1px solid ${b.color}; margin: ${b.margin} 0;">\n`;
+            }
+        });
+
+        const finalHtml = `
+<!-- INICIO POPUP GENERADO -->
+<div id="customModalOverlay" style="display: flex; position: fixed; top: 0px; left: 0px; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.7); z-index: 10500; align-items: center; justify-content: center; backdrop-filter: blur(3px);">
+    <div style="background: ${globalBg}; padding: 2rem; border-radius: ${globalRadius}px; max-width: 90%; width: 450px; text-align: center; box-shadow: 0 10px 25px rgba(0,0,0,0.2); max-height: 90vh; overflow-y: auto;">
+        ${innerHtml.trim()}
     </div>
 </div>
-
+${hasCloseButton ? `
 <script>
-    // Pequeño script para cerrar el modal al hacer clic en aceptar
     document.addEventListener("DOMContentLoaded", function() {
-        var btnAceptar = document.getElementById("acceptInfoBanner");
-        var modal = document.getElementById("infoBannerModal");
-        if(btnAceptar && modal) {
-            btnAceptar.addEventListener("click", function() {
-                modal.style.display = "none";
+        var btns = document.querySelectorAll(".acceptInfoBannerBtn");
+        var modal = document.getElementById("customModalOverlay");
+        if(modal) {
+            btns.forEach(function(btn) {
+                btn.addEventListener("click", function() { modal.style.display = "none"; });
             });
         }
     });
-<\/script>
-<!-- FIN POPUP AVISO IMPORTANTE -->
+<\/script>` : ''}
+<!-- FIN POPUP GENERADO -->
 `.trim();
 
-        // Para la vista previa usamos display:flex forzado
-        let htmlPreview = htmlModal.replace('<!-- INICIO POPUP AVISO IMPORTANTE -->', '')
-                                   .replace('<!-- FIN POPUP AVISO IMPORTANTE -->', '')
-                                   .replace('<script>', '<!-- ') // Comentamos el script para que no se ejecute en la preview
-                                   .replace('<\/script>', ' -->');
-        
-        // Hacemos que en la preview se posicione absoluto para no romper nuestra app
-        htmlPreview = htmlPreview.replace('position: fixed;', 'position: absolute;');
-
-        document.getElementById('preview-container').innerHTML = htmlPreview;
-        document.getElementById('output-code').value = htmlModal;
+        // Actualizar preview aislando el fixed
+        let previewHtml = finalHtml.replace('position: fixed;', 'position: absolute;').replace(/<script>[\s\S]*?<\/script>/, '');
+        document.getElementById('preview-container').innerHTML = previewHtml;
+        document.getElementById('output-code').value = finalHtml;
     }
 
     function copiarCodigo() {
         const codigo = document.getElementById('output-code');
         codigo.select();
-        codigo.setSelectionRange(0, 99999);
         navigator.clipboard.writeText(codigo.value);
-        
         const btn = document.getElementById('btn-copiar');
-        const textoOriginal = btn.innerHTML;
+        const original = btn.innerHTML;
         btn.innerHTML = "✅ ¡Copiado!";
         btn.classList.replace('bg-slate-800', 'bg-emerald-600');
-        
-        setTimeout(() => {
-            btn.innerHTML = textoOriginal;
-            btn.classList.replace('bg-emerald-600', 'bg-slate-800');
-        }, 2000);
+        setTimeout(() => { btn.innerHTML = original; btn.classList.replace('bg-emerald-600', 'bg-slate-800'); }, 2000);
     }
 
-    document.addEventListener('DOMContentLoaded', actualizarModal);
+    // Inicializar
+    document.addEventListener('DOMContentLoaded', render);
 </script>
 
 </body>
