@@ -324,7 +324,7 @@
         throw new Error(ultimoError || "No se pudo comunicar con los modelos disponibles de Gemini.");
     }
 
-    async function generarRespuesta() {
+async function generarRespuesta() {
         const key = getGeminiKey();
         if (!key) return alert("Por favor ingresá tu API Key de Gemini para continuar.");
 
@@ -349,7 +349,7 @@
 
             let stringContextoStock = "No se encontraron productos exactos. Invitá cordialmente a visitar la tienda online o contactarse con ventas.";
             if (productosRelevantes.length > 0) {
-                stringContextoStock = "Artículos en stock relacionados disponibles:\n";
+                stringContextoStock = "Artículos en stock real disponibles en X-Fish:\n";
                 productosRelevantes.forEach(p => {
                     const infoPrecio = incluirPrecios ? `| Precio: $${p.precio.toLocaleString('es-AR')}` : '';
                     stringContextoStock += `- ${p.nombre} (SKU: ${p.sku}) | Stock: ${p.stock} unid. ${infoPrecio}\n`;
@@ -363,17 +363,54 @@ Eres el encargado de atención al cliente y ventas de "X-Fish" (tienda de pesca 
 Reglas:
 1. Responde en español rioplatense (usando 'vos').
 2. Tono: ${tono}
-3. ${incluirPrecios ? 'INCLUYE SIEMPRE LOS PRECIOS de los artículos mencionados.' : 'NO MENCIONES NINGÚN PRECIO EN ABSOLUTO bajo ninguna circunstancia. Si hay artículos disponibles, nombralos y dile al cliente que consulte en la web.'}
-4. Usa esta info de stock real (no inventes nada fuera de esto):
+3. ${incluirPrecios ? 'INCLUYE SIEMPRE LOS PRECIOS de los artículos mencionados.' : 'NO MENCIONES NINGÚN PRECIO en absoluto bajo ninguna circunstancia. Si hay artículos disponibles, menciónalos e invita a revisar la web.'}
+4. Usa exclusivamente esta info de stock real (no inventes nada más):
 ${stringContextoStock}
 
-Escribe ÚNICAMENTE el texto de respuesta final listo para enviar.
+Escribe únicamente el texto de respuesta completo, con saludo y despedida, listo para enviar.
 
 Mensaje del cliente:
 "${textoCliente}"
             `;
 
-            const textoGenerado = await llamarApiGemini(prompt, key);
+            // Probamos primero con gemini-2.5-flash y luego con gemini-1.5-flash-latest
+            const modelos = [
+                'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
+                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent'
+            ];
+
+            let textoGenerado = null;
+            let ultimoError = null;
+
+            for (const urlBase of modelos) {
+                try {
+                    const res = await fetch(`${urlBase}?key=${encodeURIComponent(key)}`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: prompt }] }],
+                            generationConfig: { 
+                                temperature: 0.7, 
+                                maxOutputTokens: 2500 // Espacio de sobra para que no corte el mensaje
+                            }
+                        })
+                    });
+
+                    if (res.ok) {
+                        const data = await res.json();
+                        textoGenerado = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+                        if (textoGenerado) break;
+                    } else {
+                        const err = await res.json().catch(() => ({}));
+                        ultimoError = err.error?.message || `HTTP ${res.status}`;
+                    }
+                } catch (e) {
+                    ultimoError = e.message;
+                }
+            }
+
+            if (!textoGenerado) throw new Error(ultimoError || "No se pudo generar la respuesta.");
+
             document.getElementById('texto-respuesta').value = textoGenerado;
 
         } catch (error) {
