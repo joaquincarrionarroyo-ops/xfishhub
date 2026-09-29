@@ -161,7 +161,7 @@
     function getGeminiKey() {
         let key = localStorage.getItem('gemini_api_key');
         if (!key || key.trim() === '') {
-            key = prompt("🔑 Ingresá tu API Key de Google Gemini (se guardará en este navegador):");
+            key = prompt("🔑 Ingresá tu API Key de Google Gemini:");
             if (key && key.trim() !== '') {
                 localStorage.setItem('gemini_api_key', key.trim());
                 return key.trim();
@@ -180,6 +180,8 @@
     }
 
     document.addEventListener('DOMContentLoaded', async () => {
+        getGeminiKey();
+
         let pwd = sessionStorage.getItem('odoo_pwd');
         if (!pwd || pwd.trim() === '') {
             pwd = prompt("🔑 Ingresá tu Clave de API de Odoo:");
@@ -284,6 +286,44 @@
         return coincidencias.filter(c => c.score > 0).sort((a, b) => b.score - a.score).slice(0, 8).map(c => c.producto);
     }
 
+    async function llamarApiGemini(promptText, apiKey) {
+        // Lista de endpoints a probar (compatibilidad con endpoints actuales v1 y v1beta)
+        const endpoints = [
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
+            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${encodeURIComponent(apiKey)}`
+        ];
+
+        let ultimoError = null;
+
+        for (const url of endpoints) {
+            try {
+                const response = await fetch(url, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        contents: [{ parts: [{ text: promptText }] }],
+                        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
+                        return data.candidates[0].content.parts[0].text.trim();
+                    }
+                } else {
+                    const errDetail = await response.json().catch(() => ({}));
+                    ultimoError = errDetail.error?.message || `HTTP ${response.status}`;
+                }
+            } catch (err) {
+                ultimoError = err.message;
+            }
+        }
+
+        throw new Error(ultimoError || "No se pudo comunicar con los modelos disponibles de Gemini.");
+    }
+
     async function generarRespuesta() {
         const key = getGeminiKey();
         if (!key) return alert("Por favor ingresá tu API Key de Gemini para continuar.");
@@ -333,28 +373,11 @@ Mensaje del cliente:
 "${textoCliente}"
             `;
 
-            const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(key)}`;
-
-            const response = await fetch(urlGemini, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    contents: [{ parts: [{ text: prompt }] }],
-                    generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
-                })
-            });
-
-            if (!response.ok) {
-                const errDetail = await response.json().catch(() => ({}));
-                const msg = errDetail.error?.message || `HTTP ${response.status}: ${response.statusText}`;
-                throw new Error("Detalle de Google: " + msg);
-            }
-
-            const data = await response.json();
-            document.getElementById('texto-respuesta').value = data.candidates[0].content.parts[0].text.trim();
+            const textoGenerado = await llamarApiGemini(prompt, key);
+            document.getElementById('texto-respuesta').value = textoGenerado;
 
         } catch (error) {
-            alert(error.message);
+            alert("Detalle de Google: " + error.message);
         } finally {
             btn.disabled = false;
             overlay.classList.add('hidden');
