@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asistente IA de Correos | X-Fish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); }
+        .blob { position: fixed; filter: blur(80px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        
+        /* Switch CSS */
+        .toggle-checkbox:checked { right: 0; border-color: #8b5cf6; }
+        .toggle-checkbox:checked + .toggle-label { background-color: #8b5cf6; }
+        .toggle-checkbox { right: 4px; z-index: 1; border-color: #e2e8f0; transition: all 0.3s; }
+        .toggle-label { background-color: #cbd5e1; transition: all 0.3s; }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-800 pb-12">
+
+    <!-- Fondos Abstractos -->
+    <div class="blob bg-violet-200 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
+    <div class="blob bg-fuchsia-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
+
+    <header class="glass-panel sticky top-0 z-50 px-6 py-4 mb-8">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 shadow flex items-center justify-center">
+                    <i class="fa-solid fa-robot text-white text-sm"></i>
+                </div>
+                Gestor IA de Campañas y Respuestas
+            </h1>
+            <a href="index.html" class="text-sm font-semibold text-violet-600 hover:text-violet-800">← Volver al Hub</a>
+        </div>
+    </header>
+
+    <main class="max-w-7xl mx-auto px-4 md:px-6">
+        
+        <!-- Estado de Odoo y API -->
+        <div class="flex flex-col md:flex-row gap-4 mb-6">
+            <div class="glass-panel rounded-xl p-4 flex-grow flex items-center gap-4">
+                <div id="status-odoo-icon" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400"><i class="fa-solid fa-database"></i></div>
+                <div>
+                    <h3 class="font-bold text-sm text-slate-800">Conexión Odoo (Catálogo en vivo)</h3>
+                    <p id="status-odoo-text" class="text-xs text-slate-500">Conectando...</p>
+                </div>
+            </div>
+            <div class="glass-panel rounded-xl p-4 flex-grow flex items-center gap-4 border-l-4 border-violet-500">
+                <div class="w-10 h-10 rounded-full bg-violet-50 flex items-center justify-center text-violet-500"><i class="fa-solid fa-brain"></i></div>
+                <div class="flex-grow">
+                    <h3 class="font-bold text-sm text-slate-800">Motor de Inteligencia Artificial</h3>
+                    <p class="text-[10px] text-slate-500 mb-1">Clave de Google Gemini AI.</p>
+                    <input type="password" id="api-key-ai" placeholder="Pegá tu API Key de Gemini aquí..." class="w-full px-2 py-1 rounded border border-slate-300 text-xs outline-none focus:border-violet-500" onchange="guardarApiKeyIA()">
+                </div>
+                <a href="https://aistudio.google.com/app/apikey" target="_blank" class="text-[10px] bg-violet-100 text-violet-700 font-bold px-2 py-1 rounded hover:bg-violet-200 transition">Obtener Clave</a>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
+            
+            <!-- PANEL IZQUIERDO: INPUT DEL CLIENTE -->
+            <div class="lg:col-span-5 space-y-6">
+                <div class="glass-panel rounded-2xl p-6 h-full flex flex-col">
+                    <div class="flex justify-between items-end mb-4 border-b border-slate-200 pb-4">
+                        <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-bullseye text-violet-500 mr-2"></i>Contexto para la IA</h2>
+                    </div>
+
+                    <div class="space-y-4 mb-4">
+                        <div>
+                            <label class="text-xs font-bold text-slate-600 block mb-1">Motivo / Mensaje del cliente a responder</label>
+                            <textarea id="texto-cliente" placeholder="Ej: 'Quiero armar una promoción para el día del padre ofreciendo reeles rotativos y alguna caña' o pegá el mail del cliente acá..." class="w-full min-h-[120px] p-3 rounded-lg border border-slate-300 bg-slate-50 text-sm text-slate-700 outline-none focus:border-violet-500 focus:bg-white transition resize-y"></textarea>
+                        </div>
+                        
+                        <div class="grid grid-cols-2 gap-4">
+                            <div>
+                                <label class="text-xs font-bold text-slate-600 block mb-1">Tono del mensaje:</label>
+                                <select id="tono-respuesta" class="w-full text-xs border border-slate-300 rounded-lg px-3 py-2 outline-none focus:border-violet-500 bg-white">
+                                    <option value="amable, comercial, cercano y persuasivo.">Comercial y Cercano</option>
+                                    <option value="profesional, corporativo y formal.">Formal (Email)</option>
+                                    <option value="muy breve, llamativo, con emojis, ideal para Instagram o WhatsApp.">Corto (Redes/WA)</option>
+                                </select>
+                            </div>
+                            
+                            <div class="flex flex-col justify-center pt-4">
+                                <!-- Toggle Precios -->
+                                <div class="flex items-center gap-2">
+                                    <div class="relative inline-block w-10 mr-2 align-middle select-none transition duration-200 ease-in">
+                                        <input type="checkbox" name="toggle" id="toggle-precios" class="toggle-checkbox absolute block w-5 h-5 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
+                                        <label for="toggle-precios" class="toggle-label block overflow-hidden h-5 rounded-full cursor-pointer"></label>
+                                    </div>
+                                    <label class="text-xs font-bold text-slate-600 cursor-pointer" for="toggle-precios">Incluir Precios</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <button onclick="generarRespuesta()" id="btn-generar" class="mt-auto w-full bg-gradient-to-r from-violet-600 to-fuchsia-600 hover:from-violet-700 hover:to-fuchsia-700 text-white font-black py-3 px-6 rounded-xl shadow-lg transition-all transform hover:-translate-y-0.5 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Analizar Stock y Redactar
+                    </button>
+                </div>
+            </div>
+
+            <!-- PANEL DERECHO: RESULTADO Y ENVÍO MASIVO -->
+            <div class="lg:col-span-7 space-y-6">
+                <div class="glass-panel rounded-2xl p-6 flex flex-col relative h-full">
+                    
+                    <!-- Overlay de Carga -->
+                    <div id="loading-overlay" class="absolute inset-0 bg-white/80 backdrop-blur-sm z-10 hidden flex-col items-center justify-center rounded-2xl">
+                        <div class="w-12 h-12 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mb-3"></div>
+                        <p id="loading-text" class="text-sm font-bold text-violet-700 animate-pulse">Buscando productos en Odoo...</p>
+                    </div>
+
+                    <div class="flex justify-between items-center mb-4 border-b border-slate-200 pb-4">
+                        <h2 class="text-lg font-bold text-slate-800"><i class="fa-solid fa-pen-nib text-fuchsia-500 mr-2"></i>Respuesta Generada</h2>
+                        <button onclick="copiarRespuesta()" id="btn-copiar" class="bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1.5 px-4 rounded-lg text-xs transition border border-slate-300 flex items-center gap-2">
+                            <i class="fa-regular fa-copy"></i> Copiar Texto
+                        </button>
+                    </div>
+
+                    <div class="bg-violet-50/50 border border-violet-100 rounded-xl p-3 mb-4 max-h-32 overflow-y-auto hidden" id="contexto-odoo-container">
+                        <p class="text-[10px] font-black uppercase text-violet-600 mb-1 tracking-wider"><i class="fa-solid fa-box-open mr-1"></i> Stock usado por la IA (Precios mostrados u ocultos según tu elección):</p>
+                        <ul id="lista-contexto" class="text-xs text-slate-600 list-disc pl-4 space-y-1"></ul>
+                    </div>
+                    
+                    <textarea id="texto-respuesta" placeholder="La redacción de la IA aparecerá aquí..." class="w-full flex-grow min-h-[180px] p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none resize-none mb-4 shadow-inner"></textarea>
+
+                    <!-- CAJA DE ENVÍO MASIVO / MAILING -->
+                    <div class="bg-slate-800 rounded-xl p-4 text-white">
+                        <h3 class="text-sm font-bold mb-2 flex items-center gap-2"><i class="fa-solid fa-paper-plane text-sky-400"></i> Despachador de Correo</h3>
+                        <p class="text-[10px] text-slate-400 mb-3">Pegá los correos separados por comas. El sistema abrirá tu cliente de mail con los contactos en <strong>Copia Oculta (BCC)</strong> para proteger la privacidad.</p>
+                        
+                        <div class="flex flex-col gap-2">
+                            <input type="text" id="asunto-mail" placeholder="Asunto del correo..." class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm outline-none focus:border-sky-500 placeholder-slate-400">
+                            <textarea id="destinatarios-mail" placeholder="ejemplo1@mail.com, cliente2@empresa.com.ar" rows="2" class="w-full bg-slate-700 border border-slate-600 rounded-lg px-3 py-2 text-sm outline-none focus:border-sky-500 placeholder-slate-400 resize-none"></textarea>
+                        </div>
+
+                        <button onclick="abrirClienteCorreo()" class="mt-3 w-full bg-sky-500 hover:bg-sky-600 text-white font-bold py-2 px-4 rounded-lg transition shadow-md flex justify-center items-center gap-2 text-sm">
+                            Abrir en mi Correo (Gmail/Outlook) <i class="fa-solid fa-external-link-alt"></i>
+                        </button>
+                    </div>
+
+                </div>
+            </div>
+
+        </div>
+    </main>
+
+<script>
+    let catalogoOdoo = [];
+    const urlBackend = 'https://xfish-odoo-api.onrender.com';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const savedKey = sessionStorage.getItem('gemini_api_key');
+        if (savedKey) document.getElementById('api-key-ai').value = savedKey;
+        cargarCatalogoOdoo();
+    });
+
+    function guardarApiKeyIA() {
+        const key = document.getElementById('api-key-ai').value.trim();
+        sessionStorage.setItem('gemini_api_key', key);
+    }
+
+    async function cargarCatalogoOdoo() {
+        const icon = document.getElementById('status-odoo-icon');
+        const text = document.getElementById('status-odoo-text');
+
+        try {
+            const pwd = sessionStorage.getItem('odoo_pwd');
+            if (!pwd) { text.innerHTML = `<span class="text-rose-500">Requiere inicio de sesión Odoo</span>`; return; }
+            
+            const res = await fetch(`${urlBackend}/api/productos`, { headers: { 'x-odoo-password': pwd } });
+            if (!res.ok) throw new Error("Error en Odoo");
+            
+            const data = await res.json();
+            catalogoOdoo = data.filter(p => p.total > 0).map(p => ({
+                sku: p.sku || '',
+                nombre: p.nombre,
+                precio: p.precio,
+                stock: p.total,
+                categoria: p.categ_id ? p.categ_id[1] : ''
+            }));
+            
+            icon.classList.replace('bg-slate-100', 'bg-emerald-100');
+            icon.classList.replace('text-slate-400', 'text-emerald-500');
+            icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+            text.innerHTML = `<span class="text-emerald-600 font-bold">${catalogoOdoo.length} productos listos para la IA.</span>`;
+        } catch (e) {
+            icon.classList.replace('bg-slate-100', 'bg-rose-100');
+            icon.classList.replace('text-slate-400', 'text-rose-500');
+            icon.innerHTML = '<i class="fa-solid fa-times"></i>';
+            text.innerHTML = `<span class="text-rose-500 font-bold">Fallo la conexión.</span>`;
+        }
+    }
+
+    function extraerPalabrasClave(texto) {
+        const ignorar = ['hola', 'buenas', 'tardes', 'dias', 'noches', 'queria', 'saber', 'si', 'tienen', 'busco', 'necesito', 'precio', 'cuanto', 'cuesta', 'sale', 'gracias', 'saludos', 'un', 'una', 'para', 'de', 'el', 'la', 'los', 'las', 'con'];
+        const palabras = texto.toLowerCase().replace(/[^\w\sáéíóúüñ]/g, '').split(/\s+/);
+        return palabras.filter(p => p.length > 3 && !ignorar.includes(p));
+    }
+
+    function buscarEnCatalogo(palabrasClave) {
+        if(palabrasClave.length === 0) return [];
+        let coincidencias = catalogoOdoo.map(prod => {
+            let score = 0;
+            const textoProd = `${prod.nombre} ${prod.categoria} ${prod.sku}`.toLowerCase();
+            palabrasClave.forEach(keyword => {
+                if (textoProd.includes(keyword)) score++;
+            });
+            return { producto: prod, score: score };
+        });
+        coincidencias = coincidencias.filter(c => c.score > 0).sort((a, b) => b.score - a.score);
+        return coincidencias.slice(0, 10).map(c => c.producto);
+    }
+
+    async function generarRespuesta() {
+        const apiKey = document.getElementById('api-key-ai').value.trim();
+        const textoCliente = document.getElementById('texto-cliente').value.trim();
+        const tono = document.getElementById('tono-respuesta').value;
+        const incluirPrecios = document.getElementById('toggle-precios').checked;
+        const btn = document.getElementById('btn-generar');
+        const overlay = document.getElementById('loading-overlay');
+        const loadingText = document.getElementById('loading-text');
+
+        if (!apiKey) return alert("Por favor, ingresá una API Key de Google Gemini.");
+        if (!textoCliente) return alert("Por favor, escribí el motivo de la consulta.");
+        if (catalogoOdoo.length === 0) return alert("Esperá a que se cargue el catálogo de Odoo.");
+
+        btn.disabled = true;
+        overlay.classList.remove('hidden');
+        document.getElementById('contexto-odoo-container').classList.add('hidden');
+        document.getElementById('texto-respuesta').value = "";
+
+        try {
+            loadingText.textContent = "Buscando stock en tu Odoo...";
+            await new Promise(r => setTimeout(r, 500)); 
+            
+            const keywords = extraerPalabrasClave(textoCliente);
+            const productosRelevantes = buscarEnCatalogo(keywords);
+
+            let stringContextoStock = "";
+            let htmlContexto = "";
+            
+            if (productosRelevantes.length > 0) {
+                stringContextoStock = "Artículos en stock relacionados a la búsqueda (USÁ ESTA INFORMACIÓN):\n";
+                productosRelevantes.forEach(p => {
+                    const infoPrecio = incluirPrecios ? `| Precio lista: $${p.precio.toLocaleString('es-AR')}` : '';
+                    stringContextoStock += `- ${p.nombre} (SKU: ${p.sku}) | Stock: ${p.stock} unid. ${infoPrecio}\n`;
+                    htmlContexto += `<li><span class="font-bold text-slate-700">${p.nombre}</span> ${incluirPrecios ? `<span class="text-emerald-600 font-bold ml-2">$${p.precio.toLocaleString('es-AR')}</span>` : `<span class="text-slate-400 text-[10px] ml-2">(Precio oculto)</span>`}</li>`;
+                });
+                
+                document.getElementById('lista-contexto').innerHTML = htmlContexto;
+                document.getElementById('contexto-odoo-container').classList.remove('hidden');
+            } else {
+                stringContextoStock = "No se encontraron productos en stock exactos para esta consulta. Sé muy general en la respuesta e invitá al cliente a revisar el catálogo web o contactarse con ventas.";
+            }
+
+            loadingText.textContent = "Redactando correo con IA...";
+            
+            const prompt = `
+Eres el encargado de ventas y atención al cliente de "X-Fish" (tienda de pesca y camping en Argentina).
+Reglas:
+1. Responde en español de Argentina (usando 'vos').
+2. Tono: ${tono}
+3. ${incluirPrecios ? 'INCLUYE SIEMPRE LOS PRECIOS de los artículos mencionados.' : 'NO MENCIONES NINGÚN PRECIO EN ABSOLUTO bajo ninguna circunstancia. Si hay artículos disponibles, nombralos y dile al cliente que consulte en la web.'}
+4. Usa esta info de stock real (no inventes nada fuera de esto):
+${stringContextoStock}
+
+Escribe SOLO el texto de respuesta final.
+
+Contexto o mensaje recibido:
+"${textoCliente}"
+            `;
+
+            const urlGemini = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
+            const response = await fetch(urlGemini, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 800 } })
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error("Error en la IA: " + (errorData.error?.message || "Desconocido"));
+            }
+
+            const data = await response.json();
+            document.getElementById('texto-respuesta').value = data.candidates[0].content.parts[0].text.trim();
+
+        } catch (error) {
+            alert(error.message);
+        } finally {
+            btn.disabled = false;
+            overlay.classList.add('hidden');
+        }
+    }
+
+    function copiarRespuesta() {
+        const textarea = document.getElementById('texto-respuesta');
+        if (!textarea.value) return;
+        
+        textarea.select();
+        navigator.clipboard.writeText(textarea.value);
+        
+        const btn = document.getElementById('btn-copiar');
+        btn.innerHTML = `<i class="fa-solid fa-check"></i> ¡Copiado!`;
+        btn.classList.replace('bg-slate-100', 'bg-emerald-100');
+        btn.classList.replace('text-slate-700', 'text-emerald-700');
+        
+        setTimeout(() => {
+            btn.innerHTML = `<i class="fa-regular fa-copy"></i> Copiar Texto`;
+            btn.classList.replace('bg-emerald-100', 'bg-slate-100');
+            btn.classList.replace('text-emerald-700', 'text-slate-700');
+        }, 2000);
+    }
+
+    function abrirClienteCorreo() {
+        const destinatariosRaw = document.getElementById('destinatarios-mail').value.trim();
+        const asunto = document.getElementById('asunto-mail').value.trim() || 'Novedades de X-Fish';
+        const cuerpo = document.getElementById('texto-respuesta').value.trim();
+
+        if (!cuerpo) return alert("Primero generá o escribí un mensaje para enviar.");
+        if (!destinatariosRaw) return alert("Ingresá al menos un destinatario.");
+
+        // Limpiar los correos y armar la cadena
+        const emails = destinatariosRaw.split(',')
+            .map(e => e.trim())
+            .filter(e => e.length > 0)
+            .join(',');
+
+        // Usamos bcc (Copia Oculta) para que los clientes no vean los correos de los demás
+        const mailtoLink = `mailto:?bcc=${encodeURIComponent(emails)}&subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+        
+        // Abre el cliente de correo predeterminado del sistema (Mail de Mac, Outlook, etc.)
+        window.location.href = mailtoLink;
+    }
+</script>
+
+</body>
+</html>
