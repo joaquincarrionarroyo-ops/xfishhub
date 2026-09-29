@@ -14,11 +14,6 @@
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        .toggle-checkbox:checked { right: 0; border-color: #8b5cf6; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #8b5cf6; }
-        .toggle-checkbox { right: 4px; z-index: 1; border-color: #e2e8f0; transition: all 0.3s; }
-        .toggle-label { background-color: #cbd5e1; transition: all 0.3s; }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 pb-12">
@@ -104,24 +99,17 @@
                     <textarea id="texto-cliente" readonly placeholder="El mensaje del cliente se cargará aquí al seleccionar una oportunidad..." class="w-full h-24 p-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none resize-none"></textarea>
                     
                     <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
-                        <div class="flex items-center gap-4">
+                        <div class="flex items-center gap-3">
+                            <label class="text-xs font-bold text-slate-600">Tono:</label>
                             <select id="tono-respuesta" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none bg-white">
-                                <option value="amable, comercial, cercano y persuasivo.">Tono Comercial</option>
-                                <option value="profesional, corporativo y formal.">Tono Formal</option>
+                                <option value="amable, comercial, cercano y persuasivo.">Comercial y Cercano</option>
+                                <option value="profesional, corporativo y formal.">Formal e Institucional</option>
                                 <option value="muy breve, directo al grano y resolutivo.">Corto y Resolutivo</option>
                             </select>
-                            
-                            <div class="flex items-center gap-2">
-                                <div class="relative inline-block w-8 mr-1 align-middle select-none">
-                                    <input type="checkbox" id="toggle-precios" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                    <label for="toggle-precios" class="toggle-label block overflow-hidden h-4 rounded-full cursor-pointer"></label>
-                                </div>
-                                <label class="text-xs font-bold text-slate-600 cursor-pointer" for="toggle-precios">Incluir Precios</label>
-                            </div>
                         </div>
 
                         <button onclick="generarRespuesta()" id="btn-generar" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-5 rounded-xl shadow-md transition text-xs flex items-center gap-2 disabled:opacity-50">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Redactar Respuesta
+                            <i class="fa-solid fa-wand-magic-sparkles"></i> Redactar Respuesta con IA
                         </button>
                     </div>
                 </div>
@@ -130,7 +118,7 @@
                     
                     <div id="loading-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 hidden flex-col items-center justify-center rounded-2xl">
                         <div class="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mb-3"></div>
-                        <p id="loading-text" class="text-xs font-bold text-violet-700 animate-pulse">Analizando...</p>
+                        <p id="loading-text" class="text-xs font-bold text-violet-700 animate-pulse">Redactando...</p>
                     </div>
 
                     <div class="flex justify-between items-center mb-3">
@@ -142,11 +130,11 @@
                         </button>
                     </div>
                     
-                    <textarea id="texto-respuesta" placeholder="La respuesta generada por la IA aparecerá aquí para que la revises o edites..." class="w-full flex-grow p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none resize-none mb-3 shadow-inner"></textarea>
+                    <textarea id="texto-respuesta" placeholder="La respuesta generada por la IA aparecerá aquí para que la revises o edites antes de mandarla..." class="w-full flex-grow p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none resize-none mb-3 shadow-inner"></textarea>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
                         <button onclick="abrirEnGmailWeb()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-4 rounded-xl transition shadow flex justify-center items-center gap-2 text-xs">
-                            <i class="fa-brands fa-google"></i> Abrir Borrador en Gmail
+                            <i class="fa-brands fa-google"></i> Abrir Borrador en Gmail Web
                         </button>
                         <button onclick="abrirClienteLocal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-4 rounded-xl transition shadow flex justify-center items-center gap-2 text-xs">
                             <i class="fa-solid fa-envelope"></i> Abrir en App de Correo (Mail/Outlook)
@@ -275,27 +263,9 @@
         document.getElementById('texto-respuesta').value = "";
     }
 
-    function extraerPalabrasClave(texto) {
-        const ignorar = ['hola', 'buenas', 'tardes', 'dias', 'noches', 'queria', 'saber', 'si', 'tienen', 'busco', 'necesito', 'precio', 'cuanto', 'cuesta', 'sale', 'gracias', 'asistente', 'online', 'mensaje', 'contacto'];
-        return texto.toLowerCase().replace(/[^\w\sáéíóúüñ]/g, '').split(/\s+/).filter(p => p.length > 3 && !ignorar.includes(p));
-    }
-
-    function buscarEnCatalogo(palabrasClave) {
-        if (palabrasClave.length === 0) return [];
-        let coincidencias = catalogoOdoo.map(prod => {
-            let score = 0;
-            const textoProd = `${prod.nombre} ${prod.categoria} ${prod.sku}`.toLowerCase();
-            palabrasClave.forEach(keyword => { if (textoProd.includes(keyword)) score++; });
-            return { producto: prod, score: score };
-        });
-        return coincidencias.filter(c => c.score > 0).sort((a, b) => b.score - a.score).slice(0, 8).map(c => c.producto);
-    }
-
-    // Auto-detección inteligente del modelo compatible con tu API Key
     async function llamarApiGemini(promptText, apiKey) {
         let modelosCandidatos = [];
 
-        // Paso 1: Preguntarle a Google qué modelos tiene activos tu clave
         try {
             const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
             if (listRes.ok) {
@@ -310,7 +280,6 @@
             console.log("No se pudo listar modelos dinámicamente:", e.message);
         }
 
-        // Si la lista dinámica falló, usamos la lista de respaldo garantizada
         if (modelosCandidatos.length === 0) {
             modelosCandidatos = [
                 'gemini-2.0-flash',
@@ -319,7 +288,6 @@
                 'gemini-1.5-pro'
             ];
         } else {
-            // Priorizamos los modelos flash más rápidos
             modelosCandidatos.sort((a, b) => {
                 if (a.includes('flash') && !b.includes('flash')) return -1;
                 if (!a.includes('flash') && b.includes('flash')) return 1;
@@ -329,7 +297,6 @@
 
         let ultimoError = null;
 
-        // Paso 2: Ejecutar con el primer modelo que responda correctamente
         for (const modelo of modelosCandidatos) {
             const urls = [
                 `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(apiKey)}`,
@@ -345,7 +312,6 @@
                             contents: [{ parts: [{ text: promptText }] }],
                             generationConfig: {
                                 temperature: 0.7
-                                // Sin maxOutputTokens artificial: permite redactar el mensaje entero
                             }
                         })
                     });
@@ -375,7 +341,6 @@
 
         const textoCliente = document.getElementById('texto-cliente').value.trim();
         const tono = document.getElementById('tono-respuesta').value;
-        const incluirPrecios = document.getElementById('toggle-precios').checked;
         const btn = document.getElementById('btn-generar');
         const overlay = document.getElementById('loading-overlay');
         const loadingText = document.getElementById('loading-text');
@@ -386,43 +351,49 @@
         overlay.classList.remove('hidden');
 
         try {
-            loadingText.textContent = "Buscando productos en stock...";
-            await new Promise(r => setTimeout(r, 200)); 
-            
-            const keywords = extraerPalabrasClave(textoCliente);
-            const productosRelevantes = buscarEnCatalogo(keywords);
+            loadingText.textContent = "Redactando según las políticas comerciales de X-Fish...";
 
-            let stringContextoStock = "No se encontraron productos exactos. Invitá cordialmente a visitar la tienda online o contactarse con ventas.";
-            if (productosRelevantes.length > 0) {
-                stringContextoStock = "Artículos en stock real disponibles en X-Fish:\n";
-                productosRelevantes.forEach(p => {
-                    const infoPrecio = incluirPrecios ? `| Precio: $${p.precio.toLocaleString('es-AR')}` : '';
-                    stringContextoStock += `- ${p.nombre} (SKU: ${p.sku}) | Stock: ${p.stock} unid. ${infoPrecio}\n`;
-                });
-            }
-
-            loadingText.textContent = "Redactando correo con Gemini AI...";
-            
             const prompt = `
-Eres el encargado de atención al cliente y ventas de "X-Fish" (tienda de pesca y camping en Argentina).
-Reglas:
-1. Responde en español rioplatense (usando 'vos').
-2. Tono: ${tono}
-3. ${incluirPrecios ? 'INCLUYE SIEMPRE LOS PRECIOS de los artículos mencionados.' : 'NO MENCIONES NINGÚN PRECIO EN ABSOLUTO bajo ninguna circunstancia. Si hay artículos disponibles, nombralos y dile al cliente que consulte en la web.'}
-4. Usa esta info de stock real (no inventes nada fuera de esto):
-${stringContextoStock}
+Actúa como el responsable comercial y de atención al cliente de "X-Fish" (importador y distribuidor mayorista de artículos de pesca, camping y actividades al aire libre en Argentina).
 
-Escribe ÚNICAMENTE el texto de respuesta final completo, con saludo y despedida, listo para enviar.
+=== POLÍTICAS Y REGLAS OPERATIVAS DE X-FISH ===
+1. MODELO DE NEGOCIO (VENTA MAYORISTA):
+   - Somos distribuidores e importadores con venta EXCLUSIVA POR MAYOR.
+   - Si el cliente consulta por compras por unidad o como consumidor final, aclárale amablemente que no realizamos venta minorista o por unidad, sino únicamente pedidos por mayor dirigidos a comercios y revendedores.
+   - (Nota: NO menciones "bulto cerrado", simplemente indica que la venta es exclusivamente mayorista).
 
-Mensaje del cliente:
+2. MONTO MÍNIMO Y DESCUENTOS:
+   - Si el cliente consulta por montos mínimos de compra o condiciones comerciales, explícale cómo nos manejamos y menciónale que contamos con una escala de DESCUENTOS COMERCIALES por volumen o monto de compra para mejorar la rentabilidad de su negocio.
+
+3. LISTA DE PRECIOS Y CATÁLOGO:
+   - Si el cliente solicita lista de precios, costos o catálogo, infórmale que le adjuntamos la lista completa y actualizada en formato Excel para que pueda revisarla en detalle.
+   - NO menciones ni detalles artículos sueltos ni precios específicos en el cuerpo del correo; remite directamente al archivo Excel adjunto.
+
+4. POLÍTICA DE SHOWROOM Y RETIROS:
+   - Contamos con showroom comercial para exhibición de productos y ver muestras (coordinando visita previa).
+   - IMPORTANTE: NO se puede retirar mercadería por el showroom en el mismo día bajo ninguna circunstancia.
+   - Todo pedido requiere un tiempo previo de armado, preparación y control en depósito antes de ser entregado o despachado.
+
+5. MÉTODOS DE ENTREGA Y ENVÍO:
+   - Envíos a todo el país: Despachamos mediante el expreso o transporte que el cliente elija (o encomienda según la localidad).
+   - Retiro: Se puede retirar una vez que el pedido esté confirmado, armado y coordinado previamente con el equipo de ventas.
+
+6. TONO Y ESTILO:
+   - Español rioplatense natural (usando "vos", "te comento", "avisame", "quedamos a disposición").
+   - Tono comercial: ${tono}
+   - Claro, profesional, resolutivo y cercano.
+
+=== MENSAJE RECIBIDO DEL CLIENTE ===
 "${textoCliente}"
+
+Redacta únicamente la respuesta final completa, con saludo inicial y despedida formal de X-Fish, atendiendo exactamente a las dudas del cliente según las reglas anteriores.
             `;
 
             const respuestaTexto = await llamarApiGemini(prompt, key);
             document.getElementById('texto-respuesta').value = respuestaTexto;
 
         } catch (error) {
-            alert("Detalle de Google: " + error.message);
+            alert("Error al generar borrador: " + error.message);
         } finally {
             btn.disabled = false;
             overlay.classList.add('hidden');
