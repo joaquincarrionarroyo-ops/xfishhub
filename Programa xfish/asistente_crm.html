@@ -57,7 +57,7 @@
                     </div>
                     <div>
                         <h3 class="font-bold text-sm text-slate-800">Motor de Inteligencia Artificial</h3>
-                        <p class="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
+                        <p class="text-xs text-emerald-600 font-bold flex items-center gap-1.5" id="status-ai-text">
                             <i class="fa-solid fa-circle-check"></i> Google Gemini AI Vinculado
                         </p>
                     </div>
@@ -135,18 +135,23 @@
 
                     <div class="flex justify-between items-center mb-3">
                         <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-pen-nib text-fuchsia-500"></i> Borrador Listo para Enviar
+                            <i class="fa-solid fa-pen-nib text-fuchsia-500"></i> Borrador Editable (Revisar antes de despachar)
                         </h2>
                         <button onclick="copiarRespuesta()" id="btn-copiar" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1 px-3 rounded-lg border border-slate-200 transition flex items-center gap-1.5">
                             <i class="fa-regular fa-copy"></i> Copiar
                         </button>
                     </div>
                     
-                    <textarea id="texto-respuesta" placeholder="La respuesta generada por la IA aparecerá aquí..." class="w-full flex-grow p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none resize-none mb-4 shadow-inner"></textarea>
+                    <textarea id="texto-respuesta" placeholder="La respuesta generada por la IA aparecerá aquí para que la revises o edites..." class="w-full flex-grow p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none resize-none mb-3 shadow-inner"></textarea>
 
-                    <button onclick="enviarAOdoo()" id="btn-enviar" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2 text-sm disabled:opacity-50">
-                        <i class="fa-solid fa-paper-plane"></i> Enviar Correo y Registrar en Odoo CRM
-                    </button>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <button onclick="abrirEnGmailWeb()" class="bg-rose-600 hover:bg-rose-700 text-white font-bold py-2.5 px-4 rounded-xl transition shadow flex justify-center items-center gap-2 text-xs">
+                            <i class="fa-brands fa-google"></i> Abrir Borrador en Gmail
+                        </button>
+                        <button onclick="abrirClienteLocal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold py-2.5 px-4 rounded-xl transition shadow flex justify-center items-center gap-2 text-xs">
+                            <i class="fa-solid fa-envelope"></i> Abrir en App de Correo (Mail/Outlook)
+                        </button>
+                    </div>
                 </div>
             </div>
 
@@ -175,7 +180,7 @@
         const nuevaClave = prompt("🔑 Ingresá tu nueva API Key de Google Gemini:");
         if (nuevaClave && nuevaClave.trim() !== '') {
             localStorage.setItem('gemini_api_key', nuevaClave.trim());
-            alert("✅ Clave de Gemini actualizada correctamente.");
+            alert("✅ Clave de Gemini actualizada.");
         }
     }
 
@@ -286,45 +291,85 @@
         return coincidencias.filter(c => c.score > 0).sort((a, b) => b.score - a.score).slice(0, 8).map(c => c.producto);
     }
 
+    // Auto-detección inteligente del modelo compatible con tu API Key
     async function llamarApiGemini(promptText, apiKey) {
-        // Lista de endpoints a probar (compatibilidad con endpoints actuales v1 y v1beta)
-        const endpoints = [
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-            `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${encodeURIComponent(apiKey)}`,
-            `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${encodeURIComponent(apiKey)}`
-        ];
+        let modelosCandidatos = [];
+
+        // Paso 1: Preguntarle a Google qué modelos tiene activos tu clave
+        try {
+            const listRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(apiKey)}`);
+            if (listRes.ok) {
+                const listData = await listRes.json();
+                if (listData.models && Array.isArray(listData.models)) {
+                    modelosCandidatos = listData.models
+                        .filter(m => m.supportedGenerationMethods && m.supportedGenerationMethods.includes('generateContent'))
+                        .map(m => m.name.replace(/^models\//, ''));
+                }
+            }
+        } catch (e) {
+            console.log("No se pudo listar modelos dinámicamente:", e.message);
+        }
+
+        // Si la lista dinámica falló, usamos la lista de respaldo garantizada
+        if (modelosCandidatos.length === 0) {
+            modelosCandidatos = [
+                'gemini-2.0-flash',
+                'gemini-1.5-flash',
+                'gemini-2.5-flash',
+                'gemini-1.5-pro'
+            ];
+        } else {
+            // Priorizamos los modelos flash más rápidos
+            modelosCandidatos.sort((a, b) => {
+                if (a.includes('flash') && !b.includes('flash')) return -1;
+                if (!a.includes('flash') && b.includes('flash')) return 1;
+                return 0;
+            });
+        }
 
         let ultimoError = null;
 
-        for (const url of endpoints) {
-            try {
-                const response = await fetch(url, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: promptText }] }],
-                        generationConfig: { temperature: 0.7, maxOutputTokens: 800 }
-                    })
-                });
+        // Paso 2: Ejecutar con el primer modelo que responda correctamente
+        for (const modelo of modelosCandidatos) {
+            const urls = [
+                `https://generativelanguage.googleapis.com/v1beta/models/${modelo}:generateContent?key=${encodeURIComponent(apiKey)}`,
+                `https://generativelanguage.googleapis.com/v1/models/${modelo}:generateContent?key=${encodeURIComponent(apiKey)}`
+            ];
 
-                if (response.ok) {
-                    const data = await response.json();
-                    if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
-                        return data.candidates[0].content.parts[0].text.trim();
+            for (const url of urls) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            contents: [{ parts: [{ text: promptText }] }],
+                            generationConfig: {
+                                temperature: 0.7
+                                // Sin maxOutputTokens artificial: permite redactar el mensaje entero
+                            }
+                        })
+                    });
+
+                    if (response.ok) {
+                        const data = await response.json();
+                        const salida = data.candidates?.[0]?.content?.parts?.[0]?.text;
+                        if (salida && salida.trim().length > 0) {
+                            return salida.trim();
+                        }
+                    } else {
+                        const errData = await response.json().catch(() => ({}));
+                        ultimoError = errData.error?.message || `HTTP ${response.status}`;
                     }
-                } else {
-                    const errDetail = await response.json().catch(() => ({}));
-                    ultimoError = errDetail.error?.message || `HTTP ${response.status}`;
+                } catch (netErr) {
+                    ultimoError = netErr.message;
                 }
-            } catch (err) {
-                ultimoError = err.message;
             }
         }
 
-        throw new Error(ultimoError || "No se pudo comunicar con los modelos disponibles de Gemini.");
+        throw new Error(ultimoError || "No se pudo generar respuesta con los modelos disponibles.");
     }
 
-async function generarRespuesta() {
+    async function generarRespuesta() {
         const key = getGeminiKey();
         if (!key) return alert("Por favor ingresá tu API Key de Gemini para continuar.");
 
@@ -363,55 +408,18 @@ Eres el encargado de atención al cliente y ventas de "X-Fish" (tienda de pesca 
 Reglas:
 1. Responde en español rioplatense (usando 'vos').
 2. Tono: ${tono}
-3. ${incluirPrecios ? 'INCLUYE SIEMPRE LOS PRECIOS de los artículos mencionados.' : 'NO MENCIONES NINGÚN PRECIO en absoluto bajo ninguna circunstancia. Si hay artículos disponibles, menciónalos e invita a revisar la web.'}
-4. Usa exclusivamente esta info de stock real (no inventes nada más):
+3. ${incluirPrecios ? 'INCLUYE SIEMPRE LOS PRECIOS de los artículos mencionados.' : 'NO MENCIONES NINGÚN PRECIO EN ABSOLUTO bajo ninguna circunstancia. Si hay artículos disponibles, nombralos y dile al cliente que consulte en la web.'}
+4. Usa esta info de stock real (no inventes nada fuera de esto):
 ${stringContextoStock}
 
-Escribe únicamente el texto de respuesta completo, con saludo y despedida, listo para enviar.
+Escribe ÚNICAMENTE el texto de respuesta final completo, con saludo y despedida, listo para enviar.
 
 Mensaje del cliente:
 "${textoCliente}"
             `;
 
-            // Probamos primero con gemini-2.5-flash y luego con gemini-1.5-flash-latest
-            const modelos = [
-                'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent',
-                'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent'
-            ];
-
-            let textoGenerado = null;
-            let ultimoError = null;
-
-            for (const urlBase of modelos) {
-                try {
-                    const res = await fetch(`${urlBase}?key=${encodeURIComponent(key)}`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({
-                            contents: [{ parts: [{ text: prompt }] }],
-                            generationConfig: { 
-                                temperature: 0.7, 
-                                maxOutputTokens: 2500 // Espacio de sobra para que no corte el mensaje
-                            }
-                        })
-                    });
-
-                    if (res.ok) {
-                        const data = await res.json();
-                        textoGenerado = data.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
-                        if (textoGenerado) break;
-                    } else {
-                        const err = await res.json().catch(() => ({}));
-                        ultimoError = err.error?.message || `HTTP ${res.status}`;
-                    }
-                } catch (e) {
-                    ultimoError = e.message;
-                }
-            }
-
-            if (!textoGenerado) throw new Error(ultimoError || "No se pudo generar la respuesta.");
-
-            document.getElementById('texto-respuesta').value = textoGenerado;
+            const respuestaTexto = await llamarApiGemini(prompt, key);
+            document.getElementById('texto-respuesta').value = respuestaTexto;
 
         } catch (error) {
             alert("Detalle de Google: " + error.message);
@@ -421,44 +429,32 @@ Mensaje del cliente:
         }
     }
 
-    async function enviarAOdoo() {
-        const leadId = document.getElementById('lead-activo-id').value;
-        const mensaje = document.getElementById('texto-respuesta').value.trim();
-        const btn = document.getElementById('btn-enviar');
+    function extraerEmailPuro(str) {
+        const match = str.match(/<([^>]+)>/) || str.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
+        return match ? match[1] : str.trim();
+    }
 
-        if (!leadId) return alert("Seleccioná un correo de la lista primero.");
-        if (!mensaje) return alert("Generá o escribí la respuesta antes de enviar.");
+    function abrirEnGmailWeb() {
+        const destinatarioRaw = document.getElementById('lead-mail').textContent;
+        const asunto = "Re: " + document.getElementById('lead-nombre').textContent.replace(/^Re:\s*/i, '');
+        const cuerpo = document.getElementById('texto-respuesta').value.trim();
 
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando y registrando en Odoo...`;
+        if (!cuerpo) return alert("Primero generá o redactá la respuesta.");
+        const to = extraerEmailPuro(destinatarioRaw);
 
-        try {
-            const pwd = sessionStorage.getItem('odoo_pwd');
-            const mensajeHTML = mensaje.replace(/\n/g, '<br>');
+        const urlGmail = `https://mail.google.com/mail/?view=cm&fs=1&to=${encodeURIComponent(to)}&su=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
+        window.open(urlGmail, '_blank');
+    }
 
-            const res = await fetch(`${urlBackend}/api/crm-responder`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-odoo-password': pwd },
-                body: JSON.stringify({ lead_id: leadId, mensaje: mensajeHTML })
-            });
+    function abrirClienteLocal() {
+        const destinatarioRaw = document.getElementById('lead-mail').textContent;
+        const asunto = "Re: " + document.getElementById('lead-nombre').textContent.replace(/^Re:\s*/i, '');
+        const cuerpo = document.getElementById('texto-respuesta').value.trim();
 
-            if (!res.ok) throw new Error("Error de conexión al enviar");
+        if (!cuerpo) return alert("Primero generá o redactá la respuesta.");
+        const to = extraerEmailPuro(destinatarioRaw);
 
-            btn.classList.replace('bg-emerald-600', 'bg-slate-800');
-            btn.innerHTML = `<i class="fa-solid fa-check"></i> ¡Enviado con éxito!`;
-            
-            setTimeout(() => {
-                btn.classList.replace('bg-slate-800', 'bg-emerald-600');
-                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar Correo y Registrar en Odoo CRM`;
-                btn.disabled = false;
-                document.getElementById('texto-respuesta').value = "";
-            }, 3000);
-
-        } catch (e) {
-            alert("Hubo un error al intentar despachar la respuesta en Odoo.");
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Reintentar Envío`;
-        }
+        window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(asunto)}&body=${encodeURIComponent(cuerpo)}`;
     }
 
     function copiarRespuesta() {
