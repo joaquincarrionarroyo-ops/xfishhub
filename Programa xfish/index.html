@@ -3,405 +3,230 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>CRM IA | X-Fish</title>
+    <title>Centro de Herramientas X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
-        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.6); box-shadow: 0 4px 30px rgba(0, 0, 0, 0.05); }
-        .blob { position: fixed; filter: blur(80px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
-        @keyframes float { 0% { transform: translateY(0px); } 50% { transform: translateY(-20px); } 100% { transform: translateY(0px); } }
-        ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
-        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
-        
-        .toggle-checkbox:checked { right: 0; border-color: #8b5cf6; }
-        .toggle-checkbox:checked + .toggle-label { background-color: #8b5cf6; }
-        .toggle-checkbox { right: 4px; z-index: 1; border-color: #e2e8f0; transition: all 0.3s; }
-        .toggle-label { background-color: #cbd5e1; transition: all 0.3s; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f0f4f8; }
+        .glass-panel { background: rgba(255, 255, 255, 0.65); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
+        .blob { position: absolute; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
     </style>
 </head>
-<body class="relative min-h-screen text-slate-800 pb-12">
+<body class="relative min-h-screen flex items-center justify-center overflow-x-hidden selection:bg-blue-500 selection:text-white p-6 py-12">
 
-    <div class="blob bg-violet-200 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
-    <div class="blob bg-fuchsia-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
+    <div class="blob bg-blue-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-60"></div>
+    <div class="blob bg-sky-200 w-[400px] h-[400px] bottom-[50px] right-[-50px] opacity-70" style="animation-delay: -2s;"></div>
+    <div class="blob bg-amber-100 w-[300px] h-[300px] top-[20%] left-[60%] opacity-50" style="animation-delay: -4s;"></div>
 
-    <header class="glass-panel sticky top-0 z-50 px-6 py-4 mb-8">
-        <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 class="text-xl font-extrabold text-slate-800 flex items-center gap-3">
-                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-600 shadow flex items-center justify-center">
-                    <i class="fa-solid fa-envelope-open-text text-white text-sm"></i>
-                </div>
-                CRM: Gestión Inteligente de Correos
-            </h1>
-            <a href="index.html" class="text-sm font-semibold text-violet-600 hover:text-violet-800">← Volver al Hub</a>
-        </div>
-    </header>
-
-    <main class="max-w-7xl mx-auto px-4 md:px-6">
+    <div class="relative z-10 w-full max-w-6xl">
         
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-            <div class="glass-panel rounded-xl p-4 flex items-center gap-4">
-                <div id="status-odoo-icon" class="w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-400">
-                    <i class="fa-solid fa-database"></i>
-                </div>
-                <div>
-                    <h3 class="font-bold text-sm text-slate-800">Sincronización Odoo</h3>
-                    <p id="status-odoo-text" class="text-xs text-slate-500">Conectando catálogo y CRM...</p>
-                </div>
-            </div>
-            <div class="glass-panel rounded-xl p-4 flex items-center justify-between border-l-4 border-emerald-500">
-                <div class="flex items-center gap-4">
-                    <div class="w-10 h-10 rounded-full bg-emerald-50 flex items-center justify-center text-emerald-500">
-                        <i class="fa-solid fa-brain"></i>
-                    </div>
-                    <div>
-                        <h3 class="font-bold text-sm text-slate-800">Motor de Inteligencia Artificial</h3>
-                        <p class="text-xs text-emerald-600 font-bold flex items-center gap-1.5">
-                            <i class="fa-solid fa-circle-check"></i> Google Gemini AI Vinculado
-                        </p>
-                    </div>
-                </div>
-                <button onclick="cambiarGeminiKey()" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-600 px-3 py-1.5 rounded-lg border border-slate-200 transition font-semibold">
-                    <i class="fa-solid fa-key mr-1"></i> Cambiar API Key
-                </button>
-            </div>
-        </div>
-
-        <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 h-[720px]">
+        <div class="text-center mb-12 flex flex-col items-center">
+            <h1 class="text-4xl md:text-5xl font-extrabold text-slate-800 tracking-tight mb-3">Hub Operativo X-Fish</h1>
+            <p class="text-lg text-slate-500 font-medium max-w-2xl mx-auto mb-4">Plataforma centralizada de gestión de inventario, auditoría de catálogo, automatización gráfica y control en tiempo real sincronizado con Odoo.</p>
             
-            <!-- BANDEJA DE CORREOS / CRM -->
-            <div class="lg:col-span-4 h-full">
-                <div class="glass-panel rounded-2xl h-full flex flex-col overflow-hidden">
-                    <div class="p-4 border-b border-slate-200 bg-white/50 flex justify-between items-center">
-                        <h2 class="font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-inbox text-violet-500"></i> Oportunidades Abiertas
-                        </h2>
-                        <button onclick="cargarCRMLeads()" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2 py-1 rounded shadow-sm transition">
-                            <i class="fa-solid fa-sync-alt mr-1"></i> Actualizar
-                        </button>
-                    </div>
-                    
-                    <div id="lista-leads" class="flex-grow overflow-y-auto p-2 space-y-2">
-                        <p class="text-xs text-center text-slate-400 mt-10">Cargando correos desde Odoo...</p>
-                    </div>
-                </div>
-            </div>
-
-            <!-- VISOR Y GENERADOR DE RESPUESTA -->
-            <div class="lg:col-span-8 h-full flex flex-col gap-6">
-                
-                <div class="glass-panel rounded-2xl p-5 flex flex-col bg-white">
-                    <input type="hidden" id="lead-activo-id">
-                    <div class="flex justify-between items-start mb-2">
-                        <div>
-                            <h3 id="lead-nombre" class="font-bold text-lg text-slate-800">Seleccioná una oportunidad de la lista</h3>
-                            <p id="lead-mail" class="text-xs text-slate-500 font-mono">-</p>
-                        </div>
-                        <span id="lead-fecha" class="text-[10px] bg-slate-100 text-slate-500 px-2 py-1 rounded font-mono">-</span>
-                    </div>
-                    
-                    <textarea id="texto-cliente" readonly placeholder="El mensaje del cliente se cargará aquí al seleccionar una oportunidad..." class="w-full h-24 p-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none resize-none"></textarea>
-                    
-                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
-                        <div class="flex items-center gap-4">
-                            <select id="tono-respuesta" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none bg-white">
-                                <option value="amable, comercial, cercano y persuasivo.">Tono Comercial</option>
-                                <option value="profesional, corporativo y formal.">Tono Formal</option>
-                                <option value="muy breve, directo al grano y resolutivo.">Corto y Resolutivo</option>
-                            </select>
-                            
-                            <div class="flex items-center gap-2">
-                                <div class="relative inline-block w-8 mr-1 align-middle select-none">
-                                    <input type="checkbox" id="toggle-precios" class="toggle-checkbox absolute block w-4 h-4 rounded-full bg-white border-4 appearance-none cursor-pointer"/>
-                                    <label for="toggle-precios" class="toggle-label block overflow-hidden h-4 rounded-full cursor-pointer"></label>
-                                </div>
-                                <label class="text-xs font-bold text-slate-600 cursor-pointer" for="toggle-precios">Incluir Precios</label>
-                            </div>
-                        </div>
-
-                        <button onclick="generarRespuesta()" id="btn-generar" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-5 rounded-xl shadow-md transition text-xs flex items-center gap-2 disabled:opacity-50">
-                            <i class="fa-solid fa-wand-magic-sparkles"></i> Redactar Respuesta
-                        </button>
-                    </div>
-                </div>
-
-                <div class="glass-panel rounded-2xl p-5 flex flex-col flex-grow relative">
-                    
-                    <div id="loading-overlay" class="absolute inset-0 bg-white/90 backdrop-blur-sm z-10 hidden flex-col items-center justify-center rounded-2xl">
-                        <div class="w-10 h-10 border-4 border-violet-200 border-t-violet-600 rounded-full animate-spin mb-3"></div>
-                        <p id="loading-text" class="text-xs font-bold text-violet-700 animate-pulse">Analizando...</p>
-                    </div>
-
-                    <div class="flex justify-between items-center mb-3">
-                        <h2 class="text-sm font-bold text-slate-800 flex items-center gap-2">
-                            <i class="fa-solid fa-pen-nib text-fuchsia-500"></i> Borrador Listo para Enviar
-                        </h2>
-                        <button onclick="copiarRespuesta()" id="btn-copiar" class="text-xs bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold py-1 px-3 rounded-lg border border-slate-200 transition flex items-center gap-1.5">
-                            <i class="fa-regular fa-copy"></i> Copiar
-                        </button>
-                    </div>
-                    
-                    <textarea id="texto-respuesta" placeholder="La respuesta generada por la IA aparecerá aquí..." class="w-full flex-grow p-4 rounded-xl border border-slate-200 bg-white text-sm text-slate-700 outline-none resize-none mb-4 shadow-inner"></textarea>
-
-                    <button onclick="enviarAOdoo()" id="btn-enviar" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl transition shadow-lg flex justify-center items-center gap-2 text-sm disabled:opacity-50">
-                        <i class="fa-solid fa-paper-plane"></i> Enviar Correo y Registrar en Odoo CRM
-                    </button>
-                </div>
-            </div>
-
+            <button onclick="cambiarApiKey()" class="text-xs text-blue-600 hover:text-blue-800 font-semibold bg-white/80 border border-blue-200 px-4 py-1.5 rounded-full shadow-sm transition-all hover:shadow-md">
+                🔑 Configurar / Cambiar Clave API de Odoo
+            </button>
         </div>
-    </main>
 
-<script>
-    let catalogoOdoo = [];
-    let leadsOdoo = [];
-    const urlBackend = 'https://xfish-odoo-api.onrender.com';
+        <!-- CONTENEDOR DE LA GRILLA -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            
+            <!-- 1. Generador de Altas -->
+            <a href="altas.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-blue-500 to-blue-700 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Generador de Altas</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Compara planillas de compras e ingresos contra el maestro original. Detecta artículos nuevos, calcula diferencias de cantidades recibidas y genera automáticamente la estructura de alta para el catálogo.
+                </p>
+                <div class="flex items-center text-blue-600 font-semibold text-sm">Abrir herramienta →</div>
+            </a>
 
-    // Obtener la clave de Gemini sin exponerla en el código
-    function getGeminiKey() {
-        let key = localStorage.getItem('gemini_api_key');
-        if (!key || key.trim() === '') {
-            key = prompt("🔑 Ingresá tu API Key de Google Gemini (se guardará en este navegador de forma segura):");
-            if (key && key.trim() !== '') {
-                localStorage.setItem('gemini_api_key', key.trim());
-                return key.trim();
+            <!-- 2. Diferencia General -->
+            <a href="diferenciainventario.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-slate-600 to-slate-800 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Diferencia de Inventario</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Módulo de auditoría física y contable. Contrasta los conteos físicos de almacén contra el stock teórico en Odoo, identificando sobrantes, faltantes, desvíos por ubicación y valuación de diferencias.
+                </p>
+                <div class="flex items-center text-slate-700 font-semibold text-sm">Abrir herramienta →</div>
+            </a>
+
+            <!-- 3. Estampador Dinámico -->
+            <a href="editor-imagenes.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-pink-500 to-rose-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Estampador Dinámico</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Editor por lotes para procesamiento gráfico comercial. Permite aplicar marcas de agua, marcos institucionales, logos y etiquetas sobre fotografías de productos manteniendo fondo blanco y formato estandarizado.
+                </p>
+                <div class="flex items-center text-pink-600 font-semibold text-sm">Abrir estampador →</div>
+            </a>
+
+            <!-- 4. Alta de Inventario -->
+            <a href="alta-inventario.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-blue-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Alta de Inventario</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Conciliación integral de stock entre planillas maestras previas e ingresos recientes. Valida códigos SKU, unidades por bulto y genera archivos de importación masiva para ajustes de inventario.
+                </p>
+                <div class="flex items-center text-indigo-600 font-semibold text-sm">Abrir módulo →</div>
+            </a>
+
+            <!-- 5. Actualizador Precios -->
+            <a href="precios_nuevos.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Actualizador de Precios</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Cruza listas de proveedores en Excel contra Odoo en tiempo real. Resalta variaciones tarifarias, suma importes totales y exporta un archivo con External IDs exactos de variantes sin duplicados.
+                </p>
+                <div class="flex items-center text-emerald-600 font-semibold text-sm">Abrir actualizador →</div>
+            </a>
+
+            <!-- 6. Buscador Visual -->
+            <a href="buscador.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-500 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Buscador Visual</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Catálogo de consulta inmediata por nombre o SKU. Permite auditar fotos cargadas, validar existencia de stock por depósito o estantería y verificar lotes sin necesidad de ingresar al ERP.
+                </p>
+                <div class="flex items-center text-cyan-600 font-semibold text-sm">Abrir buscador →</div>
+            </a>
+
+            <!-- 7. Catálogo Revista PDF -->
+            <a href="catalogo_revista.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-purple-900/10 cursor-pointer">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-purple-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-purple-500/30 mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Catálogo Revista PDF</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Generador editorial de folletos comerciales en PDF. Filtra por categorías y etiquetas comerciales de Odoo, excluye artículos sin foto y adapta textos automáticamente para evitar solapamientos.
+                </p>
+                <div class="flex items-center text-purple-600 font-semibold text-sm group-hover:text-purple-800 transition-colors">Abrir generador →</div>
+            </a>
+
+            <!-- 8. Manuales y Procedimientos -->
+            <a href="manuales.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center shadow-lg mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Manuales y Documentación</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Biblioteca de instructivos operativos en PDF: procedimientos de venta interna y externa, facturación, cierres de caja, recepción ICO y actualización masiva de precios en Odoo.
+                </p>
+                <div class="flex items-center text-amber-600 font-semibold text-sm">Ver manuales →</div>
+            </a>
+            
+            <!-- 9. Fichas Comerciales -->
+            <a href="ficha_comercial.html" class="glass-panel rounded-3xl p-8 flex flex-col group transition-all duration-300 hover:-translate-y-2 hover:shadow-2xl hover:shadow-sky-900/10 cursor-pointer">
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-blue-600 flex items-center justify-center shadow-lg shadow-sky-500/30 mb-6 group-hover:scale-105 transition-transform">
+                    <svg class="w-7 h-7 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                </div>
+                <h2 class="text-2xl font-bold text-slate-800 mb-2">Fichas Comerciales</h2>
+                <p class="text-sm text-slate-600 font-normal leading-relaxed flex-grow mb-6">
+                    Genera imágenes comerciales listas para WhatsApp y redes: carga por lista de SKUs, extrae nombre, variante y código desde Odoo con edición visual individual.
+                </p>
+                <div class="flex items-center text-sky-600 font-semibold text-sm">Crear fichas →</div>
+            </a>
+
+            <!-- MÓDULO: Historial 360 -->
+            <a href="historial_producto.html" class="glass-panel p-6 rounded-2xl group hover:-translate-y-1 hover:shadow-xl hover:shadow-indigo-500/10 transition-all duration-300 block border border-white/60 relative overflow-hidden">
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl group-hover:bg-indigo-500/20 transition-colors duration-500"></div>
+                
+                <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 shadow-lg shadow-indigo-500/30 flex items-center justify-center mb-4 text-white transform group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"></path>
+                    </svg>
+                </div>
+                
+                <h3 class="text-lg font-extrabold text-slate-800 mb-2 tracking-tight group-hover:text-indigo-600 transition-colors">Historial 360°</h3>
+                <p class="text-xs text-slate-500 font-medium leading-relaxed">Auditoría completa por producto: compras, costos reales, curva de ventas y movimientos de stock.</p>
+            </a>
+            
+            <!-- MÓDULO: Creador de Avisos (Popups) -->
+            <a href="generador_avisos.html" class="glass-panel p-6 rounded-2xl group hover:-translate-y-1 hover:shadow-xl hover:shadow-orange-500/10 transition-all duration-300 block border border-white/60 relative overflow-hidden">
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-orange-500/10 rounded-full blur-2xl group-hover:bg-orange-500/20 transition-colors duration-500"></div>
+                
+                <div class="relative w-12 h-12 rounded-xl bg-gradient-to-br from-amber-400 to-orange-500 shadow-lg shadow-orange-500/30 flex items-center justify-center mb-4 text-white transform group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5.882V19.24a1.76 1.76 0 01-3.417.592l-2.147-6.15M18 13a3 3 0 100-6M5.436 13.683A4.001 4.001 0 017 6h1.832c4.1 0 7.625-1.234 9.168-3v14c-1.543-1.766-5.067-3-9.168-3H7a3.988 3.988 0 01-1.564-.317z"></path>
+                    </svg>
+                </div>
+                
+                <h3 class="relative text-lg font-extrabold text-slate-800 mb-2 tracking-tight group-hover:text-orange-600 transition-colors">Avisos y Popups</h3>
+                <p class="relative text-xs text-slate-500 font-medium leading-relaxed">Generá modales de alerta para informar feriados o cambios de horarios en la web.</p>
+            </a>
+            
+            <!-- MÓDULO: Auditor de Calidad y SEO -->
+            <a href="auditor_catalogo.html" class="glass-panel p-6 rounded-2xl group hover:-translate-y-1 hover:shadow-xl hover:shadow-teal-500/10 transition-all duration-300 block border border-white/60 relative overflow-hidden">
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-teal-500/10 rounded-full blur-2xl group-hover:bg-teal-500/20 transition-colors duration-500"></div>
+                
+                <div class="relative w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 shadow-lg shadow-teal-500/30 flex items-center justify-center mb-4 text-white transform group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                </div>
+                
+                <h3 class="relative text-lg font-extrabold text-slate-800 mb-2 tracking-tight group-hover:text-teal-600 transition-colors">Auditor de Calidad</h3>
+                <p class="relative text-xs text-slate-500 font-medium leading-relaxed">Escaneá el catálogo buscando artículos sin foto, sin código o con títulos pobres para el SEO de la web.</p>
+            </a>
+
+            <!-- MÓDULO: CRM IA (Gestión Inteligente de Correos) -->
+            <a href="asistente_crm.html" class="glass-panel p-6 rounded-2xl group hover:-translate-y-1 hover:shadow-xl hover:shadow-violet-500/10 transition-all duration-300 block border border-white/60 relative overflow-hidden">
+                <div class="absolute -right-8 -top-8 w-32 h-32 bg-violet-500/10 rounded-full blur-2xl group-hover:bg-violet-500/20 transition-colors duration-500"></div>
+                
+                <div class="relative w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 shadow-lg shadow-violet-500/30 flex items-center justify-center mb-4 text-white transform group-hover:scale-110 transition-transform duration-300">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"></path>
+                    </svg>
+                </div>
+                
+                <h3 class="relative text-lg font-extrabold text-slate-800 mb-2 tracking-tight group-hover:text-violet-600 transition-colors">CRM Asistente IA</h3>
+                <p class="relative text-xs text-slate-500 font-medium leading-relaxed">Conectá con las oportunidades de Odoo y redactá respuestas automáticas verificando stock real con Gemini.</p>
+            </a>
+
+        <!-- ESTE ES EL DIV QUE CIERRA LA GRILLA CORRECTAMENTE -->
+        </div>
+
+        <div class="mt-12 text-center">
+            <span class="inline-flex items-center gap-2 glass-panel px-6 py-2 rounded-full text-xs font-semibold text-slate-400 tracking-widest uppercase">
+                <span class="w-2 h-2 rounded-full bg-green-400 animate-pulse"></span>
+                Sistema Operativo X-Fish
+            </span>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            if (!sessionStorage.getItem('odoo_pwd')) {
+                pedirYGuardarKey();
             }
-        }
-        return key;
-    }
+        });
 
-    function cambiarGeminiKey() {
-        localStorage.removeItem('gemini_api_key');
-        getGeminiKey();
-        alert("Clave API de Gemini actualizada.");
-    }
-
-    document.addEventListener('DOMContentLoaded', async () => {
-        getGeminiKey();
-
-        let pwd = sessionStorage.getItem('odoo_pwd');
-        if (!pwd || pwd.trim() === '') {
-            pwd = prompt("🔑 Ingresá tu Clave de API de Odoo:");
-            if (pwd && pwd.trim() !== '') {
+        function pedirYGuardarKey() {
+            const pwd = prompt("🔒 Ingresa tu Clave de API de Odoo para habilitar el sistema:");
+            if (pwd && pwd.trim() !== "") {
                 sessionStorage.setItem('odoo_pwd', pwd.trim());
             } else {
-                document.getElementById('status-odoo-text').innerHTML = `<span class="text-rose-500 font-bold">Falta autenticar Odoo.</span>`;
-                document.getElementById('lista-leads').innerHTML = `<p class="text-xs text-center text-rose-500 font-bold mt-10">Ingresá tu clave para habilitar el sistema.</p>`;
-                return;
+                alert("Se requiere la Clave de API para utilizar las herramientas.");
             }
         }
-        
-        cargarCatalogoOdoo();
-        cargarCRMLeads();
-    });
 
-    async function cargarCatalogoOdoo() {
-        const icon = document.getElementById('status-odoo-icon');
-        const text = document.getElementById('status-odoo-text');
-        try {
-            const pwd = sessionStorage.getItem('odoo_pwd');
-            const res = await fetch(`${urlBackend}/api/productos`, { headers: { 'x-odoo-password': pwd } });
-            if (!res.ok) throw new Error("Fallo API");
-            
-            const data = await res.json();
-            catalogoOdoo = data.filter(p => p.total > 0).map(p => ({
-                sku: p.sku || '', nombre: p.nombre, precio: p.precio, stock: p.total, categoria: p.categ_id ? p.categ_id[1] : ''
-            }));
-            
-            icon.classList.replace('bg-slate-100', 'bg-emerald-100');
-            icon.classList.replace('text-slate-400', 'text-emerald-500');
-            icon.innerHTML = '<i class="fa-solid fa-check"></i>';
-            text.innerHTML = `<span class="text-emerald-600 font-bold">Catálogo sincronizado (${catalogoOdoo.length} productos).</span>`;
-        } catch (e) {
-            icon.classList.replace('bg-slate-100', 'bg-rose-100');
-            icon.classList.replace('text-slate-400', 'text-rose-500');
-            icon.innerHTML = '<i class="fa-solid fa-times"></i>';
-            text.innerHTML = `<span class="text-rose-500 font-bold">Error conectando con productos.</span>`;
+        function cambiarApiKey() {
+            sessionStorage.removeItem('odoo_pwd');
+            pedirYGuardarKey();
         }
-    }
-
-    async function cargarCRMLeads() {
-        const contenedor = document.getElementById('lista-leads');
-        contenedor.innerHTML = `<p class="text-xs text-center text-slate-400 mt-10"><i class="fa-solid fa-spinner fa-spin mr-2"></i>Actualizando bandeja...</p>`;
-        
-        try {
-            const pwd = sessionStorage.getItem('odoo_pwd');
-            const res = await fetch(`${urlBackend}/api/crm-leads`, { headers: { 'x-odoo-password': pwd } });
-            
-            if (!res.ok) {
-                const errData = await res.json().catch(() => ({}));
-                throw new Error(errData.error || "Fallo en endpoint CRM");
-            }
-            
-            leadsOdoo = await res.json();
-            
-            if (!Array.isArray(leadsOdoo) || leadsOdoo.length === 0) {
-                contenedor.innerHTML = `<p class="text-xs text-center text-slate-500 font-bold mt-10">No se encontraron consultas o correos en Odoo.</p>`;
-                return;
-            }
-
-            contenedor.innerHTML = leadsOdoo.map(lead => `
-                <div onclick="seleccionarLead(${lead.id})" class="p-3 border border-slate-200 bg-white rounded-xl cursor-pointer hover:bg-violet-50 hover:border-violet-300 transition shadow-sm group">
-                    <h4 class="font-bold text-sm text-slate-800 group-hover:text-violet-700 truncate">${lead.name}</h4>
-                    <p class="text-[10px] text-slate-500 truncate mb-1"><i class="fa-regular fa-envelope mr-1"></i>${lead.email_from || 'Sin correo'}</p>
-                    <p class="text-xs text-slate-600 line-clamp-2 leading-tight">${(lead.description || 'Sin mensaje escrito').replace(/<[^>]*>?/gm, '')}</p>
-                </div>
-            `).join('');
-
-        } catch (e) {
-            contenedor.innerHTML = `<div class="p-4 text-center"><p class="text-xs text-rose-500 font-bold mb-1">Error al leer Odoo</p><p class="text-[10px] text-slate-400 font-mono">${e.message}</p></div>`;
-        }
-    }
-
-    function seleccionarLead(id) {
-        const lead = leadsOdoo.find(l => l.id === id);
-        if (!lead) return;
-
-        document.getElementById('lead-activo-id').value = lead.id;
-        document.getElementById('lead-nombre').textContent = lead.name;
-        document.getElementById('lead-mail').textContent = lead.email_from || 'Sin correo registrado';
-        document.getElementById('lead-fecha').textContent = lead.create_date ? lead.create_date.split(' ')[0] : '-';
-        
-        const cleanText = (lead.description || '').replace(/<br\s*[\/]?>/gi, '\n').replace(/<[^>]*>?/gm, '');
-        document.getElementById('texto-cliente').value = cleanText || 'El cliente no dejó un mensaje escrito.';
-        document.getElementById('texto-respuesta').value = "";
-    }
-
-    function extraerPalabrasClave(texto) {
-        const ignorar = ['hola', 'buenas', 'tardes', 'dias', 'noches', 'queria', 'saber', 'si', 'tienen', 'busco', 'necesito', 'precio', 'cuanto', 'cuesta', 'sale', 'gracias'];
-        return texto.toLowerCase().replace(/[^\w\sáéíóúüñ]/g, '').split(/\s+/).filter(p => p.length > 3 && !ignorar.includes(p));
-    }
-
-    function buscarEnCatalogo(palabrasClave) {
-        if (palabrasClave.length === 0) return [];
-        let coincidencias = catalogoOdoo.map(prod => {
-            let score = 0;
-            const textoProd = `${prod.nombre} ${prod.categoria} ${prod.sku}`.toLowerCase();
-            palabrasClave.forEach(keyword => { if (textoProd.includes(keyword)) score++; });
-            return { producto: prod, score: score };
-        });
-        return coincidencias.filter(c => c.score > 0).sort((a, b) => b.score - a.score).slice(0, 8).map(c => c.producto);
-    }
-
-    async function generarRespuesta() {
-        const key = getGeminiKey();
-        if (!key) return alert("Por favor ingresá tu API Key de Gemini para continuar.");
-
-        const textoCliente = document.getElementById('texto-cliente').value.trim();
-        const tono = document.getElementById('tono-respuesta').value;
-        const incluirPrecios = document.getElementById('toggle-precios').checked;
-        const btn = document.getElementById('btn-generar');
-        const overlay = document.getElementById('loading-overlay');
-        const loadingText = document.getElementById('loading-text');
-
-        if (!textoCliente) return alert("Seleccioná un correo de la lista primero.");
-
-        btn.disabled = true;
-        overlay.classList.remove('hidden');
-
-        try {
-            loadingText.textContent = "Buscando productos en stock...";
-            await new Promise(r => setTimeout(r, 300)); 
-            
-            const keywords = extraerPalabrasClave(textoCliente);
-            const productosRelevantes = buscarEnCatalogo(keywords);
-
-            let stringContextoStock = "No se encontraron productos exactos. Invitá cordialmente a visitar la tienda online.";
-            if (productosRelevantes.length > 0) {
-                stringContextoStock = "Artículos en stock relacionados disponibles:\n";
-                productosRelevantes.forEach(p => {
-                    const infoPrecio = incluirPrecios ? `| Precio: $${p.precio.toLocaleString('es-AR')}` : '';
-                    stringContextoStock += `- ${p.nombre} (SKU: ${p.sku}) | Stock: ${p.stock} unid. ${infoPrecio}\n`;
-                });
-            }
-
-            loadingText.textContent = "Redactando correo con IA...";
-            
-            const prompt = `
-Eres el encargado de atención al cliente y ventas de "X-Fish" (tienda de pesca y camping en Argentina).
-Reglas:
-1. Responde en español rioplatense (usando 'vos').
-2. Tono: ${tono}
-3. ${incluirPrecios ? 'INCLUYE SIEMPRE LOS PRECIOS de los artículos mencionados.' : 'NO MENCIONES NINGÚN PRECIO EN ABSOLUTO bajo ninguna circunstancia. Si hay artículos disponibles, nombralos y dile al cliente que consulte en la web.'}
-4. Usa esta info de stock real (no inventes nada fuera de esto):
-${stringContextoStock}
-
-Escribe ÚNICAMENTE el texto de respuesta final listo para enviar.
-
-Mensaje del cliente:
-"${textoCliente}"
-            `;
-
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${key}`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ contents: [{ parts: [{ text: prompt }] }], generationConfig: { temperature: 0.7, maxOutputTokens: 800 } })
-            });
-
-            if (!response.ok) throw new Error("Error en Gemini AI (revisá que la clave sea válida).");
-
-            const data = await response.json();
-            document.getElementById('texto-respuesta').value = data.candidates[0].content.parts[0].text.trim();
-
-        } catch (error) {
-            alert(error.message);
-        } finally {
-            btn.disabled = false;
-            overlay.classList.add('hidden');
-        }
-    }
-
-    async function enviarAOdoo() {
-        const leadId = document.getElementById('lead-activo-id').value;
-        const mensaje = document.getElementById('texto-respuesta').value.trim();
-        const btn = document.getElementById('btn-enviar');
-
-        if (!leadId) return alert("Seleccioná un correo de la lista primero.");
-        if (!mensaje) return alert("Generá o escribí la respuesta antes de enviar.");
-
-        btn.disabled = true;
-        btn.innerHTML = `<i class="fa-solid fa-spinner fa-spin"></i> Enviando y registrando en Odoo...`;
-
-        try {
-            const pwd = sessionStorage.getItem('odoo_pwd');
-            const mensajeHTML = mensaje.replace(/\n/g, '<br>');
-
-            const res = await fetch(`${urlBackend}/api/crm-responder`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json', 'x-odoo-password': pwd },
-                body: JSON.stringify({ lead_id: leadId, mensaje: mensajeHTML })
-            });
-
-            if (!res.ok) throw new Error("Error de conexión al enviar");
-
-            btn.classList.replace('bg-emerald-600', 'bg-slate-800');
-            btn.innerHTML = `<i class="fa-solid fa-check"></i> ¡Enviado con éxito!`;
-            
-            setTimeout(() => {
-                btn.classList.replace('bg-slate-800', 'bg-emerald-600');
-                btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Enviar Correo y Registrar en Odoo CRM`;
-                btn.disabled = false;
-                document.getElementById('texto-respuesta').value = "";
-            }, 3000);
-
-        } catch (e) {
-            alert("Hubo un error al intentar despachar la respuesta en Odoo.");
-            btn.disabled = false;
-            btn.innerHTML = `<i class="fa-solid fa-paper-plane"></i> Reintentar Envío`;
-        }
-    }
-
-    function copiarRespuesta() {
-        const textarea = document.getElementById('texto-respuesta');
-        if (!textarea.value) return;
-        textarea.select();
-        navigator.clipboard.writeText(textarea.value);
-        const btn = document.getElementById('btn-copiar');
-        btn.innerHTML = `<i class="fa-solid fa-check"></i> ¡Copiado!`;
-        setTimeout(() => { btn.innerHTML = `<i class="fa-regular fa-copy"></i> Copiar`; }, 2000);
-    }
-</script>
-
+    </script>
 </body>
 </html>
