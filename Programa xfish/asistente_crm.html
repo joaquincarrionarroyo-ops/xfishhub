@@ -98,17 +98,30 @@
                     
                     <textarea id="texto-cliente" readonly placeholder="El mensaje del cliente se cargará aquí al seleccionar una oportunidad..." class="w-full h-24 p-3 rounded-lg border border-slate-200 bg-slate-50 text-sm text-slate-700 outline-none resize-none"></textarea>
                     
-                    <div class="flex justify-between items-center mt-3 pt-3 border-t border-slate-100">
+                    <div class="flex flex-wrap items-center justify-between gap-3 mt-3 pt-3 border-t border-slate-100">
                         <div class="flex items-center gap-3">
-                            <label class="text-xs font-bold text-slate-600">Tono:</label>
-                            <select id="tono-respuesta" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none bg-white">
-                                <option value="amable, comercial, cercano y persuasivo.">Comercial y Cercano</option>
-                                <option value="profesional, corporativo y formal.">Formal e Institucional</option>
-                                <option value="muy breve, directo al grano y resolutivo.">Corto y Resolutivo</option>
-                            </select>
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-500 block mb-0.5">Tono:</label>
+                                <select id="tono-respuesta" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none bg-white">
+                                    <option value="amable, comercial, cercano y persuasivo.">Comercial y Cercano</option>
+                                    <option value="profesional, corporativo y formal.">Formal e Institucional</option>
+                                    <option value="muy breve, directo al grano y resolutivo.">Corto y Resolutivo</option>
+                                </select>
+                            </div>
+
+                            <div>
+                                <label class="text-[11px] font-bold text-slate-500 block mb-0.5">Asignar asesor:</label>
+                                <select id="vendedor-asignado" class="text-xs border border-slate-300 rounded-lg px-2.5 py-1.5 outline-none bg-white">
+                                    <option value="automatico">Automático / Aleatorio</option>
+                                    <option value="Natalia (Ventas): 11 5626-9399">Natalia (11 5626-9399)</option>
+                                    <option value="Miguel (Ventas): 11 4916-8872">Miguel (11 4916-8872)</option>
+                                    <option value="Maxi (Ventas): 11 5229-0350">Maxi (11 5229-0350)</option>
+                                    <option value="ninguno">Sin derivar por WhatsApp</option>
+                                </select>
+                            </div>
                         </div>
 
-                        <button onclick="generarRespuesta()" id="btn-generar" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-5 rounded-xl shadow-md transition text-xs flex items-center gap-2 disabled:opacity-50">
+                        <button onclick="generarRespuesta()" id="btn-generar" class="bg-violet-600 hover:bg-violet-700 text-white font-bold py-2 px-5 rounded-xl shadow-md transition text-xs flex items-center gap-2 disabled:opacity-50 mt-auto">
                             <i class="fa-solid fa-wand-magic-sparkles"></i> Redactar Respuesta con IA
                         </button>
                     </div>
@@ -341,6 +354,7 @@
 
         const textoCliente = document.getElementById('texto-cliente').value.trim();
         const tono = document.getElementById('tono-respuesta').value;
+        const selectorVendedor = document.getElementById('vendedor-asignado').value;
         const btn = document.getElementById('btn-generar');
         const overlay = document.getElementById('loading-overlay');
         const loadingText = document.getElementById('loading-text');
@@ -351,45 +365,56 @@
         overlay.classList.remove('hidden');
 
         try {
-            loadingText.textContent = "Redactando según las políticas comerciales de X-Fish...";
+            loadingText.textContent = "Redactando con las políticas y manual comercial de X-Fish...";
+
+            let instruccionVendedor = "";
+            if (selectorVendedor === 'automatico') {
+                instruccionVendedor = "Si corresponde derivar a un vendedor para coordinar el pedido o la visita, podés elegir uno de nuestro equipo: Natalia (Ventas): 11 5626-9399, Miguel (Ventas): 11 4916-8872, o Maxi (Ventas): 11 5229-0350.";
+            } else if (selectorVendedor === 'ninguno') {
+                instruccionVendedor = "No derives a un número de WhatsApp puntual en esta respuesta; indica únicamente el correo de contacto general: joaquin.arroyo@deme4.com.";
+            } else {
+                instruccionVendedor = `Si corresponde derivar a un vendedor para coordinar, utiliza puntualmente este asesor: ${selectorVendedor}.`;
+            }
 
             const prompt = `
-Actúa como el responsable comercial y de atención al cliente de "X-Fish" (importador y distribuidor mayorista de artículos de pesca, camping y actividades al aire libre en Argentina).
+Actúa como el encargado comercial y de atención al cliente de "X-Fish" (importador y distribuidor mayorista de pesca, camping y náutica en Argentina).
 
-=== POLÍTICAS Y CONDICIONES COMERCIALES DE X-FISH ===
-1. MODELO DE NEGOCIO (VENTA MAYORISTA):
-   - Somos distribuidores e importadores con venta EXCLUSIVAMENTE POR MAYOR.
-   - Si el cliente consulta por compras por unidad o como consumidor final, aclárale amablemente que no realizamos venta minorista o por unidad, sino únicamente pedidos por mayor dirigidos a comercios y revendedores.
-   - (IMPORTANTE: NO menciones "bulto cerrado", simplemente indica que la venta es exclusivamente mayorista).
+=== MANUAL OPERATIVO Y PROTOCOLO DE RESPUESTA DE X-FISH ===
+1. MODELO DE NEGOCIO Y CONDICIONES COMERCIALES:
+   - Somos importadores y distribuidores directos. Venta EXCLUSIVAMENTE MAYORISTA a comercios y revendedores.
+   - NO realizamos venta minorista ni al público final. Si preguntan por comprar por unidad, acláralo amablemente (tampoco tenemos un listado puntual de locales minoristas donde comprar).
+   - Mínimo de compra absoluto: $800.000 (a precios de lista).
+   - Beneficio por volumen: A partir de $1.000.000 se aplica un 30% DE DESCUENTO sobre el total.
+   - UNIDADES SURTIDAS (NO BULTOS CERRADOS): ¡No hace falta comprar bultos cerrados! Se puede comprar por unidades surtidas de cada producto. La cantidad por bulto de la lista es solo una referencia para quienes compran cerrado.
 
-2. MÍNIMO DE COMPRA Y BONIFICACIONES / DESCUENTOS:
-   - Si el cliente pregunta por montos mínimos, condiciones o precios, infórmale las condiciones vigentes:
-     * Mínimo de compra: $800.000 (a precios de lista).
-     * Descuento especial: en compras a partir de $1.000.000 accede a un 30% de DESCUENTO sobre el total.
-   - Menciona estos números y porcentajes claramente si preguntan por montos mínimos, descuentos o condiciones.
+2. CÓMO GESTIONAMOS Y ARMAMOS LOS PEDIDOS (DOS MODALIDADES):
+   A) DE FORMA ONLINE / PLATAFORMA WEB:
+      - Pueden autogestionar su compra 100% online a través de nuestro portal web mayorista: www.pescapormayor.com.ar (donde pueden ver fotos, stock en vivo, precios mayoristas y armar el carrito directamente).
+      - Si quieren esta opción, solicítales que nos dejen su Nombre y Apellido y su Correo Electrónico para generarles un usuario con acceso.
+      - También podemos adjuntarles la lista completa en Excel por correo si lo prefieren.
+      - Pueden ver fotos y fichas técnicas generales abiertas en www.xfish.com.ar.
+   B) EN NUESTRO SHOWROOM:
+      - Es un espacio exclusivo de exhibición para comerciantes donde pueden ver las muestras, productos y materiales en persona y armar el pedido junto a un asesor.
+      - REGLA CLAVE DE RETIRO: En el showroom NO disponemos de stock físico para entrega inmediata en mano en el momento (no se retira en el día bajo ningún concepto). Los pedidos se procesan luego en nuestro depósito central y requieren un tiempo de armado y preparación de 1 a 3 días hábiles.
 
-3. LISTA DE PRECIOS Y CATÁLOGO:
-   - Si el cliente solicita lista de precios, catálogo o costos, infórmale que le adjuntamos la lista mayorista completa y actualizada en formato Excel con todo el stock disponible.
-   - NO menciones artículos sueltos ni precios específicos en el cuerpo del correo; remite al archivo Excel adjunto y a las condiciones comerciales mencionadas arriba.
+3. LOGÍSTICA Y ENVÍOS:
+   - Envíos a todo el país: El armado, embalaje y traslado es sin cargo adicional hasta el expreso o empresa de transporte elegida por el cliente en Capital Federal.
+   - El costo del transporte/flete corre por cuenta del comprador y se abona directamente al expreso o empresa de logística al recibir o retirar en sucursal.
+   - Retiro: Se puede retirar una vez que el pedido esté armado y coordinado previamente.
 
-4. POLÍTICA DE SHOWROOM Y RETIROS:
-   - Contamos con showroom comercial para exhibición de productos y ver muestras (coordinando visita previa).
-   - IMPORTANTE: NO se puede retirar mercadería por el showroom en el mismo día bajo ninguna circunstancia.
-   - Todo pedido requiere un tiempo previo de armado, preparación y control en depósito antes de ser entregado o despachado.
+4. DERIVACIÓN Y CONTACTOS:
+   - ${instruccionVendedor}
+   - Correo de contacto directo para consultas: joaquin.arroyo@deme4.com.
 
-5. MÉTODOS DE ENTREGA Y ENVÍO:
-   - Envíos a todo el país: El armado y embalaje seguro de la mercadería es sin costo adicional. El despacho se coordina mediante el expreso o transporte que el cliente elija (abonando el flete en destino al recibir).
-   - Retiro: Se puede retirar únicamente una vez que el pedido esté confirmado, armado y coordinado previamente con el equipo de ventas.
-
-6. TONO Y ESTILO:
+5. TONO Y ESTILO DE REDACCIÓN:
    - Español rioplatense natural (usando "vos", "te comento", "avisame", "quedamos a disposición").
    - Tono comercial: ${tono}
-   - Claro, profesional, resolutivo y cercano.
+   - Claro, ejecutivo, resolutivo, cordial y bien estructurado (usando viñetas o párrafos claros si se explican varias opciones).
 
 === MENSAJE RECIBIDO DEL CLIENTE ===
 "${textoCliente}"
 
-Redacta únicamente la respuesta final completa, con saludo inicial y despedida formal de X-Fish, atendiendo exactamente a las dudas del cliente según las reglas anteriores.
+Redacta la respuesta final completa, con saludo inicial y despedida formal de X-Fish, respondiendo con total exactitud a la consulta del cliente según las políticas anteriores.
             `;
 
             const respuestaTexto = await llamarApiGemini(prompt, key);
