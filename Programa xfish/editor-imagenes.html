@@ -83,7 +83,9 @@
                 </div>
                 <span>Estampador Dinámico & Editor por Capas</span>
             </h1>
-            <a href="index.html" class="text-xs md:text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver</a>
+            <a href="index.html" class="text-xs md:text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver</a> <button onclick="toggleModoMultiLienzo()" class="text-xs md:text-sm font-bold bg-pink-600 hover:bg-pink-700 text-white px-3 py-1.5 rounded-xl shadow transition-colors flex items-center gap-1.5 mr-2">
+    <span>🎨</span> Modo Multi-Lienzo (Mesas)
+</button>
         </div>
     </header>
 
@@ -247,6 +249,83 @@
             </div>
         </div>
     </main>
+
+    <!-- ============================================================== -->
+<!-- SECCIÓN INDEPENDIENTE: MULTI-LIENZO / MESAS DE TRABAJO ESTILO PS -->
+<!-- ============================================================== -->
+<section id="seccion-multi-lienzo" class="hidden max-w-7xl mx-auto w-full px-3 md:px-6 space-y-4 my-6">
+    <div class="glass-panel rounded-3xl p-4 md:p-6 shadow-xl border border-pink-200">
+        
+        <!-- BARRA DE PESTAÑAS (MESAS) Y DESCARGAS -->
+        <div class="flex flex-wrap items-center justify-between pb-3 border-b border-slate-200 gap-2 mb-4">
+            <div class="flex items-center gap-2 overflow-x-auto ios-scroll py-1 max-w-full md:max-w-xl" id="tab-lienzos-container"></div>
+            
+            <div class="flex items-center gap-2 flex-wrap">
+                <button onclick="crearNuevaMesa()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow">
+                    ➕ Nueva Mesa
+                </button>
+                <button onclick="descargarMesaActual()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow">
+                    ⬇️ Bajar Esta Mesa
+                </button>
+                <button onclick="descargarTodasMesasZip()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow">
+                    📦 Bajar Todas (ZIP)
+                </button>
+            </div>
+        </div>
+
+        <!-- WORKSPACE: CANVAS + CONTROL DE OBJETOS PNG -->
+        <div class="flex flex-col lg:flex-row gap-5">
+            <div class="w-full lg:w-7/12 flex flex-col items-center justify-center bg-slate-100 rounded-2xl p-3 border border-slate-300 relative min-h-[380px] overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
+                <canvas id="multi-artboard-canvas" width="1200" height="1200" class="max-w-full max-h-[60vh] object-contain bg-white rounded-xl shadow-lg"></canvas>
+                <span class="text-[10px] text-slate-500 font-bold mt-2">💡 Arrastrá y tocá los PNGs para moverlos o escalar</span>
+            </div>
+
+            <div class="w-full lg:w-5/12 space-y-4">
+                <!-- Dropzone PNGs -->
+                <div class="border-2 border-dashed border-pink-300 hover:border-pink-500 rounded-2xl p-4 text-center bg-pink-50/50">
+                    <p class="text-xs font-bold text-pink-700 mb-1">📥 Tirar PNGs acá o seleccionar archivo</p>
+                    <input type="file" id="input-multi-pngs" accept="image/png, image/jpeg, image/webp" multiple class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[11px] file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer">
+                </div>
+
+                <!-- Objeto Seleccionado -->
+                <div id="panel-objeto-seleccionado" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span class="text-xs font-bold text-slate-700" id="info-objeto-sel">Ningún objeto seleccionado</span>
+                        <div class="flex gap-1" id="btn-acciones-objeto" style="display: none;">
+                            <button onclick="duplicarObjetoSel()" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">📋 Copiar</button>
+                            <button onclick="eliminarObjetoSel()" class="text-[10px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">🗑️ Borrar</button>
+                        </div>
+                    </div>
+                    
+                    <div class="grid grid-cols-2 gap-3 text-[11px] font-semibold text-slate-600">
+                        <div>
+                            <span>Escala:</span>
+                            <input type="range" id="obj-scale" min="10" max="300" value="100" oninput="actualizarTransformObjeto()">
+                        </div>
+                        <div>
+                            <span>Rotación:</span>
+                            <input type="range" id="obj-rot" min="0" max="360" value="0" oninput="actualizarTransformObjeto()">
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                        <span class="text-[11px] text-slate-500">Mover a otra mesa:</span>
+                        <select id="select-enviar-mesa" class="custom-select py-1 px-2 text-xs w-36" onchange="enviarObjetoAMesa(this.value)">
+                            <option value="">Elegir mesa...</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Textos de la mesa -->
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                    <span class="text-xs font-bold text-slate-700 uppercase block">✏️ Textos de esta Mesa</span>
+                    <input type="text" id="mesa-txt-top" placeholder="Título Arriba" class="custom-input text-xs" oninput="actualizarTextosMesa()">
+                    <input type="text" id="mesa-txt-bot" placeholder="Texto o Código Abajo" class="custom-input text-xs" oninput="actualizarTextosMesa()">
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
 
     <!-- MODAL EDITOR INDIVIDUAL CON PANTALLA COMPLETA, PINCELES Y PANEL DE CAPAS -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
@@ -1309,6 +1388,310 @@
             a.click();
             URL.revokeObjectURL(a.href);
         });
+        // ==============================================================
+// MOTOR MULTI-LIENZO (WORKBOARDS) & EXPORTACIÓN INDIVIDUAL + ZIP
+// ==============================================================
+let mesasTrabajo = [
+    { id: 1, nombre: "Mesa 1", objetos: [], txtTop: "", txtBot: "" }
+];
+let mesaActivaId = 1;
+let objetoSeleccionadoIdx = -1;
+let isDraggingObjeto = false;
+let dragStartX = 0, dragStartY = 0;
+
+const artboardCanvas = document.getElementById('multi-artboard-canvas');
+const artboardCtx = artboardCanvas ? artboardCanvas.getContext('2d') : null;
+
+function toggleModoMultiLienzo() {
+    const sec = document.getElementById('seccion-multi-lienzo');
+    sec.classList.toggle('hidden');
+    if (!sec.classList.contains('hidden')) {
+        renderizarTabsMesas();
+        redibujarMesaActual();
+    }
+}
+
+function renderizarTabsMesas() {
+    const tabsCont = document.getElementById('tab-lienzos-container');
+    const selectEnviar = document.getElementById('select-enviar-mesa');
+    if (!tabsCont) return;
+
+    tabsCont.innerHTML = '';
+    selectEnviar.innerHTML = '<option value="">Elegir mesa...</option>';
+
+    mesasTrabajo.forEach(m => {
+        const esActiva = m.id === mesaActivaId;
+        const btn = document.createElement('button');
+        btn.className = `px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${esActiva ? 'bg-pink-600 text-white shadow' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`;
+        btn.innerHTML = `<span>${m.nombre}</span> ${mesasTrabajo.length > 1 ? `<span onclick="eliminarMesa(\${m.id}, event)" class="hover:text-red-300 ml-1">×</span>` : ''}`;
+        btn.onclick = () => { mesaActivaId = m.id; objetoSeleccionadoIdx = -1; renderizarTabsMesas(); redibujarMesaActual(); };
+        tabsCont.appendChild(btn);
+
+        if (m.id !== mesaActivaId) {
+            selectEnviar.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
+        }
+    });
+
+    const mesa = getMesaActiva();
+    if (mesa) {
+        document.getElementById('mesa-txt-top').value = mesa.txtTop || "";
+        document.getElementById('mesa-txt-bot').value = mesa.txtBot || "";
+    }
+}
+
+function getMesaActiva() {
+    return mesasTrabajo.find(m => m.id === mesaActivaId);
+}
+
+function crearNuevaMesa() {
+    const nuevoId = Date.now();
+    mesasTrabajo.push({
+        id: nuevoId,
+        nombre: `Mesa ${mesasTrabajo.length + 1}`,
+        objetos: [],
+        txtTop: "",
+        txtBot: ""
+    });
+    mesaActivaId = nuevoId;
+    objetoSeleccionadoIdx = -1;
+    renderizarTabsMesas();
+    redibujarMesaActual();
+}
+
+function eliminarMesa(id, e) {
+    e.stopPropagation();
+    if (mesasTrabajo.length <= 1) return;
+    mesasTrabajo = mesasTrabajo.filter(m => m.id !== id);
+    mesaActivaId = mesasTrabajo[0].id;
+    objetoSeleccionadoIdx = -1;
+    renderizarTabsMesas();
+    redibujarMesaActual();
+}
+
+document.getElementById('input-multi-pngs')?.addEventListener('change', (e) => {
+    const files = e.target.files;
+    if (!files.length) return;
+    const mesa = getMesaActiva();
+
+    Array.from(files).forEach(file => {
+        const img = new Image();
+        img.onload = () => {
+            mesa.objetos.push({
+                img: img,
+                x: 600,
+                y: 600,
+                width: img.width,
+                height: img.height,
+                scale: 1,
+                rotation: 0
+            });
+            objetoSeleccionadoIdx = mesa.objetos.length - 1;
+            actualizarPanelObjeto();
+            redibujarMesaActual();
+        };
+        img.src = URL.createObjectURL(file);
+    });
+});
+
+function dibujarMesaEnContexto(ctx, mesa, width, height, resaltarSeleccionado = true) {
+    ctx.fillStyle = '#ffffff';
+    ctx.fillRect(0, 0, width, height);
+
+    mesa.objetos.forEach((obj, idx) => {
+        ctx.save();
+        ctx.translate(obj.x, obj.y);
+        ctx.rotate((obj.rotation * Math.PI) / 180);
+        const w = obj.width * obj.scale;
+        const h = obj.height * obj.scale;
+        ctx.drawImage(obj.img, -w / 2, -h / 2, w, h);
+
+        if (resaltarSeleccionado && idx === objetoSeleccionadoIdx && mesa.id === mesaActivaId) {
+            ctx.strokeStyle = '#ec4899';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(-w / 2, -h / 2, w, h);
+        }
+        ctx.restore();
+    });
+
+    ctx.fillStyle = '#000000';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.font = 'normal 48px sans-serif';
+
+    if (mesa.txtTop) ctx.fillText(mesa.txtTop, width / 2, 80);
+    if (mesa.txtBot) ctx.fillText(mesa.txtBot, width / 2, height - 80);
+}
+
+function redibujarMesaActual() {
+    const mesa = getMesaActiva();
+    if (!mesa || !artboardCtx) return;
+    dibujarMesaEnContexto(artboardCtx, mesa, 1200, 1200, true);
+}
+
+function getArtboardPos(e) {
+    const rect = artboardCanvas.getBoundingClientRect();
+    const cx = e.touches ? e.touches[0].clientX : e.clientX;
+    const cy = e.touches ? e.touches[0].clientY : e.clientY;
+    return {
+        x: (cx - rect.left) * (1200 / rect.width),
+        y: (cy - rect.top) * (1200 / rect.height)
+    };
+}
+
+artboardCanvas?.addEventListener('mousedown', iniciarDragObjeto);
+artboardCanvas?.addEventListener('touchstart', iniciarDragObjeto, { passive: false });
+
+function iniciarDragObjeto(e) {
+    e.preventDefault();
+    const pos = getArtboardPos(e);
+    const mesa = getMesaActiva();
+    if (!mesa) return;
+
+    let hallado = -1;
+    for (let i = mesa.objetos.length - 1; i >= 0; i--) {
+        const o = mesa.objetos[i];
+        const w = (o.width * o.scale) / 2;
+        const h = (o.height * o.scale) / 2;
+        if (pos.x >= o.x - w && pos.x <= o.x + w && pos.y >= o.y - h && pos.y <= o.y + h) {
+            hallado = i;
+            break;
+        }
+    }
+
+    objetoSeleccionadoIdx = hallado;
+    if (hallado !== -1) {
+        isDraggingObjeto = true;
+        dragStartX = pos.x - mesa.objetos[hallado].x;
+        dragStartY = pos.y - mesa.objetos[hallado].y;
+    }
+    actualizarPanelObjeto();
+    redibujarMesaActual();
+}
+
+window.addEventListener('mousemove', moverObjetoDrag);
+window.addEventListener('touchmove', moverObjetoDrag, { passive: false });
+
+function moverObjetoDrag(e) {
+    if (!isDraggingObjeto || objetoSeleccionadoIdx === -1) return;
+    e.preventDefault();
+    const pos = getArtboardPos(e);
+    const mesa = getMesaActiva();
+    mesa.objetos[objetoSeleccionadoIdx].x = pos.x - dragStartX;
+    mesa.objetos[objetoSeleccionadoIdx].y = pos.y - dragStartY;
+    redibujarMesaActual();
+}
+
+window.addEventListener('mouseup', () => { isDraggingObjeto = false; });
+window.addEventListener('touchend', () => { isDraggingObjeto = false; });
+
+function actualizarPanelObjeto() {
+    const mesa = getMesaActiva();
+    const info = document.getElementById('info-objeto-sel');
+    const btnAcc = document.getElementById('btn-acciones-objeto');
+
+    if (objetoSeleccionadoIdx !== -1 && mesa && mesa.objetos[objetoSeleccionadoIdx]) {
+        const obj = mesa.objetos[objetoSeleccionadoIdx];
+        info.textContent = `Objeto #${objetoSeleccionadoIdx + 1} (${Math.round(obj.width * obj.scale)}x${Math.round(obj.height * obj.scale)}px)`;
+        btnAcc.style.display = 'flex';
+        document.getElementById('obj-scale').value = Math.round(obj.scale * 100);
+        document.getElementById('obj-rot').value = obj.rotation;
+    } else {
+        info.textContent = "Ningún objeto seleccionado";
+        btnAcc.style.display = 'none';
+    }
+}
+
+function actualizarTransformObjeto() {
+    const mesa = getMesaActiva();
+    if (objetoSeleccionadoIdx === -1 || !mesa) return;
+    const obj = mesa.objetos[objetoSeleccionadoIdx];
+    obj.scale = (parseInt(document.getElementById('obj-scale').value) || 100) / 100;
+    obj.rotation = parseInt(document.getElementById('obj-rot').value) || 0;
+    redibujarMesaActual();
+}
+
+function duplicarObjetoSel() {
+    const mesa = getMesaActiva();
+    if (objetoSeleccionadoIdx === -1 || !mesa) return;
+    const orig = mesa.objetos[objetoSeleccionadoIdx];
+    mesa.objetos.push({ ...orig, x: orig.x + 30, y: orig.y + 30 });
+    objetoSeleccionadoIdx = mesa.objetos.length - 1;
+    actualizarPanelObjeto();
+    redibujarMesaActual();
+}
+
+function eliminarObjetoSel() {
+    const mesa = getMesaActiva();
+    if (objetoSeleccionadoIdx === -1 || !mesa) return;
+    mesa.objetos.splice(objetoSeleccionadoIdx, 1);
+    objetoSeleccionadoIdx = -1;
+    actualizarPanelObjeto();
+    redibujarMesaActual();
+}
+
+function enviarObjetoAMesa(targetId) {
+    if (!targetId || objetoSeleccionadoIdx === -1) return;
+    const mesaOrigen = getMesaActiva();
+    const mesaDestino = mesasTrabajo.find(m => m.id == targetId);
+    if (!mesaOrigen || !mesaDestino) return;
+
+    const [obj] = mesaOrigen.objetos.splice(objetoSeleccionadoIdx, 1);
+    mesaDestino.objetos.push(obj);
+    objetoSeleccionadoIdx = -1;
+    actualizarPanelObjeto();
+    redibujarMesaActual();
+    document.getElementById('select-enviar-mesa').value = '';
+}
+
+function actualizarTextosMesa() {
+    const mesa = getMesaActiva();
+    if (!mesa) return;
+    mesa.txtTop = document.getElementById('mesa-txt-top').value;
+    mesa.txtBot = document.getElementById('mesa-txt-bot').value;
+    redibujarMesaActual();
+}
+
+function descargarMesaActual() {
+    const mesa = getMesaActiva();
+    if (!mesa) return;
+
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = 1200;
+    exportCanvas.height = 1200;
+    const ctx = exportCanvas.getContext('2d');
+
+    dibujarMesaEnContexto(ctx, mesa, 1200, 1200, false);
+
+    const a = document.createElement('a');
+    a.href = exportCanvas.toDataURL('image/jpeg', 0.95);
+    a.download = `${mesa.nombre}_HD.jpg`;
+    a.click();
+}
+
+async function descargarTodasMesasZip() {
+    if (!mesasTrabajo.length) return;
+    const zip = new JSZip();
+    const folder = zip.folder("Mesas_De_Trabajo_HD");
+
+    const exportCanvas = document.createElement('canvas');
+    exportCanvas.width = 1200;
+    exportCanvas.height = 1200;
+    const ctx = exportCanvas.getContext('2d');
+
+    mesasTrabajo.forEach((mesa, idx) => {
+        dibujarMesaEnContexto(ctx, mesa, 1200, 1200, false);
+        const dataUrl = exportCanvas.toDataURL('image/jpeg', 0.95);
+        const base64Data = dataUrl.split(',')[1];
+        folder.file(`${mesa.nombre || 'Mesa_' + (idx + 1)}_HD.jpg`, base64Data, { base64: true });
+    });
+
+    const content = await zip.generateAsync({ type: "blob" });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(content);
+    a.download = "Mesas_De_Trabajo_XFish.zip";
+    a.click();
+    URL.revokeObjectURL(a.href);
+}
     </script>
 </body>
 </html>
