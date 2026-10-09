@@ -57,8 +57,17 @@
             justify-content: space-between !important;
         }
         .fullscreen-active #main-editor-canvas {
-            max-height: 86vh !important;
-            max-width: 96vw !important;
+            max-height: 84vh !important;
+            max-width: 95vw !important;
+        }
+
+        /* Estilo Panel Photoshop de Capas */
+        .layer-item {
+            transition: all 0.15s ease;
+        }
+        .layer-item.active {
+            background-color: #fdf2f8 !important;
+            border-color: #f472b6 !important;
         }
     </style>
 </head>
@@ -241,13 +250,13 @@
         </div>
     </main>
 
-    <!-- MODAL EDITOR INDIVIDUAL CON PANTALLA COMPLETA, PINCELES Y CAPAS Z -->
+    <!-- MODAL EDITOR INDIVIDUAL CON PANTALLA COMPLETA, PINCELES Y PANEL PHOTOSHOP DE CAPAS -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[96vh] flex flex-col md:flex-row overflow-hidden relative">
             <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/90 backdrop-blur text-rose-500 font-bold w-8 h-8 rounded-full shadow border border-slate-200 flex items-center justify-center text-xl">&times;</button>
 
             <!-- LADO IZQUIERDO: CANVAS Y HERRAMIENTAS DE PINTURA -->
-            <div id="canvas-column" class="w-full md:w-1/2 bg-slate-100 flex flex-col items-center justify-between p-2.5 md:p-3 border-b md:border-b-0 md:border-r border-slate-200 h-[50vh] md:h-auto shrink-0 select-none transition-all">
+            <div id="canvas-column" class="w-full md:w-1/2 bg-slate-100 flex flex-col items-center justify-between p-2.5 md:p-3 border-b md:border-b-0 md:border-r border-slate-200 h-[50vh] md:h-auto shrink-0 select-none transition-all relative">
                 
                 <!-- Barra de herramientas superior -->
                 <div class="w-full bg-white/90 backdrop-blur rounded-xl p-2 border border-slate-200 shadow-sm flex items-center justify-between gap-1.5 z-10 overflow-x-auto ios-scroll">
@@ -280,6 +289,19 @@
                 <!-- Canvas de renderizado continuo -->
                 <div class="relative flex-grow flex items-center justify-center w-full overflow-hidden my-2">
                     <canvas id="main-editor-canvas" class="max-w-full max-h-[38vh] md:max-h-[74vh] object-contain drop-shadow-md rounded bg-white"></canvas>
+
+                    <!-- PANEL DE CAPAS FLOTANTE ESTILO PHOTOSHOP (Visible y toggleable) -->
+                    <div id="ps-layers-panel" class="absolute bottom-2 right-2 bg-white/95 backdrop-blur-md border border-slate-300 rounded-2xl shadow-2xl p-2.5 w-60 z-30 transition-all">
+                        <div class="flex items-center justify-between pb-1.5 border-b border-slate-200 mb-1.5">
+                            <span class="text-[11px] font-extrabold text-slate-800 tracking-wider uppercase flex items-center gap-1">
+                                📑 Capas (Layers)
+                            </span>
+                            <button onclick="toggleLayersBody()" class="text-slate-400 hover:text-slate-700 text-xs font-bold" id="btn-toggle-layers-body">▼</button>
+                        </div>
+                        <div id="ps-layers-list" class="space-y-1 max-h-48 ios-scroll pr-1 text-xs">
+                            <!-- Se renderiza dinámicamente con JavaScript -->
+                        </div>
+                    </div>
                 </div>
 
                 <div class="w-full flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
@@ -303,7 +325,7 @@
                             <span class="text-xs font-bold text-purple-700 uppercase">🖼️ Capa Imagen Principal</span>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-500 uppercase font-bold">Orden Capa (Z):</span>
-                                <input type="number" id="z-img" min="1" max="10" value="1" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs text-slate-800 font-bold" oninput="scheduleRender()">
+                                <input type="number" id="z-img" min="1" max="10" value="1" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs text-slate-800 font-bold" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
                         <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
@@ -318,11 +340,11 @@
                         <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div class="flex items-center justify-between bg-white p-1.5 rounded border border-slate-200">
                                 <span>Pintura Detrás (Z):</span>
-                                <input type="number" id="z-paint-under" min="1" max="10" value="2" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
+                                <input type="number" id="z-paint-under" min="1" max="10" value="2" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                             <div class="flex items-center justify-between bg-white p-1.5 rounded border border-slate-200">
                                 <span>Pintura Encima (Z):</span>
-                                <input type="number" id="z-paint-over" min="1" max="10" value="6" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
+                                <input type="number" id="z-paint-over" min="1" max="10" value="6" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
                     </div>
@@ -333,7 +355,7 @@
                             <label class="text-xs font-bold text-blue-700 uppercase">Título Principal</label>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-500 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-top" min="1" max="10" value="3" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
+                                <input type="number" id="z-top" min="1" max="10" value="3" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
                         <textarea id="txt-top" class="custom-input text-xs" rows="1"></textarea>
@@ -349,7 +371,7 @@
                             <label class="text-xs font-bold text-amber-700 uppercase">Subtítulo</label>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-500 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-sub" min="1" max="10" value="4" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
+                                <input type="number" id="z-sub" min="1" max="10" value="4" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
                         <textarea id="txt-sub" class="custom-input text-xs" rows="1"></textarea>
@@ -365,7 +387,7 @@
                             <label class="text-xs font-bold text-emerald-700 uppercase">Texto Abajo</label>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-500 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-bot" min="1" max="10" value="5" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
+                                <input type="number" id="z-bot" min="1" max="10" value="5" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
                         <textarea id="txt-bot" class="custom-input text-xs" rows="1"></textarea>
@@ -406,7 +428,7 @@
         let activeEditIndex = -1;
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-        // Capas Offscreen para Pincel Ultrarrápido
+        // Capas Offscreen para Pincel
         const paintUnderCanvas = document.createElement('canvas');
         const paintUnderCtx = paintUnderCanvas.getContext('2d');
         const paintOverCanvas = document.createElement('canvas');
@@ -419,6 +441,16 @@
         let isFullscreenCanvas = false;
         let globalMockupImgObj = null;
 
+        // Estado de visibilidad de capas
+        let layerVisibility = {
+            'image': true,
+            'paint-under': true,
+            'title': true,
+            'sub': true,
+            'bot': true,
+            'paint-over': true
+        };
+
         const mainEditorCanvas = document.getElementById('main-editor-canvas');
         const mainEditorCtx = mainEditorCanvas.getContext('2d');
 
@@ -430,6 +462,8 @@
 
         function switchPaintLayer(layer) {
             currentActivePaintLayer = layer;
+            document.getElementById('active-paint-layer').value = layer;
+            updatePSLayersPanel();
         }
 
         function clearCurrentLayerPaint() {
@@ -446,6 +480,13 @@
         }
         function syncBrushSlider(val) {
             document.getElementById('brush-size').value = Math.min(300, Math.max(1, parseInt(val) || 1));
+        }
+
+        function toggleLayersBody() {
+            const list = document.getElementById('ps-layers-list');
+            const btn = document.getElementById('btn-toggle-layers-body');
+            const isHidden = list.classList.toggle('hidden');
+            btn.textContent = isHidden ? '▲' : '▼';
         }
 
         function toggleFullscreenCanvas() {
@@ -467,6 +508,63 @@
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && isFullscreenCanvas) toggleFullscreenCanvas();
         });
+
+        // ==================== PANEL PHOTOSHOP DE CAPAS ====================
+        function getLayersConfig() {
+            return [
+                { id: 'image', inputZ: 'z-img', name: '🖼️ Foto Base', z: parseInt(document.getElementById('z-img').value) || 1, type: 'img' },
+                { id: 'paint-under', inputZ: 'z-paint-under', name: '🎨 Pincel Detrás', z: parseInt(document.getElementById('z-paint-under').value) || 2, type: 'paint', paintTarget: 'under' },
+                { id: 'title', inputZ: 'z-top', name: '🔤 Título', z: parseInt(document.getElementById('z-top').value) || 3, type: 'text' },
+                { id: 'sub', inputZ: 'z-sub', name: '📝 Subtítulo', z: parseInt(document.getElementById('z-sub').value) || 4, type: 'text' },
+                { id: 'bot', inputZ: 'z-bot', name: '🏷️ Texto Abajo', z: parseInt(document.getElementById('z-bot').value) || 5, type: 'text' },
+                { id: 'paint-over', inputZ: 'z-paint-over', name: '🖌️ Pincel Encima', z: parseInt(document.getElementById('z-paint-over').value) || 6, type: 'paint', paintTarget: 'over' }
+            ];
+        }
+
+        function updatePSLayersPanel() {
+            const layers = getLayersConfig().sort((a, b) => b.z - a.z); // Orden de arriba a abajo (Photoshop)
+            const listEl = document.getElementById('ps-layers-list');
+            listEl.innerHTML = '';
+
+            layers.forEach(l => {
+                const isSelectedPaint = (l.type === 'paint' && currentActivePaintLayer === l.paintTarget);
+                const isVis = layerVisibility[l.id] !== false;
+
+                const item = document.createElement('div');
+                item.className = `layer-item flex items-center justify-between p-1.5 rounded-lg border text-[11px] font-bold ${isSelectedPaint ? 'active' : 'bg-slate-50 border-slate-200 text-slate-700'}`;
+                
+                item.innerHTML = `
+                    <div class="flex items-center gap-1.5 truncate">
+                        <button onclick="toggleLayerVis('${l.id}')" class="text-xs hover:scale-110 transition-transform ${isVis ? 'text-slate-700' : 'text-slate-300'}">
+                            ${isVis ? '👁️' : '🕶️'}
+                        </button>
+                        <span class="truncate cursor-pointer" onclick="${l.type === 'paint' ? `switchPaintLayer('\${l.paintTarget}')` : ''}">${l.name}</span>
+                    </div>
+                    <div class="flex items-center gap-1 shrink-0">
+                        <span class="text-[9px] text-slate-400 bg-white px-1 rounded border border-slate-200">Z:${l.z}</span>
+                        <button onclick="changeLayerZ('${l.inputZ}', 1)" class="w-4 h-4 flex items-center justify-center bg-white border border-slate-200 hover:bg-pink-50 rounded text-[9px] font-black">▲</button>
+                        <button onclick="changeLayerZ('${l.inputZ}', -1)" class="w-4 h-4 flex items-center justify-center bg-white border border-slate-200 hover:bg-pink-50 rounded text-[9px] font-black">▼</button>
+                    </div>
+                `;
+                listEl.appendChild(item);
+            });
+        }
+
+        function toggleLayerVis(layerId) {
+            layerVisibility[layerId] = !layerVisibility[layerId];
+            scheduleRender();
+            updatePSLayersPanel();
+        }
+
+        function changeLayerZ(inputId, delta) {
+            const input = document.getElementById(inputId);
+            let val = parseInt(input.value) || 1;
+            val = Math.max(1, Math.min(10, val + delta));
+            input.value = val;
+            scheduleRender();
+            updatePSLayersPanel();
+        }
+        // ====================================================================
 
         const updateVal = (id, suffix) => {
             const el = document.getElementById(id);
@@ -579,7 +677,6 @@
             }
         });
 
-        // Bucle de renderizado continuo (60 FPS)
         function scheduleRender() {
             if (!renderRequested) {
                 renderRequested = true;
@@ -689,7 +786,6 @@
             return canvas.toDataURL('image/jpeg', 0.95);
         }
 
-        // Renderizado del Canvas interactivo por capas Z
         function executeRender() {
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
@@ -715,6 +811,7 @@
                     name: 'image',
                     z: parseInt(document.getElementById('z-img').value) || 1,
                     render: () => {
+                        if (!layerVisibility['image']) return;
                         const x = ((size - img.width) / 2) + parseInt(document.getElementById('x-img').value);
                         const y = ((size - img.height) / 2) + parseInt(document.getElementById('y-img').value);
                         mainEditorCtx.drawImage(img, x, y, img.width, img.height);
@@ -723,12 +820,16 @@
                 {
                     name: 'paint-under',
                     z: parseInt(document.getElementById('z-paint-under').value) || 2,
-                    render: () => mainEditorCtx.drawImage(paintUnderCanvas, 0, 0, size, size)
+                    render: () => {
+                        if (!layerVisibility['paint-under']) return;
+                        mainEditorCtx.drawImage(paintUnderCanvas, 0, 0, size, size);
+                    }
                 },
                 {
                     name: 'title',
                     z: parseInt(document.getElementById('z-top').value) || 3,
                     render: () => {
+                        if (!layerVisibility['title']) return;
                         const text = document.getElementById('txt-top').value;
                         if (!text) return;
                         mainEditorCtx.fillStyle = textColor;
@@ -747,6 +848,7 @@
                     name: 'sub',
                     z: parseInt(document.getElementById('z-sub').value) || 4,
                     render: () => {
+                        if (!layerVisibility['sub']) return;
                         const text = document.getElementById('txt-sub').value;
                         if (!text) return;
                         mainEditorCtx.fillStyle = textColor;
@@ -765,6 +867,7 @@
                     name: 'bot',
                     z: parseInt(document.getElementById('z-bot').value) || 5,
                     render: () => {
+                        if (!layerVisibility['bot']) return;
                         const text = document.getElementById('txt-bot').value;
                         if (!text) return;
                         mainEditorCtx.fillStyle = textColor;
@@ -782,14 +885,16 @@
                 {
                     name: 'paint-over',
                     z: parseInt(document.getElementById('z-paint-over').value) || 6,
-                    render: () => mainEditorCtx.drawImage(paintOverCanvas, 0, 0, size, size)
+                    render: () => {
+                        if (!layerVisibility['paint-over']) return;
+                        mainEditorCtx.drawImage(paintOverCanvas, 0, 0, size, size);
+                    }
                 }
             ];
 
             layers.sort((a, b) => a.z - b.z).forEach(layer => layer.render());
         }
 
-        // Trazado táctil de pincel fluido
         function getCoords(e) {
             const rect = mainEditorCanvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -858,6 +963,7 @@
             el.addEventListener('input', () => {
                 if (id === 'edit-scale') document.getElementById('val-edit-scale').textContent = el.value + '%';
                 scheduleRender();
+                if (id.startsWith('z-')) updatePSLayersPanel();
             });
             el.addEventListener('touchmove', () => scheduleRender(), { passive: true });
         });
@@ -917,6 +1023,7 @@
 
             document.getElementById('editor-modal').classList.remove('hidden');
             document.body.style.overflow = 'hidden';
+            updatePSLayersPanel();
             scheduleRender();
         };
 
@@ -1024,16 +1131,10 @@
                 let nameNoExt = file.name.substring(0, file.name.lastIndexOf('.') !== -1 ? file.name.lastIndexOf('.') : file.name.length).trim().toUpperCase();
                 
                 let top = "", sub = "", bot = "";
-                if (mode === 'excel') {
-                    if (dictExcel[nameNoExt]) {
-                        top = dictExcel[nameNoExt].top;
-                        sub = dictExcel[nameNoExt].sub;
-                        bot = dictExcel[nameNoExt].bot;
-                    }
-                } else {
-                    top = document.getElementById(`man-top-${i}`)?.value || "";
-                    sub = document.getElementById(`man-sub-${i}`)?.value || "";
-                    bot = document.getElementById(`man-bot-${i}`)?.value || "";
+                if (mode === 'excel' && dictExcel[nameNoExt]) {
+                    top = dictExcel[nameNoExt].top;
+                    sub = dictExcel[nameNoExt].sub;
+                    bot = dictExcel[nameNoExt].bot;
                 }
 
                 try {
