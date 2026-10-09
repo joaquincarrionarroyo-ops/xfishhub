@@ -1138,7 +1138,7 @@
             scheduleRender();
         }
 
-        function stopPaint(e) {
+function stopPaint(e) {
             if (!isPainting) return;
             isPainting = false;
             const ctx = currentActivePaintLayer === 'over' ? paintOverCtx : paintUnderCtx;
@@ -1154,6 +1154,59 @@
         mainEditorCanvas.addEventListener('touchmove', doPaint, { passive: false });
         window.addEventListener('touchend', stopPaint);
 
+        // ==============================================================
+        // GESTO DE PINZA / MULTI-TOUCH ZOOM (EDITOR PRINCIPAL - IPHONE / IPAD)
+        // ==============================================================
+        let mainPinchInitialDist = null;
+        let mainInitialScale = 100;
+
+        function calcularDistanciaPinch(e) {
+            const t1 = e.touches[0];
+            const t2 = e.touches[1];
+            const dx = t1.clientX - t2.clientX;
+            const dy = t1.clientY - t2.clientY;
+            return Math.hypot(dx, dy);
+        }
+
+        mainEditorCanvas.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+                e.preventDefault();
+                isPainting = false; // Cancela el pincel para no manchar mientras hacés pinza
+                mainPinchInitialDist = calcularDistanciaPinch(e);
+                
+                const scaleInput = document.getElementById('edit-scale');
+                mainInitialScale = parseInt(scaleInput ? scaleInput.value : 100) || 100;
+            }
+        }, { passive: false });
+
+        mainEditorCanvas.addEventListener('touchmove', (e) => {
+            if (e.touches.length === 2 && mainPinchInitialDist) {
+                e.preventDefault();
+                const currentDist = calcularDistanciaPinch(e);
+                const factor = currentDist / mainPinchInitialDist;
+                
+                let nuevaEscala = Math.round(mainInitialScale * factor);
+                nuevaEscala = Math.max(20, Math.min(250, nuevaEscala));
+
+                const scaleInput = document.getElementById('edit-scale');
+                const valLabel = document.getElementById('val-edit-scale');
+                
+                if (scaleInput) scaleInput.value = nuevaEscala;
+                if (valLabel) valLabel.textContent = `${nuevaEscala}%`;
+
+                scheduleRender();
+            }
+        }, { passive: false });
+
+        mainEditorCanvas.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+                mainPinchInitialDist = null;
+            }
+        });
+
+        // ==============================================================
+        // LISTENERS DE SLIDERS EXISTENTES
+        // ==============================================================
         ['x-img', 'y-img', 'z-img', 'x-top', 'y-top', 'z-top', 'x-sub', 'y-sub', 'z-sub', 'x-bot', 'y-bot', 'z-bot',
          'z-paint-under', 'z-paint-over', 'txt-top', 'txt-sub', 'txt-bot', 'edit-color', 'edit-scale'].forEach(id => {
             const el = document.getElementById(id);
@@ -1165,7 +1218,6 @@
             });
             el.addEventListener('touchmove', () => scheduleRender(), { passive: true });
         });
-
         // Abrir Modal
         window.openEditor = function(index) {
             activeEditIndex = index;
