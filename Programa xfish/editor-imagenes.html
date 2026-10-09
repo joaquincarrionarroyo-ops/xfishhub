@@ -1402,43 +1402,62 @@ let dragStartX = 0, dragStartY = 0;
 const artboardCanvas = document.getElementById('multi-artboard-canvas');
 const artboardCtx = artboardCanvas ? artboardCanvas.getContext('2d') : null;
 
-function toggleModoMultiLienzo() {
+// 1. Forzar función global con desplazamiento automático y apertura limpia
+window.toggleModoMultiLienzo = function() {
     const sec = document.getElementById('seccion-multi-lienzo');
-    sec.classList.toggle('hidden');
-    if (!sec.classList.contains('hidden')) {
+    if (!sec) {
+        alert("Atención: No se encontró la etiqueta <section id='seccion-multi-lienzo'> en el HTML.");
+        return;
+    }
+
+    const estaOculto = sec.classList.contains('hidden') || sec.style.display === 'none';
+    if (estaOculto) {
+        sec.classList.remove('hidden');
+        sec.style.display = 'block';
+        sec.scrollIntoView({ behavior: 'smooth' });
         renderizarTabsMesas();
         redibujarMesaActual();
+    } else {
+        sec.classList.add('hidden');
+        sec.style.display = 'none';
     }
-}
+};
 
+// 2. Renderizado corregido sin la barra invertida que rompía el código
 function renderizarTabsMesas() {
     const tabsCont = document.getElementById('tab-lienzos-container');
     const selectEnviar = document.getElementById('select-enviar-mesa');
     if (!tabsCont) return;
 
     tabsCont.innerHTML = '';
-    selectEnviar.innerHTML = '<option value="">Elegir mesa...</option>';
+    if (selectEnviar) selectEnviar.innerHTML = '<option value="">Elegir mesa...</option>';
 
     mesasTrabajo.forEach(m => {
         const esActiva = m.id === mesaActivaId;
         const btn = document.createElement('button');
         btn.className = `px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${esActiva ? 'bg-pink-600 text-white shadow' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`;
-        btn.innerHTML = `<span>${m.nombre}</span> ${mesasTrabajo.length > 1 ? `<span onclick="eliminarMesa(\${m.id}, event)" class="hover:text-red-300 ml-1">×</span>` : ''}`;
-        btn.onclick = () => { mesaActivaId = m.id; objetoSeleccionadoIdx = -1; renderizarTabsMesas(); redibujarMesaActual(); };
+        btn.innerHTML = `<span>${m.nombre}</span> ${mesasTrabajo.length > 1 ? `<span onclick="eliminarMesa(\${m.id}, event)" class="hover:text-red-300 ml-1 font-bold">×</span>` : ''}`;
+        btn.onclick = () => { 
+            mesaActivaId = m.id; 
+            objetoSeleccionadoIdx = -1; 
+            renderizarTabsMesas(); 
+            redibujarMesaActual(); 
+        };
         tabsCont.appendChild(btn);
 
-        if (m.id !== mesaActivaId) {
+        if (selectEnviar && m.id !== mesaActivaId) {
             selectEnviar.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
         }
     });
 
     const mesa = getMesaActiva();
     if (mesa) {
-        document.getElementById('mesa-txt-top').value = mesa.txtTop || "";
-        document.getElementById('mesa-txt-bot').value = mesa.txtBot || "";
+        const topEl = document.getElementById('mesa-txt-top');
+        const botEl = document.getElementById('mesa-txt-bot');
+        if (topEl) topEl.value = mesa.txtTop || "";
+        if (botEl) botEl.value = mesa.txtBot || "";
     }
 }
-
 function getMesaActiva() {
     return mesasTrabajo.find(m => m.id === mesaActivaId);
 }
