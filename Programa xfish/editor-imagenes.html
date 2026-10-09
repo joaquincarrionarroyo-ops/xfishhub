@@ -2010,6 +2010,87 @@ async function descargarTodasMesasZip() {
 document.addEventListener('DOMContentLoaded', () => {
     bindArtboardEvents();
 });
+        // ==============================================================
+// DRAG & DROP DIRECTO DE FOTOS SOBRE EL LIENZO (SIN ABRIR PESTAÑA)
+// ==============================================================
+function habilitarDropDirectoEnLienzo() {
+    const contenedorLienzo = document.getElementById('multi-artboard-canvas')?.parentElement;
+    const canvas = document.getElementById('multi-artboard-canvas');
+
+    const zonas = [contenedorLienzo, canvas].filter(Boolean);
+
+    // Evitar que el navegador abra el archivo si se suelta en cualquier parte de la ventana
+    window.addEventListener('dragover', (e) => e.preventDefault(), false);
+    window.addEventListener('drop', (e) => e.preventDefault(), false);
+
+    zonas.forEach(zona => {
+        zona.addEventListener('dragenter', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            zona.classList.add('ring-4', 'ring-pink-500', 'ring-opacity-50');
+        });
+
+        zona.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            e.dataTransfer.dropEffect = 'copy';
+        });
+
+        zona.addEventListener('dragleave', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            zona.classList.remove('ring-4', 'ring-pink-500', 'ring-opacity-50');
+        });
+
+        zona.addEventListener('drop', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            zona.classList.remove('ring-4', 'ring-pink-500', 'ring-opacity-50');
+
+            const files = e.dataTransfer.files;
+            if (!files || !files.length) return;
+
+            const mesa = getMesaActiva();
+            if (!mesa) return;
+
+            // Calcular posición exacta donde soltaste el archivo en el lienzo
+            const rect = canvas.getBoundingClientRect();
+            const dropX = (e.clientX - rect.left) * (1200 / rect.width);
+            const dropY = (e.clientY - rect.top) * (1200 / rect.height);
+
+            Array.from(files).forEach((file) => {
+                if (!file.type.startsWith('image/')) return;
+
+                const img = new Image();
+                img.onload = () => {
+                    mesa.elementos.push({
+                        type: 'image',
+                        name: file.name,
+                        img: img,
+                        x: Math.max(100, Math.min(1100, dropX || 600)),
+                        y: Math.max(100, Math.min(1100, dropY || 600)),
+                        width: img.width,
+                        height: img.height,
+                        scale: 1,
+                        rotation: 0,
+                        visible: true
+                    });
+                    elementoSeleccionadoIdx = mesa.elementos.length - 1;
+                    actualizarListaCapasDND();
+                    actualizarPanelPropiedades();
+                    redibujarMesaActual();
+                };
+                img.src = URL.createObjectURL(file);
+            });
+        });
+    });
+}
+
+// Inicializar drop junto con los demás eventos
+document.addEventListener('DOMContentLoaded', () => {
+    bindArtboardEvents();
+    habilitarDropDirectoEnLienzo();
+});
     </script>
 </body>
 </html>
