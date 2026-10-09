@@ -40,7 +40,6 @@
             -webkit-user-select: none;
         }
 
-        /* Modo Pantalla Completa Total */
         .fullscreen-active {
             position: fixed !important;
             top: 0 !important;
@@ -61,7 +60,6 @@
             max-width: 95vw !important;
         }
 
-        /* Estilo Panel Photoshop de Capas */
         .layer-item {
             transition: all 0.15s ease;
         }
@@ -250,7 +248,7 @@
         </div>
     </main>
 
-    <!-- MODAL EDITOR INDIVIDUAL CON PANTALLA COMPLETA, PINCELES Y PANEL PHOTOSHOP DE CAPAS -->
+    <!-- MODAL EDITOR INDIVIDUAL CON PANTALLA COMPLETA, PINCELES Y PANEL DE CAPAS -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[96vh] flex flex-col md:flex-row overflow-hidden relative">
             <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/90 backdrop-blur text-rose-500 font-bold w-8 h-8 rounded-full shadow border border-slate-200 flex items-center justify-center text-xl">&times;</button>
@@ -290,7 +288,7 @@
                 <div class="relative flex-grow flex items-center justify-center w-full overflow-hidden my-2">
                     <canvas id="main-editor-canvas" class="max-w-full max-h-[38vh] md:max-h-[74vh] object-contain drop-shadow-md rounded bg-white"></canvas>
 
-                    <!-- PANEL DE CAPAS FLOTANTE ESTILO PHOTOSHOP (Visible y toggleable) -->
+                    <!-- PANEL DE CAPAS FLOTANTE ESTILO PHOTOSHOP -->
                     <div id="ps-layers-panel" class="absolute bottom-2 right-2 bg-white/95 backdrop-blur-md border border-slate-300 rounded-2xl shadow-2xl p-2.5 w-60 z-30 transition-all">
                         <div class="flex items-center justify-between pb-1.5 border-b border-slate-200 mb-1.5">
                             <span class="text-[11px] font-extrabold text-slate-800 tracking-wider uppercase flex items-center gap-1">
@@ -298,9 +296,7 @@
                             </span>
                             <button onclick="toggleLayersBody()" class="text-slate-400 hover:text-slate-700 text-xs font-bold" id="btn-toggle-layers-body">▼</button>
                         </div>
-                        <div id="ps-layers-list" class="space-y-1 max-h-48 ios-scroll pr-1 text-xs">
-                            <!-- Se renderiza dinámicamente con JavaScript -->
-                        </div>
+                        <div id="ps-layers-list" class="space-y-1 max-h-48 ios-scroll pr-1 text-xs"></div>
                     </div>
                 </div>
 
@@ -319,6 +315,15 @@
 
                 <div class="space-y-3.5 ios-scroll flex-grow pr-1 pb-6">
                     
+                    <!-- 0. Modo de Lienzo Individual -->
+                    <div class="bg-pink-50/60 p-2.5 rounded-xl border border-pink-200 space-y-1.5">
+                        <label class="text-[10px] font-bold text-pink-700 uppercase block">Modo de Diseño</label>
+                        <select id="edit-mode" class="custom-select text-xs" onchange="cambiarModoIndividual(this.value)">
+                            <option value="margin">🖼️ Con Márgenes (Lienzo Blanco)</option>
+                            <option value="overlay">📸 Superpuesto (Sobre Foto Original)</option>
+                        </select>
+                    </div>
+
                     <!-- 1. Capa Imagen Principal -->
                     <div class="bg-slate-50 p-2.5 md:p-3 rounded-xl border border-slate-200 space-y-1.5">
                         <div class="flex items-center justify-between">
@@ -358,7 +363,7 @@
                                 <input type="number" id="z-top" min="1" max="10" value="3" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
-                        <textarea id="txt-top" class="custom-input text-xs" rows="1"></textarea>
+                        <textarea id="txt-top" class="custom-input text-xs" rows="1" placeholder="Título..."></textarea>
                         <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-top" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-top" min="-600" max="600" value="0"></div>
@@ -374,7 +379,7 @@
                                 <input type="number" id="z-sub" min="1" max="10" value="4" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
-                        <textarea id="txt-sub" class="custom-input text-xs" rows="1"></textarea>
+                        <textarea id="txt-sub" class="custom-input text-xs" rows="1" placeholder="Subtítulo..."></textarea>
                         <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-sub" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-sub" min="-600" max="600" value="0"></div>
@@ -390,7 +395,7 @@
                                 <input type="number" id="z-bot" min="1" max="10" value="5" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
-                        <textarea id="txt-bot" class="custom-input text-xs" rows="1"></textarea>
+                        <textarea id="txt-bot" class="custom-input text-xs" rows="1" placeholder="Precio, código..."></textarea>
                         <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-bot" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-bot" min="-600" max="600" value="0"></div>
@@ -428,7 +433,6 @@
         let activeEditIndex = -1;
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-        // Capas Offscreen para Pincel
         const paintUnderCanvas = document.createElement('canvas');
         const paintUnderCtx = paintUnderCanvas.getContext('2d');
         const paintOverCanvas = document.createElement('canvas');
@@ -441,7 +445,6 @@
         let isFullscreenCanvas = false;
         let globalMockupImgObj = null;
 
-        // Estado de visibilidad de capas
         let layerVisibility = {
             'image': true,
             'paint-under': true,
@@ -509,7 +512,6 @@
             if (e.key === 'Escape' && isFullscreenCanvas) toggleFullscreenCanvas();
         });
 
-        // ==================== PANEL PHOTOSHOP DE CAPAS ====================
         function getLayersConfig() {
             return [
                 { id: 'image', inputZ: 'z-img', name: '🖼️ Foto Base', z: parseInt(document.getElementById('z-img').value) || 1, type: 'img' },
@@ -522,7 +524,7 @@
         }
 
         function updatePSLayersPanel() {
-            const layers = getLayersConfig().sort((a, b) => b.z - a.z); // Orden de arriba a abajo (Photoshop)
+            const layers = getLayersConfig().sort((a, b) => b.z - a.z);
             const listEl = document.getElementById('ps-layers-list');
             listEl.innerHTML = '';
 
@@ -564,7 +566,6 @@
             scheduleRender();
             updatePSLayersPanel();
         }
-        // ====================================================================
 
         const updateVal = (id, suffix) => {
             const el = document.getElementById(id);
@@ -718,93 +719,164 @@
             });
         }
 
+        // RENDERIZADO GLOBAL / EXPORTACIÓN
         function renderCanvasDataUrl(config) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = config.imgObj;
             const scaleFactor = (config.textScale || 100) / 100;
+            const mode = config.mode || 'margin';
 
-            const maxDim = Math.max(img.width, img.height);
-            const margin = Math.max(maxDim * 0.22, 120); 
-            const size = maxDim + (margin * 2);
-            canvas.width = size; canvas.height = size;
+            let canvasW, canvasH, fontTop, fontSub, fontBot, startYTop, startYBot;
 
-            ctx.fillStyle = '#ffffff'; 
-            ctx.fillRect(0, 0, size, size);
+            if (mode === 'margin') {
+                const maxDim = Math.max(img.width, img.height);
+                const margin = Math.max(maxDim * 0.22, 120); 
+                const size = maxDim + (margin * 2);
+                canvas.width = size; 
+                canvas.height = size;
+                canvasW = size; 
+                canvasH = size;
 
-            const imgX = ((size - img.width) / 2) + (config.imgX || 0);
-            const imgY = ((size - img.height) / 2) + (config.imgY || 0);
-            ctx.drawImage(img, imgX, imgY, img.width, img.height);
+                ctx.fillStyle = '#ffffff'; 
+                ctx.fillRect(0, 0, size, size);
+
+                const imgX = ((size - img.width) / 2) + (config.imgX || 0);
+                const imgY = ((size - img.height) / 2) + (config.imgY || 0);
+                ctx.drawImage(img, imgX, imgY, img.width, img.height);
+
+                fontTop = Math.round((margin * 0.35) * scaleFactor);
+                fontSub = Math.round(fontTop * 0.7);
+                fontBot = Math.round((margin * 0.45) * scaleFactor);
+                startYTop = Math.round(margin * 0.45) + (config.yTop || 0);
+                startYBot = size - Math.round(margin * 0.35) + (config.yBot || 0);
+            } else {
+                // Modo Superpuesto: Dimensiones nativas de la foto
+                canvas.width = img.width;
+                canvas.height = img.height;
+                canvasW = img.width;
+                canvasH = img.height;
+
+                ctx.drawImage(img, (config.imgX || 0), (config.imgY || 0), img.width, img.height);
+
+                fontTop = Math.round((img.height * 0.08) * scaleFactor);
+                fontSub = Math.round(fontTop * 0.7);
+                fontBot = Math.round((img.height * 0.08) * scaleFactor);
+                startYTop = Math.round(img.height * 0.12) + (config.yTop || 0);
+                startYBot = Math.round(img.height * 0.88) + (config.yBot || 0);
+            }
 
             ctx.fillStyle = config.textColor || '#000000'; 
             ctx.textAlign = 'center'; 
             ctx.textBaseline = 'middle';
 
-            let fontTop = (margin * 0.35) * scaleFactor;
-            let fontSub = fontTop * 0.7;
-            let lhTop = fontTop * 1.2;
-            let lhSub = fontSub * 1.2;
-
-            ctx.font = `normal ${fontTop}px ${fontFamily}`;
-            let tLines = config.top ? getLines(ctx, config.top, size * 0.85) : [];
-            ctx.font = `normal ${fontSub}px ${fontFamily}`;
-            let sLines = config.sub ? getLines(ctx, config.sub, size * 0.85) : [];
-
-            let blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
-            if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
-            let y = ((margin - blockH) / 2) + 30; 
-            
-            if (tLines.length > 0) {
+            let curY = startYTop;
+            if (config.top) {
                 ctx.font = `normal ${fontTop}px ${fontFamily}`;
-                tLines.forEach(l => { 
-                    ctx.fillText(l, (size / 2) + (config.xTop || 0), y + (lhTop/2) + (config.yTop || 0)); 
-                    y += lhTop; 
+                let tLines = getLines(ctx, config.top, canvasW * 0.88);
+                let lhTop = fontTop * 1.25;
+                tLines.forEach(l => {
+                    ctx.fillText(l, (canvasW / 2) + (config.xTop || 0), curY);
+                    curY += lhTop;
                 });
-                if (sLines.length > 0) y += (fontTop * 0.2);
             }
-            if (sLines.length > 0) {
+
+            if (config.sub) {
                 ctx.font = `normal ${fontSub}px ${fontFamily}`;
-                sLines.forEach(l => { 
-                    ctx.fillText(l, (size / 2) + (config.xSub || 0), y + (lhSub/2) + (config.ySub || 0)); 
-                    y += lhSub; 
+                let sLines = getLines(ctx, config.sub, canvasW * 0.88);
+                let lhSub = fontSub * 1.25;
+                let subY = curY + 10 + (config.ySub || 0);
+                sLines.forEach(l => {
+                    ctx.fillText(l, (canvasW / 2) + (config.xSub || 0), subY);
+                    subY += lhSub;
                 });
             }
 
             if (config.bot) {
-                let fontBot = (margin * 0.45) * scaleFactor; 
                 ctx.font = `normal ${fontBot}px ${fontFamily}`;
-                let bLines = getLines(ctx, config.bot, size * 0.85);
-                let lhBot = fontBot * 1.2;
-                let botH = bLines.length * lhBot;
-                let botY = size - (margin / 2) - (botH / 2) + (lhBot/2) + (config.yBot || 0);
-                bLines.forEach(l => { 
-                    ctx.fillText(l, (size / 2) + (config.xBot || 0), botY); 
-                    botY += lhBot; 
+                let bLines = getLines(ctx, config.bot, canvasW * 0.88);
+                let lhBot = fontBot * 1.25;
+                let botY = startYBot - ((bLines.length - 1) * lhBot * 0.5);
+                bLines.forEach(l => {
+                    ctx.fillText(l, (canvasW / 2) + (config.xBot || 0), botY);
+                    botY += lhBot;
                 });
             }
 
             return canvas.toDataURL('image/jpeg', 0.95);
         }
 
+        function cambiarModoIndividual(modo) {
+            if (activeEditIndex === -1) return;
+            imagesData[activeEditIndex].mode = modo;
+            
+            // Reajustar dimensiones de capas de pintura al cambiar modo
+            const item = imagesData[activeEditIndex];
+            const img = item.imgObj;
+            let targetW, targetH;
+            if (modo === 'margin') {
+                const maxDim = Math.max(img.width, img.height);
+                const margin = Math.max(maxDim * 0.22, 120);
+                const size = maxDim + (margin * 2);
+                targetW = size;
+                targetH = size;
+            } else {
+                targetW = img.width;
+                targetH = img.height;
+            }
+
+            paintUnderCanvas.width = targetW;
+            paintUnderCanvas.height = targetH;
+            paintOverCanvas.width = targetW;
+            paintOverCanvas.height = targetH;
+
+            scheduleRender();
+        }
+
+        // RENDERIZADO DEL MODAL (CON CAPAS Z Y MODO MARGEN / SUPERPUESTO)
         function executeRender() {
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
             const img = item.imgObj;
+            const mode = document.getElementById('edit-mode').value || 'margin';
 
             const scaleFactor = (parseInt(document.getElementById('edit-scale').value) || 100) / 100;
-            const textColor = document.getElementById('edit-color').value;
+            const textColor = document.getElementById('edit-color').value || '#000000';
 
-            const maxDim = Math.max(img.width, img.height);
-            const margin = Math.max(maxDim * 0.22, 120);
-            const size = maxDim + (margin * 2);
+            let canvasW, canvasH, fontTop, fontSub, fontBot, startYTop, startYBot;
 
-            if (mainEditorCanvas.width !== size || mainEditorCanvas.height !== size) {
-                mainEditorCanvas.width = size;
-                mainEditorCanvas.height = size;
+            if (mode === 'margin') {
+                const maxDim = Math.max(img.width, img.height);
+                const margin = Math.max(maxDim * 0.22, 120);
+                const size = maxDim + (margin * 2);
+                canvasW = size;
+                canvasH = size;
+                fontTop = Math.round((margin * 0.35) * scaleFactor);
+                fontSub = Math.round(fontTop * 0.7);
+                fontBot = Math.round((margin * 0.45) * scaleFactor);
+                startYTop = Math.round(margin * 0.45) + parseInt(document.getElementById('y-top').value);
+                startYBot = size - Math.round(margin * 0.35) + parseInt(document.getElementById('y-bot').value);
+            } else {
+                canvasW = img.width;
+                canvasH = img.height;
+                fontTop = Math.round((img.height * 0.08) * scaleFactor);
+                fontSub = Math.round(fontTop * 0.7);
+                fontBot = Math.round((img.height * 0.08) * scaleFactor);
+                startYTop = Math.round(img.height * 0.12) + parseInt(document.getElementById('y-top').value);
+                startYBot = Math.round(img.height * 0.88) + parseInt(document.getElementById('y-bot').value);
             }
 
-            mainEditorCtx.fillStyle = '#ffffff';
-            mainEditorCtx.fillRect(0, 0, size, size);
+            if (mainEditorCanvas.width !== canvasW || mainEditorCanvas.height !== canvasH) {
+                mainEditorCanvas.width = canvasW;
+                mainEditorCanvas.height = canvasH;
+            }
+
+            if (mode === 'margin') {
+                mainEditorCtx.fillStyle = '#ffffff';
+                mainEditorCtx.fillRect(0, 0, canvasW, canvasH);
+            } else {
+                mainEditorCtx.clearRect(0, 0, canvasW, canvasH);
+            }
 
             const layers = [
                 {
@@ -812,9 +884,15 @@
                     z: parseInt(document.getElementById('z-img').value) || 1,
                     render: () => {
                         if (!layerVisibility['image']) return;
-                        const x = ((size - img.width) / 2) + parseInt(document.getElementById('x-img').value);
-                        const y = ((size - img.height) / 2) + parseInt(document.getElementById('y-img').value);
-                        mainEditorCtx.drawImage(img, x, y, img.width, img.height);
+                        if (mode === 'margin') {
+                            const x = ((canvasW - img.width) / 2) + parseInt(document.getElementById('x-img').value);
+                            const y = ((canvasH - img.height) / 2) + parseInt(document.getElementById('y-img').value);
+                            mainEditorCtx.drawImage(img, x, y, img.width, img.height);
+                        } else {
+                            const x = parseInt(document.getElementById('x-img').value);
+                            const y = parseInt(document.getElementById('y-img').value);
+                            mainEditorCtx.drawImage(img, x, y, img.width, img.height);
+                        }
                     }
                 },
                 {
@@ -822,7 +900,7 @@
                     z: parseInt(document.getElementById('z-paint-under').value) || 2,
                     render: () => {
                         if (!layerVisibility['paint-under']) return;
-                        mainEditorCtx.drawImage(paintUnderCanvas, 0, 0, size, size);
+                        mainEditorCtx.drawImage(paintUnderCanvas, 0, 0, canvasW, canvasH);
                     }
                 },
                 {
@@ -835,13 +913,11 @@
                         mainEditorCtx.fillStyle = textColor;
                         mainEditorCtx.textAlign = 'center';
                         mainEditorCtx.textBaseline = 'middle';
-                        let font = Math.round((margin * 0.35) * scaleFactor);
-                        mainEditorCtx.font = `normal ${font}px ${fontFamily}`;
-                        let lines = getLines(mainEditorCtx, text, size * 0.85);
-                        let lh = font * 1.2;
-                        let startY = 80 + parseInt(document.getElementById('y-top').value);
-                        let posX = (size / 2) + parseInt(document.getElementById('x-top').value);
-                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, startY + (idx * lh)));
+                        mainEditorCtx.font = `normal ${fontTop}px ${fontFamily}`;
+                        let lines = getLines(mainEditorCtx, text, canvasW * 0.88);
+                        let lh = fontTop * 1.25;
+                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-top').value);
+                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, startYTop + (idx * lh)));
                     }
                 },
                 {
@@ -854,13 +930,12 @@
                         mainEditorCtx.fillStyle = textColor;
                         mainEditorCtx.textAlign = 'center';
                         mainEditorCtx.textBaseline = 'middle';
-                        let font = Math.round((margin * 0.25) * scaleFactor);
-                        mainEditorCtx.font = `normal ${font}px ${fontFamily}`;
-                        let lines = getLines(mainEditorCtx, text, size * 0.85);
-                        let lh = font * 1.2;
-                        let startY = 150 + parseInt(document.getElementById('y-sub').value);
-                        let posX = (size / 2) + parseInt(document.getElementById('x-sub').value);
-                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, startY + (idx * lh)));
+                        mainEditorCtx.font = `normal ${fontSub}px ${fontFamily}`;
+                        let lines = getLines(mainEditorCtx, text, canvasW * 0.88);
+                        let lh = fontSub * 1.25;
+                        let subBaseY = startYTop + (fontTop * 1.3) + parseInt(document.getElementById('y-sub').value);
+                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-sub').value);
+                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, subBaseY + (idx * lh)));
                     }
                 },
                 {
@@ -873,13 +948,12 @@
                         mainEditorCtx.fillStyle = textColor;
                         mainEditorCtx.textAlign = 'center';
                         mainEditorCtx.textBaseline = 'middle';
-                        let font = Math.round((margin * 0.40) * scaleFactor);
-                        mainEditorCtx.font = `normal ${font}px ${fontFamily}`;
-                        let lines = getLines(mainEditorCtx, text, size * 0.85);
-                        let lh = font * 1.2;
-                        let botY = size - 70 + parseInt(document.getElementById('y-bot').value);
-                        let posX = (size / 2) + parseInt(document.getElementById('x-bot').value);
-                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, botY + (idx * lh)));
+                        mainEditorCtx.font = `normal ${fontBot}px ${fontFamily}`;
+                        let lines = getLines(mainEditorCtx, text, canvasW * 0.88);
+                        let lh = fontBot * 1.25;
+                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-bot').value);
+                        let botBaseY = startYBot - ((lines.length - 1) * lh * 0.5);
+                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, botBaseY + (idx * lh)));
                     }
                 },
                 {
@@ -887,7 +961,7 @@
                     z: parseInt(document.getElementById('z-paint-over').value) || 6,
                     render: () => {
                         if (!layerVisibility['paint-over']) return;
-                        mainEditorCtx.drawImage(paintOverCanvas, 0, 0, size, size);
+                        mainEditorCtx.drawImage(paintOverCanvas, 0, 0, canvasW, canvasH);
                     }
                 }
             ];
@@ -973,6 +1047,7 @@
             activeEditIndex = index;
             const item = imagesData[index];
 
+            document.getElementById('edit-mode').value = item.mode || 'margin';
             document.getElementById('txt-top').value = item.top || "";
             document.getElementById('txt-sub').value = item.sub || "";
             document.getElementById('txt-bot').value = item.bot || "";
@@ -999,16 +1074,25 @@
             document.getElementById('z-paint-under').value = item.zPaintUnder || 2;
             document.getElementById('z-paint-over').value = item.zPaintOver || 6;
 
-            const maxDim = Math.max(item.imgObj.width, item.imgObj.height);
-            const size = maxDim + (Math.max(maxDim * 0.22, 120) * 2);
+            const mode = item.mode || 'margin';
+            let targetW, targetH;
+            if (mode === 'margin') {
+                const maxDim = Math.max(item.imgObj.width, item.imgObj.height);
+                const size = maxDim + (Math.max(maxDim * 0.22, 120) * 2);
+                targetW = size;
+                targetH = size;
+            } else {
+                targetW = item.imgObj.width;
+                targetH = item.imgObj.height;
+            }
 
-            paintUnderCanvas.width = size;
-            paintUnderCanvas.height = size;
-            paintOverCanvas.width = size;
-            paintOverCanvas.height = size;
+            paintUnderCanvas.width = targetW;
+            paintUnderCanvas.height = targetH;
+            paintOverCanvas.width = targetW;
+            paintOverCanvas.height = targetH;
 
-            paintUnderCtx.clearRect(0, 0, size, size);
-            paintOverCtx.clearRect(0, 0, size, size);
+            paintUnderCtx.clearRect(0, 0, targetW, targetH);
+            paintOverCtx.clearRect(0, 0, targetW, targetH);
 
             if (item.paintUnderData) {
                 const imgU = new Image();
@@ -1038,6 +1122,7 @@
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
 
+            item.mode = document.getElementById('edit-mode').value;
             item.top = document.getElementById('txt-top').value;
             item.sub = document.getElementById('txt-sub').value;
             item.bot = document.getElementById('txt-bot').value;
@@ -1102,6 +1187,7 @@
             if (!files.length) { alert("Seleccioná las fotos primero."); return; }
 
             const mode = document.querySelector('input[name="input-mode"]:checked').value;
+            const globalMode = document.getElementById('global-mode').value;
             let dictExcel = {};
 
             if (mode === 'excel') {
@@ -1131,10 +1217,16 @@
                 let nameNoExt = file.name.substring(0, file.name.lastIndexOf('.') !== -1 ? file.name.lastIndexOf('.') : file.name.length).trim().toUpperCase();
                 
                 let top = "", sub = "", bot = "";
-                if (mode === 'excel' && dictExcel[nameNoExt]) {
-                    top = dictExcel[nameNoExt].top;
-                    sub = dictExcel[nameNoExt].sub;
-                    bot = dictExcel[nameNoExt].bot;
+                if (mode === 'excel') {
+                    if (dictExcel[nameNoExt]) {
+                        top = dictExcel[nameNoExt].top;
+                        sub = dictExcel[nameNoExt].sub;
+                        bot = dictExcel[nameNoExt].bot;
+                    }
+                } else {
+                    top = document.getElementById(`man-top-${i}`)?.value || "";
+                    sub = document.getElementById(`man-sub-${i}`)?.value || "";
+                    bot = document.getElementById(`man-bot-${i}`)?.value || "";
                 }
 
                 try {
@@ -1142,6 +1234,7 @@
                     const item = {
                         name: file.name,
                         imgObj: imgObj,
+                        mode: globalMode,
                         top: top, sub: sub, bot: bot,
                         textColor: document.getElementById('global-color').value,
                         textScale: parseInt(document.getElementById('global-scale').value),
@@ -1155,6 +1248,7 @@
 
                     item.dataUrl = renderCanvasDataUrl({
                         imgObj: imgObj,
+                        mode: item.mode,
                         textColor: item.textColor,
                         textScale: item.textScale,
                         top: item.top, sub: item.sub, bot: item.bot,
