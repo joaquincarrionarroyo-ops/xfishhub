@@ -20,7 +20,7 @@
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); z-index: 100; }
         .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
-        input[type=range] { width: 100%; accent-color: #0284c7; touch-action: none; cursor: pointer; }
+        input[type=range] { width: 100%; accent-color: #0284c7; touch-action: none; cursor: pointer; height: 6px; border-radius: 3px; }
         input[type=color] { border: none; border-radius: 4px; padding: 0; cursor: pointer; }
         textarea.custom-input { resize: vertical; min-height: 40px; }
     </style>
@@ -50,7 +50,7 @@
             <div class="flex flex-col md:flex-row md:items-center justify-between pb-4 mb-6 border-b border-slate-200/60 gap-3">
                 <div>
                     <h2 class="text-lg font-bold text-slate-700">1. Seleccionar Artículos</h2>
-                    <p class="text-xs text-slate-500 font-medium">Textos con espaciado dinámico sin solapamientos, fotos en alta resolución nativa de Odoo (1920).</p>
+                    <p class="text-xs text-slate-500 font-medium">Renderizado HD 2000px, capas Z reordenables y soporte táctil para iPad.</p>
                 </div>
                 <div id="odoo-sync-status" class="text-xs font-bold text-slate-500 bg-white/70 px-3 py-1.5 rounded-full border border-slate-200 flex items-center gap-2">
                     <span class="w-2 h-2 rounded-full bg-amber-400 animate-pulse"></span> Sincronizando con Odoo...
@@ -141,12 +141,18 @@
                         </div>
                     </div>
 
-                    <div class="space-y-3 pt-2 border-t border-slate-200">
+                    <div class="grid grid-cols-2 gap-4 pt-2 border-t border-slate-200">
                         <div>
                             <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
                                 <span>Posición Vertical Título (Y)</span><span id="val-global-y-top">0px</span>
                             </label>
                             <input type="range" id="global-y-top" min="-200" max="200" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-purple-600 uppercase flex justify-between">
+                                <span>Capa Foto (Z-Index)</span><span id="val-global-z-img">1</span>
+                            </label>
+                            <input type="range" id="global-z-img" min="1" max="5" value="1" step="1">
                         </div>
                     </div>
                 </div>
@@ -169,7 +175,7 @@
             <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-sky-500 gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-slate-800">Fichas Generadas</h3>
-                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Edita posición X/Y, textos o tamaño de imagen individualmente.</p>
+                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Edición en ejes X, Y y Z individualmente.</p>
                 </div>
                 <button onclick="descargarTodoZip()" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-blue-600 hover:from-indigo-600 hover:to-blue-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
@@ -184,7 +190,7 @@
 
     </main>
 
-    <!-- MODAL EDITOR INDIVIDUAL -->
+    <!-- MODAL EDITOR INDIVIDUAL CON CONTROLES X, Y, Z TÁCTILES -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
         <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[95vh] md:h-auto md:max-h-[92vh] flex flex-col md:flex-row overflow-hidden relative">
             
@@ -196,11 +202,12 @@
 
             <div class="w-full md:w-1/2 p-4 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
                 <div class="hidden md:flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
-                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Individual (X / Y y Foto)</h2>
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Individual (X / Y / Z)</h2>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl">&times;</button>
                 </div>
 
                 <div class="space-y-4 ios-scroll flex-grow pr-2 pb-6">
+                    <!-- Foto y Dimensiones -->
                     <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
                         <div class="grid grid-cols-2 gap-3">
                             <div>
@@ -215,29 +222,36 @@
                             </div>
                         </div>
 
-                        <div class="grid grid-cols-2 gap-3 pt-2 border-t border-slate-200">
+                        <div class="grid grid-cols-3 gap-2 pt-2 border-t border-slate-200">
                             <div>
-                                <label class="text-[10px] font-bold text-slate-600 flex justify-between uppercase">
-                                    <span>Zoom Foto</span><span id="val-edit-img-scale" class="text-sky-600">90%</span>
+                                <label class="text-[9px] font-bold text-slate-600 flex justify-between uppercase">
+                                    <span>Zoom</span><span id="val-edit-img-scale" class="text-sky-600">90%</span>
                                 </label>
                                 <input type="range" id="edit-img-scale" min="30" max="150" value="90">
                             </div>
                             <div>
-                                <label class="text-[10px] font-bold text-slate-600 flex justify-between uppercase">
-                                    <span>Posición Foto Y</span><span id="val-edit-img-y" class="text-sky-600">80px</span>
+                                <label class="text-[9px] font-bold text-slate-600 flex justify-between uppercase">
+                                    <span>Foto Y</span><span id="val-edit-img-y" class="text-sky-600">80px</span>
                                 </label>
                                 <input type="range" id="edit-img-y" min="-300" max="400" value="80">
+                            </div>
+                            <div>
+                                <label class="text-[9px] font-bold text-purple-600 flex justify-between uppercase">
+                                    <span>Foto Z</span><span id="val-edit-z-img" class="text-purple-600">1</span>
+                                </label>
+                                <input type="range" id="edit-z-img" min="1" max="5" value="1" step="1">
                             </div>
                         </div>
                     </div>
 
                     <!-- Título -->
                     <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
-                        <label class="text-[10px] font-bold text-blue-700 uppercase block">Título Principal (Limpio)</label>
+                        <label class="text-[10px] font-bold text-blue-700 uppercase block">Título Principal</label>
                         <textarea id="edit-txt-top" class="custom-input" rows="1"></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase">
-                            <div><span>Posición X</span><input type="range" id="edit-x-top" min="-300" max="300" value="0"></div>
-                            <div><span>Posición Y</span><input type="range" id="edit-y-top" min="-200" max="200" value="0"></div>
+                        <div class="grid grid-cols-3 gap-2 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>X</span><input type="range" id="edit-x-top" min="-300" max="300" value="0"></div>
+                            <div><span>Y</span><input type="range" id="edit-y-top" min="-200" max="200" value="0"></div>
+                            <div><span class="text-blue-600">Capa Z</span><input type="range" id="edit-z-top" min="1" max="5" value="2" step="1"></div>
                         </div>
                     </div>
 
@@ -245,13 +259,14 @@
                     <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100 space-y-2">
                         <label class="text-[10px] font-bold text-amber-700 uppercase block">Subtítulo (Tramos / Tipo)</label>
                         <textarea id="edit-txt-sub" class="custom-input" rows="1"></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase">
-                            <div><span>Posición X</span><input type="range" id="edit-x-sub" min="-300" max="300" value="0"></div>
-                            <div><span>Posición Y</span><input type="range" id="edit-y-sub" min="-200" max="200" value="0"></div>
+                        <div class="grid grid-cols-3 gap-2 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>X</span><input type="range" id="edit-x-sub" min="-300" max="300" value="0"></div>
+                            <div><span>Y</span><input type="range" id="edit-y-sub" min="-200" max="200" value="0"></div>
+                            <div><span class="text-amber-600">Capa Z</span><input type="range" id="edit-z-sub" min="1" max="5" value="3" step="1"></div>
                         </div>
                     </div>
 
-                    <!-- Columnas -->
+                    <!-- Columnas de Atributos -->
                     <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 space-y-2">
                         <label class="text-[10px] font-bold text-slate-700 uppercase block">Columnas de Atributos</label>
                         <div class="grid grid-cols-2 gap-2">
@@ -264,9 +279,10 @@
                                 <textarea id="edit-txt-col-right" class="custom-input font-mono" rows="3"></textarea>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase pt-1">
+                        <div class="grid grid-cols-3 gap-2 text-[9px] font-bold text-slate-500 uppercase pt-1">
                             <div><span>Separación X</span><input type="range" id="edit-x-bot" min="-200" max="200" value="0"></div>
                             <div><span>Posición Y</span><input type="range" id="edit-y-bot" min="-200" max="200" value="0"></div>
+                            <div><span class="text-slate-700">Capa Z</span><input type="range" id="edit-z-cols" min="1" max="5" value="4" step="1"></div>
                         </div>
                     </div>
 
@@ -274,9 +290,10 @@
                     <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-2">
                         <label class="text-[10px] font-bold text-emerald-700 uppercase block">Código Inferior</label>
                         <textarea id="edit-txt-bot" class="custom-input" rows="1"></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-500 uppercase">
-                            <div><span>Posición X</span><input type="range" id="edit-x-code" min="-300" max="300" value="0"></div>
-                            <div><span>Posición Y</span><input type="range" id="edit-y-code" min="-200" max="200" value="0"></div>
+                        <div class="grid grid-cols-3 gap-2 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>X</span><input type="range" id="edit-x-code" min="-300" max="300" value="0"></div>
+                            <div><span>Y</span><input type="range" id="edit-y-code" min="-200" max="200" value="0"></div>
+                            <div><span class="text-emerald-700">Capa Z</span><input type="range" id="edit-z-code" min="1" max="5" value="5" step="1"></div>
                         </div>
                     </div>
                 </div>
@@ -298,8 +315,47 @@
     let activeEditIndex = -1;
     const urlBackend = 'https://xfish-odoo-api.onrender.com';
 
-    // 🎨 Tipografía Berlin unificada
     const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
+
+    // Carga de imágenes con soporte crossOrigin y compatibilidad Retina/iPad
+    function loadImageFromUrl(url) {
+        return new Promise((resolve, reject) => {
+            const img = new Image();
+            img.crossOrigin = "anonymous";
+            img.onload = () => resolve(img);
+            img.onerror = () => reject(new Error("Error decodificando imagen"));
+            img.src = url;
+        });
+    }
+
+    function canvasToBlobPromise(canvas, type = 'image/jpeg', quality = 0.98) {
+        return new Promise((resolve) => {
+            canvas.toBlob((blob) => resolve(blob), type, quality);
+        });
+    }
+
+    // Consulta de imagen HD nativa (1920) a Odoo
+    async function obtenerFotoHD(tmplId, prodId) {
+        const pwd = sessionStorage.getItem('odoo_pwd');
+        try {
+            // Intentar primero con la ruta directa configurada en la API
+            const res = await fetch(`${urlBackend}/api/foto-directa-hd/${tmplId}`, {
+                headers: { 'x-odoo-password': pwd }
+            });
+            if (res.ok) {
+                const data = await res.json();
+                if (data.foto_hd) return await loadImageFromUrl(data.foto_hd);
+            }
+        } catch(e) {}
+
+        // Fallback directo a la URL original de Odoo en 1920
+        try {
+            const directUrl = `${urlBackend}/web/image?model=product.template&id=${tmplId}&field=image_1920`;
+            return await loadImageFromUrl(directUrl);
+        } catch(e) {}
+
+        return null;
+    }
 
     async function sincronizarOdoo() {
         try {
@@ -350,7 +406,6 @@
             /\s*-\s*\$/g
         ];
         palabrasAEliminar.forEach(rgx => { name = name.replace(rgx, ''); });
-        
         return name.replace(/\s+/g, ' ').replace(/\s*-\s*\$/, '').trim().toUpperCase();
     }
 
@@ -360,7 +415,6 @@
         rawOdooVariants.forEach(item => {
             let baseName = item.nombre_matriz || item.nombre || "";
             let cleanTitle = limpiarTituloMatriz(baseName);
-
             const groupKey = item.tmpl_id ? `TMPL_${item.tmpl_id}` : `${cleanTitle}_${item.categ_id}`;
 
             if (!groups[groupKey]) {
@@ -390,7 +444,6 @@
             }
 
             if (item.sku) groups[groupKey].skusHijos.add(item.sku.trim().toUpperCase());
-
             const attrs = item.atributos || {};
 
             if (attrs['Tramos']) {
@@ -428,14 +481,12 @@
 
             if (g.castingLargos.size > 0 || g.spinningLargos.size > 0 || g.tramos.size > 0) {
                 subtitulo = Array.from(g.tramos).join(' / ');
-
                 if (g.castingLargos.size > 0 || g.castingLibrajes.size > 0) {
                     colLeft.push("CASTING");
                     if (g.castingLargos.size > 0) colLeft.push(Array.from(g.castingLargos).join(' | '));
                     const libs = Array.from(g.castingLibrajes);
                     for (let i = 0; i < libs.length; i += 2) colLeft.push(libs.slice(i, i + 2).join('   '));
                 }
-
                 if (g.spinningLargos.size > 0 || g.spinningLibrajes.size > 0) {
                     colRight.push("SPINNING");
                     if (g.spinningLargos.size > 0) colRight.push(Array.from(g.spinningLargos).join(' | '));
@@ -444,13 +495,8 @@
                 }
             } else if (g.tiposReel.size > 0 || g.manosReel.size > 0 || g.tamanosReel.size > 0) {
                 if (g.tiposReel.size > 0) subtitulo = Array.from(g.tiposReel).join(' / ').toUpperCase();
-
-                if (g.manosReel.size > 0) {
-                    colLeft.push(Array.from(g.manosReel).map(m => `Mano: ${m}`).join('\n'));
-                }
-                if (g.tamanosReel.size > 0) {
-                    colRight.push(Array.from(g.tamanosReel).map(t => `Tamaño: ${t}`).join('\n'));
-                }
+                if (g.manosReel.size > 0) colLeft.push(Array.from(g.manosReel).map(m => `Mano: ${m}`).join('\n'));
+                if (g.tamanosReel.size > 0) colRight.push(Array.from(g.tamanosReel).map(t => `Tamaño: ${t}`).join('\n'));
             } else {
                 if (g.variantesGenericas.size > 0) colLeft = Array.from(g.variantesGenericas);
             }
@@ -476,9 +522,7 @@
         const catSelect = document.getElementById('filtro-categoria');
         const categorias = new Set();
         productTemplates.forEach(p => { if (p.categ_id) categorias.add(p.categ_id); });
-        categorias.forEach(cat => {
-            catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
-        });
+        categorias.forEach(cat => { catSelect.innerHTML += `<option value="${cat}">${cat}</option>`; });
     }
 
     function alCambiarCategoria() {
@@ -500,7 +544,6 @@
         const contenedor = document.getElementById('lista-catalogo-selector');
 
         const disponibles = productTemplates.filter(p => !selectedTemplateIds.has(p.id));
-
         const filtrados = disponibles.filter(p => {
             const matchTxt = (p.titulo || '').toLowerCase().includes(txt) || 
                              (p.skuPrincipal || '').toLowerCase().includes(txt) ||
@@ -510,7 +553,7 @@
         }).slice(0, 50);
 
         if (filtrados.length === 0) {
-            contenedor.innerHTML = '<p class="text-slate-400 italic">No hay productos disponibles para seleccionar.</p>';
+            contenedor.innerHTML = '<p class="text-slate-400 italic">No hay productos disponibles.</p>';
             return;
         }
 
@@ -522,9 +565,8 @@
                 <div class="truncate mr-2">
                     <span class="font-bold text-slate-800">[${p.skuPrincipal}]</span> 
                     <span class="text-slate-700 font-semibold">${p.titulo}</span>
-                    <span class="text-[10px] text-slate-400 block truncate">${p.subtitulo ? p.subtitulo + ' | ' : ''}${p.colLeft ? 'Atributos listos' : ''}</span>
                 </div>
-                <button onclick="seleccionarProductoId('${p.id}')" class="text-sky-600 hover:text-sky-800 font-extrabold text-xs px-2.5 py-1 bg-sky-100 hover:bg-sky-200 rounded transition-colors">+</button>
+                <button onclick="seleccionarProductoId('${p.id}')" class="text-sky-600 hover:text-sky-800 font-extrabold text-xs px-2.5 py-1 bg-sky-100 hover:bg-sky-200 rounded">+</button>
             `;
             contenedor.appendChild(item);
         });
@@ -540,22 +582,16 @@
     function seleccionarCategoriaCompleta() {
         const cat = document.getElementById('filtro-categoria').value;
         if (cat === 'all') return;
-
         productTemplates.forEach(p => {
-            if (p.categ_id === cat && !selectedTemplateIds.has(p.id)) {
-                selectedTemplateIds.add(p.id);
-            }
+            if (p.categ_id === cat && !selectedTemplateIds.has(p.id)) selectedTemplateIds.add(p.id);
         });
-
         actualizarSeleccion();
     }
 
     function seleccionarPorListaSkus() {
         const raw = document.getElementById('input-sku-list').value;
         if (!raw.trim()) return;
-
         const skus = raw.split(/[\n, ]+/).map(s => s.trim().toUpperCase()).filter(Boolean);
-
         skus.forEach(sku => {
             const prod = productTemplates.find(p => 
                 p.skuPrincipal.toUpperCase() === sku || 
@@ -564,7 +600,6 @@
             );
             if (prod) selectedTemplateIds.add(prod.id);
         });
-
         actualizarSeleccion();
     }
 
@@ -601,7 +636,6 @@
                 }
             });
         }
-
         filtrarCatalogoOdoo();
         actualizarMockupDinamico();
     }
@@ -627,7 +661,7 @@
         return lines;
     }
 
-    // 🎨 RENDERIZADO CANVAS EN ALTA DEFINICIÓN (2000x2000)
+    // 🎨 RENDERIZADO CANVAS EN ALTA DEFINICIÓN (2000x2000) ORDENADO POR EJE Z
     function renderCanvasDataUrl(config, isExportHD = false) {
         const canvas = document.createElement('canvas');
         const ctx = canvas.getContext('2d');
@@ -642,114 +676,119 @@
 
         ctx.fillStyle = '#ffffff';
         ctx.fillRect(0, 0, size, size);
-
         ctx.imageSmoothingEnabled = true;
         ctx.imageSmoothingQuality = 'high';
 
-        const maxImgDim = size * imgZoom;
-        const ratio = Math.min(maxImgDim / img.width, maxImgDim / img.height);
-        const imgW = img.width * ratio;
-        const imgH = img.height * ratio;
-        const imgX = (size - imgW) / 2;
-        const imgY = (size - imgH) / 2 + ((config.imgY || 80) * scaleRef);
+        // Estructura de elementos con soporte para capas Z
+        const layers = [
+            {
+                name: 'img',
+                z: config.zImg || 1,
+                draw: () => {
+                    const maxImgDim = size * imgZoom;
+                    const ratio = Math.min(maxImgDim / img.width, maxImgDim / img.height);
+                    const imgW = img.width * ratio;
+                    const imgH = img.height * ratio;
+                    const imgX = (size - imgW) / 2;
+                    const imgY = (size - imgH) / 2 + ((config.imgY || 80) * scaleRef);
+                    ctx.drawImage(img, imgX, imgY, imgW, imgH);
+                }
+            },
+            {
+                name: 'title',
+                z: config.zTop || 2,
+                draw: () => {
+                    ctx.fillStyle = config.textColor || '#000000';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    const maxWidth = size * 0.90;
+                    let fontTitle = Math.round(48 * scaleRef * scaleFactor);
+                    ctx.font = `normal ${fontTitle}px ${fontFamily}`;
+                    let titleLines = getWrappedLines(ctx, config.top || "", maxWidth);
+                    let lhTitle = fontTitle * 1.25;
+                    let startYTitle = (80 * scaleRef) + ((config.yTop || 0) * scaleRef);
+                    let posX_Title = (size / 2) + ((config.xTop || 0) * scaleRef);
+                    titleLines.forEach((tl, idx) => ctx.fillText(tl, posX_Title, startYTitle + (idx * lhTitle)));
+                }
+            },
+            {
+                name: 'sub',
+                z: config.zSub || 3,
+                draw: () => {
+                    if (!config.sub) return;
+                    ctx.fillStyle = config.textColor || '#000000';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    let fontSub = Math.round(38 * scaleRef * scaleFactor);
+                    ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                    let posX_Sub = (size / 2) + ((config.xSub || 0) * scaleRef);
+                    let subY = (145 * scaleRef) + ((config.ySub || 0) * scaleRef);
+                    ctx.fillText(config.sub, posX_Sub, subY);
+                }
+            },
+            {
+                name: 'cols',
+                z: config.zCols || 4,
+                draw: () => {
+                    ctx.fillStyle = config.textColor || '#000000';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    let fontColHead = Math.round(28 * scaleRef * scaleFactor);
+                    let fontColBody = Math.round(24 * scaleRef * scaleFactor);
+                    let lhCol = fontColBody * 1.35;
+                    let colBaseY = (210 * scaleRef) + ((config.yBot || 0) * scaleRef);
+                    let sepX = ((config.xBot || 0) * scaleRef);
 
-        ctx.drawImage(img, imgX, imgY, imgW, imgH);
+                    const colLeftLines = config.colLeft ? config.colLeft.split('\n').filter(Boolean) : [];
+                    const colRightLines = config.colRight ? config.colRight.split('\n').filter(Boolean) : [];
 
-        ctx.fillStyle = config.textColor || '#000000';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        const maxWidth = size * 0.90;
+                    if (colLeftLines.length > 0 && colRightLines.length > 0) {
+                        const posX_Left = (size * 0.28) - (sepX / 2);
+                        const posX_Right = (size * 0.72) + (sepX / 2);
+                        let yL = colBaseY;
+                        colLeftLines.forEach((l, idx) => {
+                            ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                            ctx.fillText(l.trim(), posX_Left, yL);
+                            yL += lhCol;
+                        });
+                        let yR = colBaseY;
+                        colRightLines.forEach((l, idx) => {
+                            ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                            ctx.fillText(l.trim(), posX_Right, yR);
+                            yR += lhCol;
+                        });
+                    } else {
+                        let singleLines = (config.colLeft || config.colRight || "").split('\n').filter(Boolean);
+                        let yS = colBaseY;
+                        singleLines.forEach((l, idx) => {
+                            ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                            ctx.fillText(l.trim(), (size / 2) + sepX, yS);
+                            yS += lhCol;
+                        });
+                    }
+                }
+            },
+            {
+                name: 'code',
+                z: config.zCode || 5,
+                draw: () => {
+                    if (!config.bot) return;
+                    ctx.fillStyle = config.textColor || '#000000';
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    let fontBot = Math.round(26 * scaleRef * scaleFactor);
+                    ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                    let posX_Code = (size / 2) + ((config.xCode || 0) * scaleRef);
+                    let botY = size - (45 * scaleRef) + ((config.yCode || 0) * scaleRef);
+                    ctx.fillText(config.bot, posX_Code, botY);
+                }
+            }
+        ];
 
-        // 1. TÍTULO PRINCIPAL (Normal, no bold)
-        let fontTitle = Math.round(48 * scaleRef * scaleFactor);
-        ctx.font = `normal ${fontTitle}px ${fontFamily}`;
-        
-        let titleLines = getWrappedLines(ctx, config.top || "", maxWidth);
-        let lhTitle = fontTitle * 1.25;
-        let startYTitle = (80 * scaleRef) + ((config.yTop || 0) * scaleRef);
-        let posX_Title = (size / 2) + ((config.xTop || 0) * scaleRef);
+        // Dibujar en el orden exacto del eje Z (menor a mayor)
+        layers.sort((a, b) => a.z - b.z).forEach(l => l.draw());
 
-        titleLines.forEach((tl, idx) => {
-            ctx.fillText(tl, posX_Title, startYTitle + (idx * lhTitle));
-        });
-
-        let curY = startYTitle + (titleLines.length * lhTitle) + (15 * scaleRef);
-
-        // 2. SUBTÍTULO
-        if (config.sub) {
-            let fontSub = Math.round(38 * scaleRef * scaleFactor);
-            ctx.font = `normal ${fontSub}px ${fontFamily}`;
-            let posX_Sub = (size / 2) + ((config.xSub || 0) * scaleRef);
-            let subY = curY + ((config.ySub || 0) * scaleRef);
-            ctx.fillText(config.sub, posX_Sub, subY);
-            curY = subY + (fontSub * 0.9) + (20 * scaleRef);
-        }
-
-        // 3. COLUMNAS
-        let fontColHead = Math.round(28 * scaleRef * scaleFactor);
-        let fontColBody = Math.round(24 * scaleRef * scaleFactor);
-        let lhCol = fontColBody * 1.35;
-        let colBaseY = curY + ((config.yBot || 0) * scaleRef);
-        let sepX = ((config.xBot || 0) * scaleRef);
-
-        const colLeftLines = config.colLeft ? config.colLeft.split('\n').filter(Boolean) : [];
-        const colRightLines = config.colRight ? config.colRight.split('\n').filter(Boolean) : [];
-
-        if (colLeftLines.length > 0 && colRightLines.length > 0) {
-            const posX_Left = (size * 0.28) - (sepX / 2);
-            const posX_Right = (size * 0.72) + (sepX / 2);
-
-            let yL = colBaseY;
-            colLeftLines.forEach((l, idx) => {
-                ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
-                ctx.fillText(l.trim(), posX_Left, yL);
-                yL += lhCol;
-            });
-
-            let yR = colBaseY;
-            colRightLines.forEach((l, idx) => {
-                ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
-                ctx.fillText(l.trim(), posX_Right, yR);
-                yR += lhCol;
-            });
-        } else {
-            let singleLines = (config.colLeft || config.colRight || "").split('\n').filter(Boolean);
-            let yS = colBaseY;
-            singleLines.forEach((l, idx) => {
-                ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
-                ctx.fillText(l.trim(), (size / 2) + sepX, yS);
-                yS += lhCol;
-            });
-        }
-
-        // 4. CÓDIGO INFERIOR
-        if (config.bot) {
-            let fontBot = Math.round(26 * scaleRef * scaleFactor);
-            ctx.font = `normal ${fontBot}px ${fontFamily}`;
-            let posX_Code = (size / 2) + ((config.xCode || 0) * scaleRef);
-            let botY = size - (45 * scaleRef) + ((config.yCode || 0) * scaleRef);
-            ctx.fillText(config.bot, posX_Code, botY);
-        }
-
-        return canvas.toDataURL('image/jpeg', 1.0);
-    }
-
-    // Carga de imagen con soporte crossOrigin para evitar Tainted Canvas
-    function loadImageFromUrl(url) {
-        return new Promise((resolve, reject) => {
-            const img = new Image();
-            img.crossOrigin = "anonymous";
-            img.onload = () => resolve(img);
-            img.onerror = () => reject(new Error("Error decodificando imagen"));
-            img.src = url;
-        });
-    }
-
-    // Conversión directa de Canvas a Blob
-    function canvasToBlobPromise(canvas, type = 'image/jpeg', quality = 0.98) {
-        return new Promise((resolve) => {
-            canvas.toBlob((blob) => resolve(blob), type, quality);
-        });
+        return canvas.toDataURL('image/jpeg', 0.98);
     }
 
     let mockupProductObj = null;
@@ -757,17 +796,9 @@
 
     async function actualizarMockupDinamico() {
         if (productTemplates.length === 0) return;
-
-        let prod = null;
-        if (selectedTemplateIds.size > 0) {
-            const firstId = Array.from(selectedTemplateIds)[0];
-            prod = productTemplates.find(p => p.id === firstId);
-        }
-
-        if (!prod) {
-            const cat = document.getElementById('filtro-categoria').value;
-            prod = productTemplates.find(p => cat === 'all' || p.categ_id === cat) || productTemplates[0];
-        }
+        let prod = selectedTemplateIds.size > 0 
+            ? productTemplates.find(p => p.id === Array.from(selectedTemplateIds)[0])
+            : (productTemplates.find(p => document.getElementById('filtro-categoria').value === 'all' || p.categ_id === document.getElementById('filtro-categoria').value) || productTemplates[0]);
 
         mockupProductObj = prod;
         if (prod && prod.foto) {
@@ -787,48 +818,35 @@
             textScale: parseInt(document.getElementById('global-scale').value),
             imgScale: parseInt(document.getElementById('global-img-scale').value),
             imgY: parseInt(document.getElementById('global-img-y').value),
+            zImg: parseInt(document.getElementById('global-z-img').value),
             top: mockupProductObj.titulo,
             sub: mockupProductObj.subtitulo,
             colLeft: mockupProductObj.colLeft,
             colRight: mockupProductObj.colRight,
             bot: mockupProductObj.codigoPie,
             yTop: parseInt(document.getElementById('global-y-top').value),
-            xTop: 0, xSub: 0, ySub: 0, xBot: 0, yBot: 0, xCode: 0, yCode: 0
+            xTop: 0, xSub: 0, ySub: 0, xBot: 0, yBot: 0, xCode: 0, yCode: 0,
+            zTop: 2, zSub: 3, zCols: 4, zCode: 5
         };
         document.getElementById('global-mockup-img').src = renderCanvasDataUrl(config, false);
     }
 
     const updateSlider = (id, suffix) => {
-        document.getElementById(id).addEventListener('input', (e) => {
+        const el = document.getElementById(id);
+        const update = (e) => {
             document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
             renderizarMockupPreview();
-        });
+        };
+        el.addEventListener('input', update);
+        el.addEventListener('touchmove', update, { passive: true });
     };
     updateSlider('global-scale', '%');
     updateSlider('global-img-scale', '%');
     updateSlider('global-img-y', 'px');
     updateSlider('global-y-top', 'px');
+    updateSlider('global-z-img', '');
 
     document.getElementById('global-color').addEventListener('input', renderizarMockupPreview);
-
-    // Consulta directa de imagen HD en su archivo original a Odoo (/web/image?model=product.template)
-    async function obtenerFotoHD(tmplId) {
-        const pwd = sessionStorage.getItem('odoo_pwd');
-        try {
-            const res = await fetch(`${urlBackend}/api/foto-directa-hd/${tmplId}`, {
-                headers: { 'x-odoo-password': pwd }
-            });
-            if (res.ok) {
-                const data = await res.json();
-                if (data.foto_hd) {
-                    return await loadImageFromUrl(data.foto_hd);
-                }
-            }
-        } catch(e) {
-            console.warn("No se pudo obtener imagen HD original, usando estándar:", e);
-        }
-        return null;
-    }
 
     // 4. Procesar Lote
     async function procesarLote() {
@@ -839,13 +857,14 @@
 
         generatedCards = [];
         const grid = document.getElementById('preview-grid');
-        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Generando fichas comerciales...</p>';
+        grid.innerHTML = '<p class="col-span-full text-center text-sky-600 font-bold animate-pulse py-8">Cargando imágenes HD originales...</p>';
         document.getElementById('results-section').classList.remove('hidden');
 
         const gColor = document.getElementById('global-color').value;
         const gScale = parseInt(document.getElementById('global-scale').value);
         const gImgScale = parseInt(document.getElementById('global-img-scale').value);
         const gImgY = parseInt(document.getElementById('global-img-y').value);
+        const gzImg = parseInt(document.getElementById('global-z-img').value);
         const gyTop = parseInt(document.getElementById('global-y-top').value);
 
         for (let id of selectedTemplateIds) {
@@ -853,7 +872,10 @@
             if (!prod) continue;
 
             try {
-                const imgObj = await loadImageFromUrl(`data:image/jpeg;base64,${prod.foto}`);
+                // Prioriza imagen HD nativa de Odoo
+                let imgObj = null;
+                if (prod.tmpl_id) imgObj = await obtenerFotoHD(prod.tmpl_id, prod.rawProdId);
+                if (!imgObj) imgObj = await loadImageFromUrl(`data:image/jpeg;base64,${prod.foto}`);
 
                 const config = {
                     tmpl_id: prod.tmpl_id,
@@ -870,10 +892,11 @@
                     textScale: gScale,
                     imgScale: gImgScale,
                     imgY: gImgY,
-                    xTop: 0, yTop: gyTop,
-                    xSub: 0, ySub: 0,
-                    xBot: 0, yBot: 0,
-                    xCode: 0, yCode: 0
+                    zImg: gzImg,
+                    xTop: 0, yTop: gyTop, zTop: 2,
+                    xSub: 0, ySub: 0, zSub: 3,
+                    xBot: 0, yBot: 0, zCols: 4,
+                    xCode: 0, yCode: 0, zCode: 5
                 };
 
                 config.dataUrl = renderCanvasDataUrl(config, false);
@@ -924,23 +947,29 @@
         document.getElementById('val-edit-img-scale').textContent = (config.imgScale || 90) + '%';
         document.getElementById('edit-img-y').value = config.imgY || 80;
         document.getElementById('val-edit-img-y').textContent = (config.imgY || 80) + 'px';
+        document.getElementById('edit-z-img').value = config.zImg || 1;
+        document.getElementById('val-edit-z-img').textContent = config.zImg || 1;
 
         document.getElementById('edit-txt-top').value = config.top;
         document.getElementById('edit-x-top').value = config.xTop || 0;
         document.getElementById('edit-y-top').value = config.yTop || 0;
+        document.getElementById('edit-z-top').value = config.zTop || 2;
 
         document.getElementById('edit-txt-sub').value = config.sub;
         document.getElementById('edit-x-sub').value = config.xSub || 0;
         document.getElementById('edit-y-sub').value = config.ySub || 0;
+        document.getElementById('edit-z-sub').value = config.zSub || 3;
 
         document.getElementById('edit-txt-col-left').value = config.colLeft || '';
         document.getElementById('edit-txt-col-right').value = config.colRight || '';
         document.getElementById('edit-x-bot').value = config.xBot || 0;
         document.getElementById('edit-y-bot').value = config.yBot || 0;
+        document.getElementById('edit-z-cols').value = config.zCols || 4;
 
         document.getElementById('edit-txt-bot').value = config.bot || '';
         document.getElementById('edit-x-code').value = config.xCode || 0;
         document.getElementById('edit-y-code').value = config.yCode || 0;
+        document.getElementById('edit-z-code').value = config.zCode || 5;
 
         updateModalPreview();
         document.getElementById('editor-modal').classList.remove('hidden');
@@ -960,36 +989,46 @@
             textScale: parseInt(document.getElementById('edit-scale').value),
             imgScale: parseInt(document.getElementById('edit-img-scale').value),
             imgY: parseInt(document.getElementById('edit-img-y').value),
+            zImg: parseInt(document.getElementById('edit-z-img').value),
             top: document.getElementById('edit-txt-top').value,
             xTop: parseInt(document.getElementById('edit-x-top').value),
             yTop: parseInt(document.getElementById('edit-y-top').value),
+            zTop: parseInt(document.getElementById('edit-z-top').value),
             sub: document.getElementById('edit-txt-sub').value,
             xSub: parseInt(document.getElementById('edit-x-sub').value),
             ySub: parseInt(document.getElementById('edit-y-sub').value),
+            zSub: parseInt(document.getElementById('edit-z-sub').value),
             colLeft: document.getElementById('edit-txt-col-left').value,
             colRight: document.getElementById('edit-txt-col-right').value,
             xBot: parseInt(document.getElementById('edit-x-bot').value),
             yBot: parseInt(document.getElementById('edit-y-bot').value),
+            zCols: parseInt(document.getElementById('edit-z-cols').value),
             bot: document.getElementById('edit-txt-bot').value,
             xCode: parseInt(document.getElementById('edit-x-code').value),
-            yCode: parseInt(document.getElementById('edit-y-code').value)
+            yCode: parseInt(document.getElementById('edit-y-code').value),
+            zCode: parseInt(document.getElementById('edit-z-code').value)
         };
         document.getElementById('modal-preview-img').src = renderCanvasDataUrl(tempConfig, false);
     }
 
-    ['edit-img-scale', 'edit-img-y', 'edit-scale'].forEach(id => {
-        document.getElementById(id).addEventListener('input', (e) => {
-            const suf = id === 'edit-img-y' ? 'px' : '%';
+    ['edit-img-scale', 'edit-img-y', 'edit-scale', 'edit-z-img'].forEach(id => {
+        const el = document.getElementById(id);
+        const update = (e) => {
+            const suf = id === 'edit-img-y' ? 'px' : (id === 'edit-z-img' ? '' : '%');
             document.getElementById(`val-${id}`).textContent = e.target.value + suf;
-        });
+        };
+        el.addEventListener('input', update);
+        el.addEventListener('touchmove', update, { passive: true });
     });
 
-    ['edit-color', 'edit-scale', 'edit-img-scale', 'edit-img-y', 
-     'edit-txt-top', 'edit-x-top', 'edit-y-top', 
-     'edit-txt-sub', 'edit-x-sub', 'edit-y-sub', 
-     'edit-txt-col-left', 'edit-txt-col-right', 'edit-x-bot', 'edit-y-bot', 
-     'edit-txt-bot', 'edit-x-code', 'edit-y-code'].forEach(id => {
-        document.getElementById(id).addEventListener('input', updateModalPreview);
+    ['edit-color', 'edit-scale', 'edit-img-scale', 'edit-img-y', 'edit-z-img',
+     'edit-txt-top', 'edit-x-top', 'edit-y-top', 'edit-z-top',
+     'edit-txt-sub', 'edit-x-sub', 'edit-y-sub', 'edit-z-sub',
+     'edit-txt-col-left', 'edit-txt-col-right', 'edit-x-bot', 'edit-y-bot', 'edit-z-cols',
+     'edit-txt-bot', 'edit-x-code', 'edit-y-code', 'edit-z-code'].forEach(id => {
+        const el = document.getElementById(id);
+        el.addEventListener('input', updateModalPreview);
+        el.addEventListener('touchmove', updateModalPreview, { passive: true });
     });
 
     window.saveModalChanges = function() {
@@ -999,30 +1038,35 @@
         config.textScale = parseInt(document.getElementById('edit-scale').value);
         config.imgScale = parseInt(document.getElementById('edit-img-scale').value);
         config.imgY = parseInt(document.getElementById('edit-img-y').value);
+        config.zImg = parseInt(document.getElementById('edit-z-img').value);
 
         config.top = document.getElementById('edit-txt-top').value;
         config.xTop = parseInt(document.getElementById('edit-x-top').value);
         config.yTop = parseInt(document.getElementById('edit-y-top').value);
+        config.zTop = parseInt(document.getElementById('edit-z-top').value);
 
         config.sub = document.getElementById('edit-txt-sub').value;
         config.xSub = parseInt(document.getElementById('edit-x-sub').value);
         config.ySub = parseInt(document.getElementById('edit-y-sub').value);
+        config.zSub = parseInt(document.getElementById('edit-z-sub').value);
 
         config.colLeft = document.getElementById('edit-txt-col-left').value;
         config.colRight = document.getElementById('edit-txt-col-right').value;
         config.xBot = parseInt(document.getElementById('edit-x-bot').value);
         config.yBot = parseInt(document.getElementById('edit-y-bot').value);
+        config.zCols = parseInt(document.getElementById('edit-z-cols').value);
 
         config.bot = document.getElementById('edit-txt-bot').value;
         config.xCode = parseInt(document.getElementById('edit-x-code').value);
         config.yCode = parseInt(document.getElementById('edit-y-code').value);
+        config.zCode = parseInt(document.getElementById('edit-z-code').value);
 
         config.dataUrl = renderCanvasDataUrl(config, false);
         document.getElementById(`grid-img-${activeEditIndex}`).src = config.dataUrl;
         closeModal();
     };
 
-    // 🚀 Descarga individual HD usando Blob directo (compatible con navegadores modernos)
+    // Descarga individual HD 2000px mediante Blob
     window.descargarIndividualHD = async function(index) {
         const item = generatedCards[index];
         const btn = document.getElementById(`btn-dl-${index}`);
@@ -1032,14 +1076,13 @@
 
         try {
             let imgObjFinal = item.imgObj;
-
             if (item.tmpl_id) {
-                const fotoOriginal = await obtenerFotoHD(item.tmpl_id);
+                const fotoOriginal = await obtenerFotoHD(item.tmpl_id, item.rawProdId);
                 if (fotoOriginal) imgObjFinal = fotoOriginal;
             }
 
             const configHD = { ...item, imgObj: imgObjFinal };
-
+            
             const canvas = document.createElement('canvas');
             const size = 2000;
             canvas.width = size;
@@ -1054,78 +1097,107 @@
             ctx.imageSmoothingEnabled = true;
             ctx.imageSmoothingQuality = 'high';
 
-            const maxImgDim = size * imgZoom;
-            const ratio = Math.min(maxImgDim / imgObjFinal.width, maxImgDim / imgObjFinal.height);
-            const imgW = imgObjFinal.width * ratio;
-            const imgH = imgObjFinal.height * ratio;
-            const imgX = (size - imgW) / 2;
-            const imgY = (size - imgH) / 2 + ((configHD.imgY || 80) * scaleRef);
-            ctx.drawImage(imgObjFinal, imgX, imgY, imgW, imgH);
+            const layers = [
+                {
+                    z: configHD.zImg || 1,
+                    draw: () => {
+                        const maxImgDim = size * imgZoom;
+                        const ratio = Math.min(maxImgDim / imgObjFinal.width, maxImgDim / imgObjFinal.height);
+                        const imgW = imgObjFinal.width * ratio;
+                        const imgH = imgObjFinal.height * ratio;
+                        const imgX = (size - imgW) / 2;
+                        const imgY = (size - imgH) / 2 + ((configHD.imgY || 80) * scaleRef);
+                        ctx.drawImage(imgObjFinal, imgX, imgY, imgW, imgH);
+                    }
+                },
+                {
+                    z: configHD.zTop || 2,
+                    draw: () => {
+                        ctx.fillStyle = configHD.textColor || '#000000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        const maxWidth = size * 0.90;
+                        let fontTitle = Math.round(48 * scaleRef * scaleFactor);
+                        ctx.font = `normal ${fontTitle}px ${fontFamily}`;
+                        let titleLines = getWrappedLines(ctx, configHD.top || "", maxWidth);
+                        let lhTitle = fontTitle * 1.25;
+                        let startYTitle = (80 * scaleRef) + ((configHD.yTop || 0) * scaleRef);
+                        let posX_Title = (size / 2) + ((configHD.xTop || 0) * scaleRef);
+                        titleLines.forEach((tl, idx) => ctx.fillText(tl, posX_Title, startYTitle + (idx * lhTitle)));
+                    }
+                },
+                {
+                    z: configHD.zSub || 3,
+                    draw: () => {
+                        if (!configHD.sub) return;
+                        ctx.fillStyle = configHD.textColor || '#000000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        let fontSub = Math.round(38 * scaleRef * scaleFactor);
+                        ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                        let posX_Sub = (size / 2) + ((configHD.xSub || 0) * scaleRef);
+                        let subY = (145 * scaleRef) + ((configHD.ySub || 0) * scaleRef);
+                        ctx.fillText(configHD.sub, posX_Sub, subY);
+                    }
+                },
+                {
+                    z: configHD.zCols || 4,
+                    draw: () => {
+                        ctx.fillStyle = configHD.textColor || '#000000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        let fontColHead = Math.round(28 * scaleRef * scaleFactor);
+                        let fontColBody = Math.round(24 * scaleRef * scaleFactor);
+                        let lhCol = fontColBody * 1.35;
+                        let colBaseY = (210 * scaleRef) + ((configHD.yBot || 0) * scaleRef);
+                        let sepX = ((configHD.xBot || 0) * scaleRef);
 
-            ctx.fillStyle = configHD.textColor || '#000000';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
-            const maxWidth = size * 0.90;
+                        const colLeftLines = configHD.colLeft ? configHD.colLeft.split('\n').filter(Boolean) : [];
+                        const colRightLines = configHD.colRight ? configHD.colRight.split('\n').filter(Boolean) : [];
 
-            let fontTitle = Math.round(48 * scaleRef * scaleFactor);
-            ctx.font = `normal ${fontTitle}px ${fontFamily}`;
-            let titleLines = getWrappedLines(ctx, configHD.top || "", maxWidth);
-            let lhTitle = fontTitle * 1.25;
-            let startYTitle = (80 * scaleRef) + ((configHD.yTop || 0) * scaleRef);
-            let posX_Title = (size / 2) + ((configHD.xTop || 0) * scaleRef);
-            titleLines.forEach((tl, idx) => ctx.fillText(tl, posX_Title, startYTitle + (idx * lhTitle)));
+                        if (colLeftLines.length > 0 && colRightLines.length > 0) {
+                            const posX_Left = (size * 0.28) - (sepX / 2);
+                            const posX_Right = (size * 0.72) + (sepX / 2);
+                            let yL = colBaseY;
+                            colLeftLines.forEach((l, idx) => {
+                                ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                                ctx.fillText(l.trim(), posX_Left, yL);
+                                yL += lhCol;
+                            });
+                            let yR = colBaseY;
+                            colRightLines.forEach((l, idx) => {
+                                ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                                ctx.fillText(l.trim(), posX_Right, yR);
+                                yR += lhCol;
+                            });
+                        } else {
+                            let singleLines = (configHD.colLeft || configHD.colRight || "").split('\n').filter(Boolean);
+                            let yS = colBaseY;
+                            singleLines.forEach((l, idx) => {
+                                ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                                ctx.fillText(l.trim(), (size / 2) + sepX, yS);
+                                yS += lhCol;
+                            });
+                        }
+                    }
+                },
+                {
+                    z: configHD.zCode || 5,
+                    draw: () => {
+                        if (!configHD.bot) return;
+                        ctx.fillStyle = configHD.textColor || '#000000';
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        let fontBot = Math.round(26 * scaleRef * scaleFactor);
+                        ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                        let posX_Code = (size / 2) + ((configHD.xCode || 0) * scaleRef);
+                        let botY = size - (45 * scaleRef) + ((configHD.yCode || 0) * scaleRef);
+                        ctx.fillText(configHD.bot, posX_Code, botY);
+                    }
+                }
+            ];
 
-            let curY = startYTitle + (titleLines.length * lhTitle) + (15 * scaleRef);
-
-            if (configHD.sub) {
-                let fontSub = Math.round(38 * scaleRef * scaleFactor);
-                ctx.font = `normal ${fontSub}px ${fontFamily}`;
-                let posX_Sub = (size / 2) + ((configHD.xSub || 0) * scaleRef);
-                let subY = curY + ((configHD.ySub || 0) * scaleRef);
-                ctx.fillText(configHD.sub, posX_Sub, subY);
-                curY = subY + (fontSub * 0.9) + (20 * scaleRef);
-            }
-
-            let fontColHead = Math.round(28 * scaleRef * scaleFactor);
-            let fontColBody = Math.round(24 * scaleRef * scaleFactor);
-            let lhCol = fontColBody * 1.35;
-            let colBaseY = curY + ((configHD.yBot || 0) * scaleRef);
-            let sepX = ((configHD.xBot || 0) * scaleRef);
-            const colLeftLines = configHD.colLeft ? configHD.colLeft.split('\n').filter(Boolean) : [];
-            const colRightLines = configHD.colRight ? configHD.colRight.split('\n').filter(Boolean) : [];
-
-            if (colLeftLines.length > 0 && colRightLines.length > 0) {
-                const posX_Left = (size * 0.28) - (sepX / 2);
-                const posX_Right = (size * 0.72) + (sepX / 2);
-                let yL = colBaseY;
-                colLeftLines.forEach((l, idx) => {
-                    ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
-                    ctx.fillText(l.trim(), posX_Left, yL);
-                    yL += lhCol;
-                });
-                let yR = colBaseY;
-                colRightLines.forEach((l, idx) => {
-                    ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
-                    ctx.fillText(l.trim(), posX_Right, yR);
-                    yR += lhCol;
-                });
-            } else {
-                let singleLines = (configHD.colLeft || configHD.colRight || "").split('\n').filter(Boolean);
-                let yS = colBaseY;
-                singleLines.forEach((l, idx) => {
-                    ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
-                    ctx.fillText(l.trim(), (size / 2) + sepX, yS);
-                    yS += lhCol;
-                });
-            }
-
-            if (configHD.bot) {
-                let fontBot = Math.round(26 * scaleRef * scaleFactor);
-                ctx.font = `normal ${fontBot}px ${fontFamily}`;
-                let posX_Code = (size / 2) + ((configHD.xCode || 0) * scaleRef);
-                let botY = size - (45 * scaleRef) + ((configHD.yCode || 0) * scaleRef);
-                ctx.fillText(configHD.bot, posX_Code, botY);
-            }
+            layers.sort((a, b) => a.z - b.z).forEach(l => l.draw());
 
             const blob = await canvasToBlobPromise(canvas, 'image/jpeg', 0.98);
             const blobUrl = URL.createObjectURL(blob);
@@ -1139,25 +1211,25 @@
 
         } catch (err) {
             console.error("Fallo al descargar HD:", err);
-            alert("Hubo un error al generar la descarga HD. Verifica la consola para más detalles.");
+            alert("Error al descargar la imagen HD.");
         } finally {
             btn.innerHTML = originalText;
             btn.disabled = false;
         }
     };
 
-    // 🚀 Descarga masiva ZIP con Blobs nativos
+    // Descarga masiva ZIP
     window.descargarTodoZip = async function() {
         if (generatedCards.length === 0) return;
         const zip = new JSZip();
         const folder = zip.folder("Fichas_Comerciales_HD");
 
-        alert("Generando imágenes en alta definición con fotos originales de Odoo. Aguarda unos segundos...");
+        alert("Generando imágenes en 2000px HD con fotos originales de Odoo...");
 
         for (let item of generatedCards) {
             let imgObjFinal = item.imgObj;
             if (item.tmpl_id) {
-                const fotoOriginal = await obtenerFotoHD(item.tmpl_id);
+                const fotoOriginal = await obtenerFotoHD(item.tmpl_id, item.rawProdId);
                 if (fotoOriginal) imgObjFinal = fotoOriginal;
             }
             const configHD = { ...item, imgObj: imgObjFinal };
