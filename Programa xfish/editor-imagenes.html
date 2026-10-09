@@ -1974,10 +1974,11 @@ window.addEventListener('touchend', () => { isDraggingElemento = false; });
 // DESCARGAS (INDIVIDUAL Y ZIP)
 // ==============================================================
 // Función auxiliar para descargar o guardar en el Carrete (iPhone / PC / Android)
-async function guardarArchivoUniversal(blob, nombreArchivo, mimeType = 'image/jpeg') {
+// Función auxiliar para descargar o guardar en el Carrete (iPhone / PC / Android) en formato PNG
+async function guardarArchivoUniversal(blob, nombreArchivo, mimeType = 'image/png') {
     const esIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
 
-    // 1. En iPhone/iPad: si es imagen y soporta share, abre el menú para "Guardar imagen" en Fotos
+    // 1. En iPhone/iPad: si es imagen y soporta share, abre el menú para "Guardar imagen" en Fotos en PNG
     if (esIPhone && navigator.canShare && mimeType.startsWith('image/')) {
         try {
             const file = new File([blob], nombreArchivo, { type: mimeType });
@@ -1989,7 +1990,7 @@ async function guardarArchivoUniversal(blob, nombreArchivo, mimeType = 'image/jp
                 return;
             }
         } catch (e) {
-            if (e.name === 'AbortError') return; // El usuario canceló el menú compartir
+            if (e.name === 'AbortError') return; // Cancelado por el usuario
             console.warn("Share fallback:", e);
         }
     }
@@ -2003,7 +2004,7 @@ async function guardarArchivoUniversal(blob, nombreArchivo, mimeType = 'image/jp
     a.click();
     document.body.removeChild(a);
 
-    // 3. Respaldo para iOS si el navegador no inicia la descarga automática del ZIP
+    // 3. Respaldo para iOS en caso de archivos comprimidos
     if (esIPhone && !mimeType.startsWith('image/')) {
         setTimeout(() => {
             window.location.href = blobUrl;
@@ -2013,7 +2014,7 @@ async function guardarArchivoUniversal(blob, nombreArchivo, mimeType = 'image/jp
     setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
 }
 
-// Descarga individual compatible con iPhone (guarda en Fotos) y PC
+// Descarga individual en PNG compatible con iPhone (Fotos) y PC
 async function descargarMesaActual() {
     const mesa = getMesaActiva();
     if (!mesa) return;
@@ -2027,11 +2028,11 @@ async function descargarMesaActual() {
 
     exportCanvas.toBlob(async (blob) => {
         if (!blob) return;
-        await guardarArchivoUniversal(blob, `${mesa.nombre || 'Mesa'}_HD.jpg`, 'image/jpeg');
-    }, 'image/jpeg', 0.95);
+        await guardarArchivoUniversal(blob, `${mesa.nombre || 'Mesa'}_HD.png`, 'image/png');
+    }, 'image/png');
 }
 
-// Descarga masiva ZIP compatible con PC y navegadores móviles
+// Descarga masiva ZIP con todos los archivos en formato PNG
 async function descargarTodasMesasZip() {
     if (!mesasTrabajo.length) return;
     const zip = new JSZip();
@@ -2044,9 +2045,10 @@ async function descargarTodasMesasZip() {
 
     mesasTrabajo.forEach((mesa, idx) => {
         dibujarMesaEnContexto(ctx, mesa, 1200, 1200, false);
-        const dataUrl = exportCanvas.toDataURL('image/jpeg', 0.95);
+        // Generar en PNG nativo
+        const dataUrl = exportCanvas.toDataURL('image/png');
         const base64Data = dataUrl.split(',')[1];
-        folder.file(`${mesa.nombre || 'Mesa_' + (idx + 1)}_HD.jpg`, base64Data, { base64: true });
+        folder.file(`${mesa.nombre || 'Mesa_' + (idx + 1)}_HD.png`, base64Data, { base64: true });
     });
 
     const content = await zip.generateAsync({ type: "blob" });
