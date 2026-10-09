@@ -253,10 +253,13 @@
     <!-- ============================================================== -->
 <!-- SECCIÓN INDEPENDIENTE: MULTI-LIENZO / MESAS DE TRABAJO ESTILO PS -->
 <!-- ============================================================== -->
+<!-- ============================================================== -->
+<!-- SECCIÓN MULTI-LIENZO: WORKBOARDS + PANEL LATERAL PHOTOSHOP     -->
+<!-- ============================================================== -->
 <section id="seccion-multi-lienzo" class="hidden max-w-7xl mx-auto w-full px-3 md:px-6 space-y-4 my-6">
     <div class="glass-panel rounded-3xl p-4 md:p-6 shadow-xl border border-pink-200">
         
-        <!-- BARRA DE PESTAÑAS (MESAS) Y DESCARGAS -->
+        <!-- PESTAÑAS (MESAS) Y ACCIONES GLOBALES -->
         <div class="flex flex-wrap items-center justify-between pb-3 border-b border-slate-200 gap-2 mb-4">
             <div class="flex items-center gap-2 overflow-x-auto ios-scroll py-1 max-w-full md:max-w-xl" id="tab-lienzos-container"></div>
             
@@ -265,7 +268,7 @@
                     ➕ Nueva Mesa
                 </button>
                 <button onclick="descargarMesaActual()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3 py-1.5 rounded-xl shadow">
-                    ⬇️ Bajar Esta Mesa
+                    ⬇️ Bajar Mesa
                 </button>
                 <button onclick="descargarTodasMesasZip()" class="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white text-xs font-bold px-3.5 py-1.5 rounded-xl shadow">
                     📦 Bajar Todas (ZIP)
@@ -273,55 +276,89 @@
             </div>
         </div>
 
-        <!-- WORKSPACE: CANVAS + CONTROL DE OBJETOS PNG -->
+        <!-- WORKSPACE: CANVAS CENTRAL + PANEL LATERAL ESTILO PHOTOSHOP -->
         <div class="flex flex-col lg:flex-row gap-5">
-            <div class="w-full lg:w-7/12 flex flex-col items-center justify-center bg-slate-100 rounded-2xl p-3 border border-slate-300 relative min-h-[380px] overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
-                <canvas id="multi-artboard-canvas" width="1200" height="1200" class="max-w-full max-h-[60vh] object-contain bg-white rounded-xl shadow-lg"></canvas>
-                <span class="text-[10px] text-slate-500 font-bold mt-2">💡 Arrastrá y tocá los PNGs para moverlos o escalar</span>
+            
+            <!-- LIENZO CENTRAL -->
+            <div class="w-full lg:w-8/12 flex flex-col items-center justify-center bg-slate-100 rounded-2xl p-3 border border-slate-300 relative min-h-[420px] overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
+                <canvas id="multi-artboard-canvas" width="1200" height="1200" class="max-w-full max-h-[62vh] object-contain bg-white rounded-xl shadow-lg"></canvas>
+                <span class="text-[10px] text-slate-500 font-bold mt-2">💡 Arrastrá objetos o textos directamente en el lienzo</span>
             </div>
 
-            <div class="w-full lg:w-5/12 space-y-4">
-                <!-- Dropzone PNGs -->
-                <div class="border-2 border-dashed border-pink-300 hover:border-pink-500 rounded-2xl p-4 text-center bg-pink-50/50">
-                    <p class="text-xs font-bold text-pink-700 mb-1">📥 Tirar PNGs acá o seleccionar archivo</p>
-                    <input type="file" id="input-multi-pngs" accept="image/png, image/jpeg, image/webp" multiple class="block w-full text-xs text-slate-500 file:mr-2 file:py-1 file:px-3 file:rounded-full file:border-0 file:text-[11px] file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer">
+            <!-- PANEL LATERAL DERECHO (CAPAS Y PROPIEDADES) -->
+            <div class="w-full lg:w-4/12 space-y-3.5">
+                
+                <!-- ACCIONES RÁPIDAS DE INSERCIÓN -->
+                <div class="bg-white p-3 rounded-2xl border border-slate-200 shadow-sm space-y-2">
+                    <span class="text-[11px] font-bold text-slate-700 uppercase block">➕ Insertar en esta Mesa</span>
+                    <div class="grid grid-cols-2 gap-2">
+                        <button onclick="agregarCapaTexto()" class="bg-blue-50 hover:bg-blue-100 text-blue-700 font-bold text-xs py-2 px-3 rounded-xl border border-blue-200 flex items-center justify-center gap-1.5">
+                            🔤 Añadir Texto
+                        </button>
+                        <label class="bg-pink-50 hover:bg-pink-100 text-pink-700 font-bold text-xs py-2 px-3 rounded-xl border border-pink-200 flex items-center justify-center gap-1.5 cursor-pointer text-center">
+                            🖼️ Añadir PNG
+                            <input type="file" id="input-multi-pngs" accept="image/png, image/jpeg, image/webp" multiple class="hidden">
+                        </label>
+                    </div>
                 </div>
 
-                <!-- Objeto Seleccionado -->
-                <div id="panel-objeto-seleccionado" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-3">
-                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
-                        <span class="text-xs font-bold text-slate-700" id="info-objeto-sel">Ningún objeto seleccionado</span>
-                        <div class="flex gap-1" id="btn-acciones-objeto" style="display: none;">
-                            <button onclick="duplicarObjetoSel()" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">📋 Copiar</button>
-                            <button onclick="eliminarObjetoSel()" class="text-[10px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">🗑️ Borrar</button>
-                        </div>
+                <!-- LISTA DE CAPAS ESTILO PHOTOSHOP (DRAG AND DROP) -->
+                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm">
+                    <div class="flex items-center justify-between pb-2 border-b border-slate-100 mb-2">
+                        <span class="text-xs font-extrabold text-slate-800 uppercase tracking-wider flex items-center gap-1.5">
+                            📑 Capas (Arrastrá para reordenar)
+                        </span>
+                        <span class="text-[10px] text-slate-400 font-bold" id="total-capas-contador">0 capas</span>
                     </div>
                     
-                    <div class="grid grid-cols-2 gap-3 text-[11px] font-semibold text-slate-600">
-                        <div>
-                            <span>Escala:</span>
-                            <input type="range" id="obj-scale" min="10" max="300" value="100" oninput="actualizarTransformObjeto()">
-                        </div>
-                        <div>
-                            <span>Rotación:</span>
-                            <input type="range" id="obj-rot" min="0" max="360" value="0" oninput="actualizarTransformObjeto()">
-                        </div>
-                    </div>
-
-                    <div class="flex items-center justify-between pt-1 border-t border-slate-100">
-                        <span class="text-[11px] text-slate-500">Mover a otra mesa:</span>
-                        <select id="select-enviar-mesa" class="custom-select py-1 px-2 text-xs w-36" onchange="enviarObjetoAMesa(this.value)">
-                            <option value="">Elegir mesa...</option>
-                        </select>
+                    <div id="lista-capas-dnd" class="space-y-1.5 max-h-56 ios-scroll pr-1 select-none">
+                        <!-- Generado dinámicamente con drag & drop -->
                     </div>
                 </div>
 
-                <!-- Textos de la mesa -->
-                <div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2">
-                    <span class="text-xs font-bold text-slate-700 uppercase block">✏️ Textos de esta Mesa</span>
-                    <input type="text" id="mesa-txt-top" placeholder="Título Arriba" class="custom-input text-xs" oninput="actualizarTextosMesa()">
-                    <input type="text" id="mesa-txt-bot" placeholder="Texto o Código Abajo" class="custom-input text-xs" oninput="actualizarTextosMesa()">
+                <!-- PROPIEDADES DEL ELEMENTO SELECCIONADO (PNG O TEXTO) -->
+                <div id="panel-objeto-seleccionado" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                        <span class="text-xs font-bold text-slate-700 truncate max-w-[170px]" id="info-objeto-sel">Ningún elemento seleccionado</span>
+                        <div class="flex gap-1" id="btn-acciones-objeto" style="display: none;">
+                            <button onclick="centrarElementoMesa('total')" class="text-[10px] font-bold bg-pink-50 text-pink-700 hover:bg-pink-100 px-2 py-1 rounded">🎯 Centrar</button>
+                            <button onclick="duplicarElementoSel()" class="text-[10px] font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 px-2 py-1 rounded">📋 Copiar</button>
+                            <button onclick="eliminarElementoSel()" class="text-[10px] font-bold bg-rose-100 text-rose-700 hover:bg-rose-200 px-2 py-1 rounded">🗑️</button>
+                        </div>
+                    </div>
+
+                    <!-- Campos de edición de texto (se muestran si el objeto es tipo texto) -->
+                    <div id="controles-tipo-texto" class="space-y-2" style="display: none;">
+                        <textarea id="prop-texto-contenido" class="custom-input text-xs" rows="2" placeholder="Escribí el texto..." oninput="actualizarPropiedadesElemento()"></textarea>
+                        <div class="flex items-center justify-between gap-2">
+                            <span class="text-[11px] font-bold text-slate-600">Color:</span>
+                            <input type="color" id="prop-texto-color" value="#000000" class="w-8 h-8 rounded border border-slate-300" oninput="actualizarPropiedadesElemento()">
+                        </div>
+                    </div>
+
+                    <!-- Sliders universales de Escala y Rotación -->
+                    <div id="controles-sliders-elemento" class="space-y-2" style="display: none;">
+                        <div class="grid grid-cols-2 gap-3 text-[11px] font-semibold text-slate-600">
+                            <div>
+                                <span class="flex justify-between"><span>Tamaño:</span><span id="val-prop-scale" class="text-pink-600 font-bold">100%</span></span>
+                                <input type="range" id="prop-scale" min="10" max="300" value="100" oninput="actualizarPropiedadesElemento()">
+                            </div>
+                            <div>
+                                <span class="flex justify-between"><span>Rotación:</span><span id="val-prop-rot" class="text-pink-600 font-bold">0°</span></span>
+                                <input type="range" id="prop-rot" min="0" max="360" value="0" oninput="actualizarPropiedadesElemento()">
+                            </div>
+                        </div>
+
+                        <!-- Mover elemento a otra mesa -->
+                        <div class="flex items-center justify-between pt-1 border-t border-slate-100">
+                            <span class="text-[11px] text-slate-500 font-medium">Mover a otra mesa:</span>
+                            <select id="select-enviar-mesa" class="custom-select py-1 px-2 text-xs w-36" onchange="enviarElementoAMesa(this.value)">
+                                <option value="">Elegir mesa...</option>
+                            </select>
+                        </div>
+                    </div>
                 </div>
+
             </div>
         </div>
     </div>
@@ -1416,15 +1453,16 @@ window.downloadSingle = function(index) {
         });
 
 // ==============================================================
-// MOTOR MULTI-LIENZO (WORKBOARDS) & CAPAS INDEPENDIENTES + ZIP
+// MOTOR PHOTOSHOP MULTI-LIENZO: CAPAS ARRASTRABLES Y TEXTOS X/Y/Z
 // ==============================================================
 let mesasTrabajo = [
-    { id: 1, nombre: "Mesa 1", objetos: [], txtTop: "", txtBot: "" }
+    { id: 1, nombre: "Mesa 1", elementos: [] }
 ];
 let mesaActivaId = 1;
-let objetoSeleccionadoIdx = -1;
-let isDraggingObjeto = false;
+let elementoSeleccionadoIdx = -1;
+let isDraggingElemento = false;
 let dragStartX = 0, dragStartY = 0;
+let draggedLayerIndex = null;
 
 function getArtboardElements() {
     const canvas = document.getElementById('multi-artboard-canvas');
@@ -1446,12 +1484,18 @@ window.toggleModoMultiLienzo = function() {
         sec.scrollIntoView({ behavior: 'smooth' });
         bindArtboardEvents();
         renderizarTabsMesas();
+        actualizarListaCapasDND();
+        actualizarPanelPropiedades();
         redibujarMesaActual();
     } else {
         sec.classList.add('hidden');
         sec.style.display = 'none';
     }
 };
+
+function getMesaActiva() {
+    return mesasTrabajo.find(m => m.id === mesaActivaId);
+}
 
 function renderizarTabsMesas() {
     const tabsCont = document.getElementById('tab-lienzos-container');
@@ -1468,9 +1512,10 @@ function renderizarTabsMesas() {
         btn.innerHTML = `<span>${m.nombre}</span> ${mesasTrabajo.length > 1 ? `<span onclick="eliminarMesa(\${m.id}, event)" class="hover:text-red-300 ml-1 font-bold">×</span>` : ''}`;
         btn.onclick = () => { 
             mesaActivaId = m.id; 
-            objetoSeleccionadoIdx = -1; 
+            elementoSeleccionadoIdx = -1; 
             renderizarTabsMesas(); 
-            actualizarPanelObjeto();
+            actualizarListaCapasDND();
+            actualizarPanelPropiedades();
             redibujarMesaActual(); 
         };
         tabsCont.appendChild(btn);
@@ -1479,18 +1524,6 @@ function renderizarTabsMesas() {
             selectEnviar.innerHTML += `<option value="${m.id}">${m.nombre}</option>`;
         }
     });
-
-    const mesa = getMesaActiva();
-    if (mesa) {
-        const topEl = document.getElementById('mesa-txt-top');
-        const botEl = document.getElementById('mesa-txt-bot');
-        if (topEl) topEl.value = mesa.txtTop || "";
-        if (botEl) botEl.value = mesa.txtBot || "";
-    }
-}
-
-function getMesaActiva() {
-    return mesasTrabajo.find(m => m.id === mesaActivaId);
 }
 
 function crearNuevaMesa() {
@@ -1498,14 +1531,13 @@ function crearNuevaMesa() {
     mesasTrabajo.push({
         id: nuevoId,
         nombre: `Mesa ${mesasTrabajo.length + 1}`,
-        objetos: [],
-        txtTop: "",
-        txtBot: ""
+        elementos: []
     });
     mesaActivaId = nuevoId;
-    objetoSeleccionadoIdx = -1;
+    elementoSeleccionadoIdx = -1;
     renderizarTabsMesas();
-    actualizarPanelObjeto();
+    actualizarListaCapasDND();
+    actualizarPanelPropiedades();
     redibujarMesaActual();
 }
 
@@ -1514,13 +1546,38 @@ function eliminarMesa(id, e) {
     if (mesasTrabajo.length <= 1) return;
     mesasTrabajo = mesasTrabajo.filter(m => m.id !== id);
     mesaActivaId = mesasTrabajo[0].id;
-    objetoSeleccionadoIdx = -1;
+    elementoSeleccionadoIdx = -1;
     renderizarTabsMesas();
-    actualizarPanelObjeto();
+    actualizarListaCapasDND();
+    actualizarPanelPropiedades();
     redibujarMesaActual();
 }
 
-// Carga de PNGs con asignación de capas
+// 🔤 AGREGAR CAPA DE TEXTO (TRANSFORMABLE Y MOVIBLE)
+window.agregarCapaTexto = function() {
+    const mesa = getMesaActiva();
+    if (!mesa) return;
+
+    mesa.elementos.push({
+        type: 'text',
+        name: `Texto #${mesa.elementos.filter(e => e.type === 'text').length + 1}`,
+        text: 'NUEVO TEXTO',
+        x: 600,
+        y: 600,
+        fontSize: 56,
+        color: '#000000',
+        scale: 1,
+        rotation: 0,
+        visible: true
+    });
+
+    elementoSeleccionadoIdx = mesa.elementos.length - 1;
+    actualizarListaCapasDND();
+    actualizarPanelPropiedades();
+    redibujarMesaActual();
+};
+
+// 🖼️ CARGA DE PNGs COMO CAPAS
 document.getElementById('input-multi-pngs')?.addEventListener('change', (e) => {
     const files = e.target.files;
     if (!files.length) return;
@@ -1529,59 +1586,285 @@ document.getElementById('input-multi-pngs')?.addEventListener('change', (e) => {
     Array.from(files).forEach(file => {
         const img = new Image();
         img.onload = () => {
-            const nextZ = mesa.objetos.length ? Math.max(...mesa.objetos.map(o => o.zIndex || 1)) + 1 : 1;
-            mesa.objetos.push({
-                img: img,
+            mesa.elementos.push({
+                type: 'image',
                 name: file.name,
-                x: 600, // Centro exacto inicial
+                img: img,
+                x: 600,
                 y: 600,
                 width: img.width,
                 height: img.height,
                 scale: 1,
                 rotation: 0,
-                zIndex: nextZ
+                visible: true
             });
-            objetoSeleccionadoIdx = mesa.objetos.length - 1;
-            actualizarPanelObjeto();
+            elementoSeleccionadoIdx = mesa.elementos.length - 1;
+            actualizarListaCapasDND();
+            actualizarPanelPropiedades();
             redibujarMesaActual();
         };
         img.src = URL.createObjectURL(file);
     });
+    e.target.value = '';
 });
 
-// Renderizado con tipografía Berlin y capas Z
+// ==============================================================
+// GESTIÓN DE CAPAS TIPO PHOTOSHOP (DRAG AND DROP REORDER)
+// ==============================================================
+function actualizarListaCapasDND() {
+    const mesa = getMesaActiva();
+    const listEl = document.getElementById('lista-capas-dnd');
+    const contadorEl = document.getElementById('total-capas-contador');
+    if (!listEl || !mesa) return;
+
+    contadorEl.textContent = `${mesa.elementos.length} capa${mesa.elementos.length !== 1 ? 's' : ''}`;
+    listEl.innerHTML = '';
+
+    if (!mesa.elementos.length) {
+        listEl.innerHTML = '<p class="text-[11px] text-slate-400 italic text-center py-4">No hay capas en esta mesa todavía.</p>';
+        return;
+    }
+
+    // Renderizar de arriba hacia abajo (Photoshop: la capa superior está arriba en la lista)
+    for (let i = mesa.elementos.length - 1; i >= 0; i--) {
+        const el = mesa.elementos[i];
+        const isSelected = (i === elementoSeleccionadoIdx);
+
+        const item = document.createElement('div');
+        item.draggable = true;
+        item.dataset.index = i;
+        item.className = `flex items-center justify-between p-2 rounded-xl border text-xs font-bold cursor-grab transition-colors ${isSelected ? 'bg-pink-50 border-pink-400 text-pink-800' : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-slate-100'}`;
+
+        item.innerHTML = `
+            <div class="flex items-center gap-2 truncate pointer-events-none">
+                <span class="text-slate-400">☰</span>
+                <span class="text-xs">${el.type === 'image' ? '🖼️' : '🔤'}</span>
+                <span class="truncate">${el.type === 'text' ? (el.text || 'Texto vacío') : el.name}</span>
+            </div>
+            <div class="flex items-center gap-1.5 shrink-0">
+                <button onclick="toggleVisibilidadElemento(${i}, event)" class="text-xs hover:scale-110 transition-transform ${el.visible !== false ? 'text-slate-700' : 'text-slate-300'}">
+                    ${el.visible !== false ? '👁️' : '🕶️'}
+                </button>
+            </div>
+        `;
+
+        // Selección al hacer clic
+        item.onclick = () => {
+            elementoSeleccionadoIdx = i;
+            actualizarListaCapasDND();
+            actualizarPanelPropiedades();
+            redibujarMesaActual();
+        };
+
+        // Eventos Drag and Drop nativo
+        item.addEventListener('dragstart', (e) => {
+            draggedLayerIndex = i;
+            e.dataTransfer.effectAllowed = 'move';
+            item.classList.add('opacity-40');
+        });
+
+        item.addEventListener('dragend', () => {
+            item.classList.remove('opacity-40');
+            draggedLayerIndex = null;
+        });
+
+        item.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            item.classList.add('border-pink-500');
+        });
+
+        item.addEventListener('dragleave', () => {
+            item.classList.remove('border-pink-500');
+        });
+
+        item.addEventListener('drop', (e) => {
+            e.preventDefault();
+            item.classList.remove('border-pink-500');
+            const targetIdx = parseInt(item.dataset.index);
+            if (draggedLayerIndex !== null && draggedLayerIndex !== targetIdx) {
+                // Reordenar array de capas
+                const [movedItem] = mesa.elementos.splice(draggedLayerIndex, 1);
+                mesa.elementos.splice(targetIdx, 0, movedItem);
+                elementoSeleccionadoIdx = targetIdx;
+                actualizarListaCapasDND();
+                actualizarPanelPropiedades();
+                redibujarMesaActual();
+            }
+        });
+
+        listEl.appendChild(item);
+    }
+}
+
+window.toggleVisibilidadElemento = function(idx, e) {
+    e.stopPropagation();
+    const mesa = getMesaActiva();
+    if (!mesa || !mesa.elementos[idx]) return;
+    mesa.elementos[idx].visible = mesa.elementos[idx].visible === false ? true : false;
+    actualizarListaCapasDND();
+    redibujarMesaActual();
+};
+
+// ==============================================================
+// PANEL DE PROPIEDADES (ESCALA, ROTACIÓN, TEXTOS, COLOR)
+// ==============================================================
+function actualizarPanelPropiedades() {
+    const mesa = getMesaActiva();
+    const info = document.getElementById('info-objeto-sel');
+    const btnAcc = document.getElementById('btn-acciones-objeto');
+    const ctrlTexto = document.getElementById('controles-tipo-texto');
+    const ctrlSliders = document.getElementById('controles-sliders-elemento');
+
+    if (elementoSeleccionadoIdx !== -1 && mesa && mesa.elementos[elementoSeleccionadoIdx]) {
+        const el = mesa.elementos[elementoSeleccionadoIdx];
+        info.textContent = el.type === 'text' ? 'Texto Seleccionado' : el.name;
+        btnAcc.style.display = 'flex';
+        ctrlSliders.style.display = 'block';
+
+        document.getElementById('prop-scale').value = Math.round(el.scale * 100);
+        document.getElementById('prop-rot').value = el.rotation;
+        document.getElementById('val-prop-scale').textContent = `${Math.round(el.scale * 100)}%`;
+        document.getElementById('val-prop-rot').textContent = `${el.rotation}°`;
+
+        if (el.type === 'text') {
+            ctrlTexto.style.display = 'block';
+            document.getElementById('prop-texto-contenido').value = el.text || '';
+            document.getElementById('prop-texto-color').value = el.color || '#000000';
+        } else {
+            ctrlTexto.style.display = 'none';
+        }
+    } else {
+        info.textContent = 'Ningún elemento seleccionado';
+        btnAcc.style.display = 'none';
+        ctrlTexto.style.display = 'none';
+        ctrlSliders.style.display = 'none';
+    }
+}
+
+window.actualizarPropiedadesElemento = function() {
+    const mesa = getMesaActiva();
+    if (elementoSeleccionadoIdx === -1 || !mesa || !mesa.elementos[elementoSeleccionadoIdx]) return;
+    const el = mesa.elementos[elementoSeleccionadoIdx];
+
+    el.scale = (parseInt(document.getElementById('prop-scale').value) || 100) / 100;
+    el.rotation = parseInt(document.getElementById('prop-rot').value) || 0;
+    document.getElementById('val-prop-scale').textContent = `${Math.round(el.scale * 100)}%`;
+    document.getElementById('val-prop-rot').textContent = `${el.rotation}°`;
+
+    if (el.type === 'text') {
+        el.text = document.getElementById('prop-texto-contenido').value;
+        el.color = document.getElementById('prop-texto-color').value;
+        actualizarListaCapasDND();
+    }
+    redibujarMesaActual();
+};
+
+window.centrarElementoMesa = function(eje = 'total') {
+    const mesa = getMesaActiva();
+    if (elementoSeleccionadoIdx === -1 || !mesa || !mesa.elementos[elementoSeleccionadoIdx]) return;
+    const el = mesa.elementos[elementoSeleccionadoIdx];
+    if (eje === 'total' || eje === 'x') el.x = 600;
+    if (eje === 'total' || eje === 'y') el.y = 600;
+    redibujarMesaActual();
+};
+
+window.duplicarElementoSel = function() {
+    const mesa = getMesaActiva();
+    if (elementoSeleccionadoIdx === -1 || !mesa || !mesa.elementos[elementoSeleccionadoIdx]) return;
+    const orig = mesa.elementos[elementoSeleccionadoIdx];
+    mesa.elementos.push({
+        ...orig,
+        name: orig.name ? `${orig.name} (copia)` : 'Copia',
+        x: orig.x + 40,
+        y: orig.y + 40
+    });
+    elementoSeleccionadoIdx = mesa.elementos.length - 1;
+    actualizarListaCapasDND();
+    actualizarPanelPropiedades();
+    redibujarMesaActual();
+};
+
+window.eliminarElementoSel = function() {
+    const mesa = getMesaActiva();
+    if (elementoSeleccionadoIdx === -1 || !mesa || !mesa.elementos[elementoSeleccionadoIdx]) return;
+    mesa.elementos.splice(elementoSeleccionadoIdx, 1);
+    elementoSeleccionadoIdx = -1;
+    actualizarListaCapasDND();
+    actualizarPanelPropiedades();
+    redibujarMesaActual();
+};
+
+window.enviarElementoAMesa = function(targetId) {
+    if (!targetId || elementoSeleccionadoIdx === -1) return;
+    const mesaOrigen = getMesaActiva();
+    const mesaDestino = mesasTrabajo.find(m => m.id == targetId);
+    if (!mesaOrigen || !mesaDestino || !mesaOrigen.elementos[elementoSeleccionadoIdx]) return;
+
+    const [item] = mesaOrigen.elementos.splice(elementoSeleccionadoIdx, 1);
+    mesaDestino.elementos.push(item);
+    elementoSeleccionadoIdx = -1;
+    actualizarListaCapasDND();
+    actualizarPanelPropiedades();
+    redibujarMesaActual();
+    document.getElementById('select-enviar-mesa').value = '';
+};
+
+// ==============================================================
+// RENDERIZADO DEL LIENZO (CANVAS)
+// ==============================================================
 function dibujarMesaEnContexto(ctx, mesa, width, height, resaltarSeleccionado = true) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    // 1. Dibujar PNGs ordenados por Z-Index
-    const objetosOrdenados = [...mesa.objetos].map((obj, originalIdx) => ({ obj, originalIdx }))
-                                              .sort((a, b) => (a.obj.zIndex || 0) - (b.obj.zIndex || 0));
+    // Dibujar elementos en el orden de las capas (índice 0 = fondo, último índice = frente)
+    mesa.elementos.forEach((el, idx) => {
+        if (el.visible === false) return;
 
-    objetosOrdenados.forEach(({ obj, originalIdx }) => {
         ctx.save();
-        ctx.translate(obj.x, obj.y);
-        ctx.rotate((obj.rotation * Math.PI) / 180);
-        const w = obj.width * obj.scale;
-        const h = obj.height * obj.scale;
-        ctx.drawImage(obj.img, -w / 2, -h / 2, w, h);
+        ctx.translate(el.x, el.y);
+        ctx.rotate((el.rotation * Math.PI) / 180);
 
-        if (resaltarSeleccionado && originalIdx === objetoSeleccionadoIdx && mesa.id === mesaActivaId) {
-            ctx.strokeStyle = '#ec4899';
-            ctx.lineWidth = 4;
-            ctx.strokeRect(-w / 2, -h / 2, w, h);
+        if (el.type === 'image') {
+            const w = el.width * el.scale;
+            const h = el.height * el.scale;
+            ctx.drawImage(el.img, -w / 2, -h / 2, w, h);
+
+            if (resaltarSeleccionado && idx === elementoSeleccionadoIdx && mesa.id === mesaActivaId) {
+                ctx.strokeStyle = '#ec4899';
+                ctx.lineWidth = 4;
+                ctx.strokeRect(-w / 2, -h / 2, w, h);
+            }
+        } else if (el.type === 'text') {
+            const fontF = typeof fontFamily !== 'undefined' ? fontFamily : 'sans-serif';
+            const fSize = Math.round((el.fontSize || 56) * el.scale);
+            ctx.font = `normal ${fSize}px ${fontF}`;
+            ctx.fillStyle = el.color || '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            const lines = (el.text || '').split('\n');
+            const lh = fSize * 1.25;
+            const totalH = lines.length * lh;
+            let startY = -totalH / 2 + (lh / 2);
+
+            let maxLineW = 0;
+            lines.forEach((l) => {
+                ctx.fillText(l, 0, startY);
+                const metrics = ctx.measureText(l);
+                if (metrics.width > maxLineW) maxLineW = metrics.width;
+                startY += lh;
+            });
+
+            // Recuadro de selección para textos
+            if (resaltarSeleccionado && idx === elementoSeleccionadoIdx && mesa.id === mesaActivaId) {
+                ctx.strokeStyle = '#3b82f6';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(-maxLineW / 2 - 10, -totalH / 2 - 6, maxLineW + 20, totalH + 12);
+            }
         }
         ctx.restore();
     });
-
-    // 2. Textos con Berlin Sans FB
-    ctx.fillStyle = '#000000';
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.font = `normal 52px ${fontFamily}`;
-
-    if (mesa.txtTop) ctx.fillText(mesa.txtTop, width / 2, 85);
-    if (mesa.txtBot) ctx.fillText(mesa.txtBot, width / 2, height - 75);
 }
 
 function redibujarMesaActual() {
@@ -1607,171 +1890,81 @@ function bindArtboardEvents() {
     const { canvas } = getArtboardElements();
     if (!canvas || canvas.dataset.bound) return;
     canvas.dataset.bound = "true";
-    canvas.addEventListener('mousedown', iniciarDragObjeto);
-    canvas.addEventListener('touchstart', iniciarDragObjeto, { passive: false });
+    canvas.addEventListener('mousedown', iniciarDragElemento);
+    canvas.addEventListener('touchstart', iniciarDragElemento, { passive: false });
 }
 
-function iniciarDragObjeto(e) {
+function iniciarDragElemento(e) {
     e.preventDefault();
     const pos = getArtboardPos(e);
     const mesa = getMesaActiva();
-    if (!mesa) return;
+    const { ctx } = getArtboardElements();
+    if (!mesa || !ctx) return;
 
-    // Buscar de arriba hacia abajo respetando la capa Z
-    const objetosOrdenados = [...mesa.objetos].map((obj, originalIdx) => ({ obj, originalIdx }))
-                                              .sort((a, b) => (b.obj.zIndex || 0) - (a.obj.zIndex || 0));
-
+    // Buscar de arriba hacia abajo (capas superiores primero)
     let hallado = -1;
-    for (let item of objetosOrdenados) {
-        const o = item.obj;
-        const w = (o.width * o.scale) / 2;
-        const h = (o.height * o.scale) / 2;
-        if (pos.x >= o.x - w && pos.x <= o.x + w && pos.y >= o.y - h && pos.y <= o.y + h) {
-            hallado = item.originalIdx;
-            break;
+    for (let i = mesa.elementos.length - 1; i >= 0; i--) {
+        const el = mesa.elementos[i];
+        if (el.visible === false) continue;
+
+        if (el.type === 'image') {
+            const w = (el.width * el.scale) / 2;
+            const h = (el.height * el.scale) / 2;
+            if (pos.x >= el.x - w && pos.x <= el.x + w && pos.y >= el.y - h && pos.y <= el.y + h) {
+                hallado = i;
+                break;
+            }
+        } else if (el.type === 'text') {
+            const fontF = typeof fontFamily !== 'undefined' ? fontFamily : 'sans-serif';
+            const fSize = Math.round((el.fontSize || 56) * el.scale);
+            ctx.font = `normal ${fSize}px ${fontF}`;
+            const lines = (el.text || '').split('\n');
+            let maxW = 50;
+            lines.forEach(l => {
+                const w = ctx.measureText(l).width;
+                if (w > maxW) maxW = w;
+            });
+            const totalH = (lines.length * fSize * 1.25) || 50;
+            const halfW = (maxW / 2) + 15;
+            const halfH = (totalH / 2) + 10;
+            if (pos.x >= el.x - halfW && pos.x <= el.x + halfW && pos.y >= el.y - halfH && pos.y <= el.y + halfH) {
+                hallado = i;
+                break;
+            }
         }
     }
 
-    objetoSeleccionadoIdx = hallado;
+    elementoSeleccionadoIdx = hallado;
     if (hallado !== -1) {
-        isDraggingObjeto = true;
-        dragStartX = pos.x - mesa.objetos[hallado].x;
-        dragStartY = pos.y - mesa.objetos[hallado].y;
+        isDraggingElemento = true;
+        dragStartX = pos.x - mesa.elementos[hallado].x;
+        dragStartY = pos.y - mesa.elementos[hallado].y;
     }
-    actualizarPanelObjeto();
+    actualizarListaCapasDND();
+    actualizarPanelPropiedades();
     redibujarMesaActual();
 }
 
-window.addEventListener('mousemove', moverObjetoDrag);
-window.addEventListener('touchmove', moverObjetoDrag, { passive: false });
+window.addEventListener('mousemove', moverElementoDrag);
+window.addEventListener('touchmove', moverElementoDrag, { passive: false });
 
-function moverObjetoDrag(e) {
-    if (!isDraggingObjeto || objetoSeleccionadoIdx === -1) return;
+function moverElementoDrag(e) {
+    if (!isDraggingElemento || elementoSeleccionadoIdx === -1) return;
     e.preventDefault();
     const pos = getArtboardPos(e);
     const mesa = getMesaActiva();
-    mesa.objetos[objetoSeleccionadoIdx].x = pos.x - dragStartX;
-    mesa.objetos[objetoSeleccionadoIdx].y = pos.y - dragStartY;
+    if (!mesa || !mesa.elementos[elementoSeleccionadoIdx]) return;
+    mesa.elementos[elementoSeleccionadoIdx].x = pos.x - dragStartX;
+    mesa.elementos[elementoSeleccionadoIdx].y = pos.y - dragStartY;
     redibujarMesaActual();
 }
 
-window.addEventListener('mouseup', () => { isDraggingObjeto = false; });
-window.addEventListener('touchend', () => { isDraggingObjeto = false; });
+window.addEventListener('mouseup', () => { isDraggingElemento = false; });
+window.addEventListener('touchend', () => { isDraggingElemento = false; });
 
-// Panel de control del objeto con Centrado y Capas Z
-function actualizarPanelObjeto() {
-    const mesa = getMesaActiva();
-    const info = document.getElementById('info-objeto-sel');
-    const btnAcc = document.getElementById('btn-acciones-objeto');
-
-    if (objetoSeleccionadoIdx !== -1 && mesa && mesa.objetos[objetoSeleccionadoIdx]) {
-        const obj = mesa.objetos[objetoSeleccionadoIdx];
-        info.innerHTML = `
-            <div class="flex flex-col">
-                <span class="font-bold text-slate-800">${obj.name || `Objeto #\${objetoSeleccionadoIdx + 1}`}</span>
-                <span class="text-[10px] text-pink-600 font-bold">Capa Z: ${obj.zIndex || 1} | ${Math.round(obj.width * obj.scale)}x${Math.round(obj.height * obj.scale)}px</span>
-            </div>
-        `;
-        if (btnAcc) {
-            btnAcc.style.display = 'flex';
-            btnAcc.innerHTML = `
-                <div class="flex items-center gap-1">
-                    <button onclick="centrarObjetoSel('total')" title="Centrar en medio del lienzo" class="text-[10px] font-bold bg-pink-50 hover:bg-pink-100 text-pink-700 px-2 py-1 rounded">🎯 Centrar</button>
-                    <button onclick="cambiarCapaObjetoSel(1)" title="Subir Capa Z" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-1 rounded">▲</button>
-                    <button onclick="cambiarCapaObjetoSel(-1)" title="Bajar Capa Z" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-1 rounded">▼</button>
-                    <button onclick="duplicarObjetoSel()" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">📋 Copiar</button>
-                    <button onclick="eliminarObjetoSel()" class="text-[10px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">🗑️</button>
-                </div>
-            `;
-        }
-        const scaleEl = document.getElementById('obj-scale');
-        const rotEl = document.getElementById('obj-rot');
-        if (scaleEl) scaleEl.value = Math.round(obj.scale * 100);
-        if (rotEl) rotEl.value = obj.rotation;
-    } else {
-        if (info) info.textContent = "Ningún objeto seleccionado";
-        if (btnAcc) btnAcc.style.display = 'none';
-    }
-}
-
-// Función de centrado
-window.centrarObjetoSel = function(eje = 'total') {
-    const mesa = getMesaActiva();
-    if (objetoSeleccionadoIdx === -1 || !mesa) return;
-    const obj = mesa.objetos[objetoSeleccionadoIdx];
-    if (eje === 'total' || eje === 'x') obj.x = 600;
-    if (eje === 'total' || eje === 'y') obj.y = 600;
-    redibujarMesaActual();
-};
-
-// Función para subir o bajar capas del objeto
-window.cambiarCapaObjetoSel = function(delta) {
-    const mesa = getMesaActiva();
-    if (objetoSeleccionadoIdx === -1 || !mesa) return;
-    const obj = mesa.objetos[objetoSeleccionadoIdx];
-    obj.zIndex = Math.max(1, (obj.zIndex || 1) + delta);
-    actualizarPanelObjeto();
-    redibujarMesaActual();
-};
-
-function actualizarTransformObjeto() {
-    const mesa = getMesaActiva();
-    if (objetoSeleccionadoIdx === -1 || !mesa) return;
-    const obj = mesa.objetos[objetoSeleccionadoIdx];
-    const scaleEl = document.getElementById('obj-scale');
-    const rotEl = document.getElementById('obj-rot');
-    if (scaleEl) obj.scale = (parseInt(scaleEl.value) || 100) / 100;
-    if (rotEl) obj.rotation = parseInt(rotEl.value) || 0;
-    redibujarMesaActual();
-}
-
-function duplicarObjetoSel() {
-    const mesa = getMesaActiva();
-    if (objetoSeleccionadoIdx === -1 || !mesa) return;
-    const orig = mesa.objetos[objetoSeleccionadoIdx];
-    mesa.objetos.push({ 
-        ...orig, 
-        x: orig.x + 35, 
-        y: orig.y + 35,
-        zIndex: (orig.zIndex || 1) + 1 
-    });
-    objetoSeleccionadoIdx = mesa.objetos.length - 1;
-    actualizarPanelObjeto();
-    redibujarMesaActual();
-}
-
-function eliminarObjetoSel() {
-    const mesa = getMesaActiva();
-    if (objetoSeleccionadoIdx === -1 || !mesa) return;
-    mesa.objetos.splice(objetoSeleccionadoIdx, 1);
-    objetoSeleccionadoIdx = -1;
-    actualizarPanelObjeto();
-    redibujarMesaActual();
-}
-
-function enviarObjetoAMesa(targetId) {
-    if (!targetId || objetoSeleccionadoIdx === -1) return;
-    const mesaOrigen = getMesaActiva();
-    const mesaDestino = mesasTrabajo.find(m => m.id == targetId);
-    if (!mesaOrigen || !mesaDestino) return;
-
-    const [obj] = mesaOrigen.objetos.splice(objetoSeleccionadoIdx, 1);
-    obj.zIndex = mesaDestino.objetos.length + 1;
-    mesaDestino.objetos.push(obj);
-    objetoSeleccionadoIdx = -1;
-    actualizarPanelObjeto();
-    redibujarMesaActual();
-    document.getElementById('select-enviar-mesa').value = '';
-}
-
-function actualizarTextosMesa() {
-    const mesa = getMesaActiva();
-    if (!mesa) return;
-    mesa.txtTop = document.getElementById('mesa-txt-top').value;
-    mesa.txtBot = document.getElementById('mesa-txt-bot').value;
-    redibujarMesaActual();
-}
-
+// ==============================================================
+// DESCARGAS (INDIVIDUAL Y ZIP)
+// ==============================================================
 function descargarMesaActual() {
     const mesa = getMesaActiva();
     if (!mesa) return;
