@@ -347,11 +347,11 @@
             /\b\d+\s*TRAMOS?\b/gi,
             /\b\d+-\d+\s*LBS?\b/gi,
             /\b\d+\.\d+\s*M\b/gi,
-            /\s*-\s*$/g
+            /\s*-\s*\$/g
         ];
         palabrasAEliminar.forEach(rgx => { name = name.replace(rgx, ''); });
         
-        return name.replace(/\s+/g, ' ').replace(/\s*-\s*$/, '').trim().toUpperCase();
+        return name.replace(/\s+/g, ' ').replace(/\s*-\s*\$/, '').trim().toUpperCase();
     }
 
     function agruparPorProductoMatriz() {
@@ -370,7 +370,7 @@
 
                 groups[groupKey] = {
                     id: groupKey,
-                    tmpl_id: item.tmpl_id, // ID exacto de la plantilla para pedir la foto original
+                    tmpl_id: item.tmpl_id,
                     rawProdId: item.id,
                     titulo: cleanTitle,
                     skuPrincipal: baseSku || item.sku || 'S/N',
@@ -559,7 +559,7 @@
         skus.forEach(sku => {
             const prod = productTemplates.find(p => 
                 p.skuPrincipal.toUpperCase() === sku || 
-                p.titulo.toUpperCase().includes(sku) ||
+                p.titulo.toUpperCase().includes(sku) || 
                 p.skusHijos.some(sh => sh === sku)
             );
             if (prod) selectedTemplateIds.add(prod.id);
@@ -734,12 +734,21 @@
         return canvas.toDataURL('image/jpeg', 1.0);
     }
 
+    // Carga de imagen con soporte crossOrigin para evitar Tainted Canvas
     function loadImageFromUrl(url) {
         return new Promise((resolve, reject) => {
             const img = new Image();
+            img.crossOrigin = "anonymous";
             img.onload = () => resolve(img);
             img.onerror = () => reject(new Error("Error decodificando imagen"));
             img.src = url;
+        });
+    }
+
+    // Conversión directa de Canvas a Blob
+    function canvasToBlobPromise(canvas, type = 'image/jpeg', quality = 0.98) {
+        return new Promise((resolve) => {
+            canvas.toBlob((blob) => resolve(blob), type, quality);
         });
     }
 
@@ -1013,7 +1022,7 @@
         closeModal();
     };
 
-    // 🚀 Descarga individual: busca el archivo original binario en Odoo (/web/image)
+    // 🚀 Descarga individual HD usando Blob directo (compatible con navegadores modernos)
     window.descargarIndividualHD = async function(index) {
         const item = generatedCards[index];
         const btn = document.getElementById(`btn-dl-${index}`);
@@ -1021,29 +1030,123 @@
         btn.innerHTML = "⏳ Descargando HD...";
         btn.disabled = true;
 
-        let imgObjFinal = item.imgObj;
+        try {
+            let imgObjFinal = item.imgObj;
 
-        // Intentar traer el binario original de Odoo vía template id
-        if (item.tmpl_id) {
-            const fotoOriginal = await obtenerFotoHD(item.tmpl_id);
-            if (fotoOriginal) imgObjFinal = fotoOriginal;
+            if (item.tmpl_id) {
+                const fotoOriginal = await obtenerFotoHD(item.tmpl_id);
+                if (fotoOriginal) imgObjFinal = fotoOriginal;
+            }
+
+            const configHD = { ...item, imgObj: imgObjFinal };
+
+            const canvas = document.createElement('canvas');
+            const size = 2000;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            const scaleRef = size / 1000;
+            const scaleFactor = (configHD.textScale || 100) / 100;
+            const imgZoom = (configHD.imgScale || 90) / 100;
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, size, size);
+            ctx.imageSmoothingEnabled = true;
+            ctx.imageSmoothingQuality = 'high';
+
+            const maxImgDim = size * imgZoom;
+            const ratio = Math.min(maxImgDim / imgObjFinal.width, maxImgDim / imgObjFinal.height);
+            const imgW = imgObjFinal.width * ratio;
+            const imgH = imgObjFinal.height * ratio;
+            const imgX = (size - imgW) / 2;
+            const imgY = (size - imgH) / 2 + ((configHD.imgY || 80) * scaleRef);
+            ctx.drawImage(imgObjFinal, imgX, imgY, imgW, imgH);
+
+            ctx.fillStyle = configHD.textColor || '#000000';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const maxWidth = size * 0.90;
+
+            let fontTitle = Math.round(48 * scaleRef * scaleFactor);
+            ctx.font = `normal ${fontTitle}px ${fontFamily}`;
+            let titleLines = getWrappedLines(ctx, configHD.top || "", maxWidth);
+            let lhTitle = fontTitle * 1.25;
+            let startYTitle = (80 * scaleRef) + ((configHD.yTop || 0) * scaleRef);
+            let posX_Title = (size / 2) + ((configHD.xTop || 0) * scaleRef);
+            titleLines.forEach((tl, idx) => ctx.fillText(tl, posX_Title, startYTitle + (idx * lhTitle)));
+
+            let curY = startYTitle + (titleLines.length * lhTitle) + (15 * scaleRef);
+
+            if (configHD.sub) {
+                let fontSub = Math.round(38 * scaleRef * scaleFactor);
+                ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                let posX_Sub = (size / 2) + ((configHD.xSub || 0) * scaleRef);
+                let subY = curY + ((configHD.ySub || 0) * scaleRef);
+                ctx.fillText(configHD.sub, posX_Sub, subY);
+                curY = subY + (fontSub * 0.9) + (20 * scaleRef);
+            }
+
+            let fontColHead = Math.round(28 * scaleRef * scaleFactor);
+            let fontColBody = Math.round(24 * scaleRef * scaleFactor);
+            let lhCol = fontColBody * 1.35;
+            let colBaseY = curY + ((configHD.yBot || 0) * scaleRef);
+            let sepX = ((configHD.xBot || 0) * scaleRef);
+            const colLeftLines = configHD.colLeft ? configHD.colLeft.split('\n').filter(Boolean) : [];
+            const colRightLines = configHD.colRight ? configHD.colRight.split('\n').filter(Boolean) : [];
+
+            if (colLeftLines.length > 0 && colRightLines.length > 0) {
+                const posX_Left = (size * 0.28) - (sepX / 2);
+                const posX_Right = (size * 0.72) + (sepX / 2);
+                let yL = colBaseY;
+                colLeftLines.forEach((l, idx) => {
+                    ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                    ctx.fillText(l.trim(), posX_Left, yL);
+                    yL += lhCol;
+                });
+                let yR = colBaseY;
+                colRightLines.forEach((l, idx) => {
+                    ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                    ctx.fillText(l.trim(), posX_Right, yR);
+                    yR += lhCol;
+                });
+            } else {
+                let singleLines = (configHD.colLeft || configHD.colRight || "").split('\n').filter(Boolean);
+                let yS = colBaseY;
+                singleLines.forEach((l, idx) => {
+                    ctx.font = `normal ${idx === 0 ? fontColHead : fontColBody}px ${fontFamily}`;
+                    ctx.fillText(l.trim(), (size / 2) + sepX, yS);
+                    yS += lhCol;
+                });
+            }
+
+            if (configHD.bot) {
+                let fontBot = Math.round(26 * scaleRef * scaleFactor);
+                ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                let posX_Code = (size / 2) + ((configHD.xCode || 0) * scaleRef);
+                let botY = size - (45 * scaleRef) + ((configHD.yCode || 0) * scaleRef);
+                ctx.fillText(configHD.bot, posX_Code, botY);
+            }
+
+            const blob = await canvasToBlobPromise(canvas, 'image/jpeg', 0.98);
+            const blobUrl = URL.createObjectURL(blob);
+            const link = document.createElement('a');
+            link.href = blobUrl;
+            link.download = item.name;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(blobUrl);
+
+        } catch (err) {
+            console.error("Fallo al descargar HD:", err);
+            alert("Hubo un error al generar la descarga HD. Verifica la consola para más detalles.");
+        } finally {
+            btn.innerHTML = originalText;
+            btn.disabled = false;
         }
-
-        const configHD = { ...item, imgObj: imgObjFinal };
-        const dataUrlHD = renderCanvasDataUrl(configHD, true);
-
-        const link = document.createElement('a');
-        link.href = dataUrlHD;
-        link.download = item.name;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-
-        btn.innerHTML = originalText;
-        btn.disabled = false;
     };
 
-    // 🚀 Descarga masiva ZIP con todas las imágenes en 2000px nítidas
+    // 🚀 Descarga masiva ZIP con Blobs nativos
     window.descargarTodoZip = async function() {
         if (generatedCards.length === 0) return;
         const zip = new JSZip();
@@ -1059,16 +1162,19 @@
             }
             const configHD = { ...item, imgObj: imgObjFinal };
             const dataUrlHD = renderCanvasDataUrl(configHD, true);
-
             const base64Data = dataUrlHD.split(',')[1];
-            folder.file(item.name, base64Data, {base64: true});
+            folder.file(item.name, base64Data, { base64: true });
         }
 
-        const content = await zip.generateAsync({type:"blob"});
+        const content = await zip.generateAsync({ type: "blob" });
         const link = document.createElement('a');
-        link.href = URL.createObjectURL(content);
+        const url = URL.createObjectURL(content);
+        link.href = url;
         link.download = "Fichas_Comerciales_HD_XFish.zip";
+        document.body.appendChild(link);
         link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
     };
 
     document.addEventListener('DOMContentLoaded', sincronizarOdoo);
