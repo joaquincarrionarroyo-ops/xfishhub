@@ -15,20 +15,29 @@
         .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background-color: rgba(255, 255, 255, 0.8); outline: none; transition: all 0.2s; font-weight: 600; color: #334155; }
         .custom-select:focus, .custom-input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.2); background-color: #fff; }
         
-        /* Scrollbars */
         ::-webkit-scrollbar { width: 6px; height: 6px; }
         ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
         ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
         ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        /* Modal & iOS Optimization */
-        .modal-overlay { background: rgba(15, 23, 42, 0.8); backdrop-filter: blur(5px); z-index: 100; }
+        .modal-overlay { background: rgba(15, 23, 42, 0.85); backdrop-filter: blur(6px); z-index: 100; }
         .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
         
-        /* Touch sliders (touch-action: none evita que la página scrollee al mover el dedo) */
         input[type=range] { width: 100%; accent-color: #ec4899; touch-action: none; cursor: pointer; }
         input[type=color] { border: none; border-radius: 4px; padding: 0; cursor: pointer; }
-        textarea.custom-input { resize: vertical; min-height: 60px; }
+        textarea.custom-input { resize: vertical; min-height: 50px; }
+
+        .paint-canvas-container {
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+        }
+        .tool-btn.active {
+            background-color: #ec4899;
+            color: #ffffff;
+            border-color: #db2777;
+        }
     </style>
 </head>
 <body class="relative min-h-screen text-slate-800 selection:bg-pink-500 selection:text-white pb-10">
@@ -41,9 +50,9 @@
         <div class="max-w-7xl mx-auto flex items-center justify-between">
             <h1 class="text-xl md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"></path></svg>
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 </div>
-                Estampador Dinámico
+                Estampador & Editor Táctil
             </h1>
             <a href="index.html" class="text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver</a>
         </div>
@@ -54,7 +63,6 @@
         <div class="glass-panel rounded-3xl p-6 md:p-8">
             <h2 class="text-lg font-bold text-slate-700 mb-5 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
-            <!-- SELECTOR DE MODO -->
             <div class="mb-6 flex flex-col sm:flex-row gap-4 sm:gap-6 border-b border-slate-100 pb-4">
                 <label class="flex items-center gap-2 text-sm font-bold text-slate-700 cursor-pointer hover:text-pink-600 transition-colors p-2 rounded-lg hover:bg-white/50">
                     <input type="radio" name="input-mode" value="excel" checked class="accent-pink-600 w-5 h-5">
@@ -67,35 +75,25 @@
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8 mb-6">
-                <!-- CONTENEDOR EXCEL -->
-                <div id="excel-input-container" class="relative group">
-                    <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20 transition duration-200"></div>
-                    <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">📊 Excel con Textos</label>
-                        <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer transition-colors"/>
-                    </div>
+                <div id="excel-input-container" class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">📊 Excel con Textos</label>
+                    <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer transition-colors"/>
                 </div>
 
-                <!-- CONTENEDOR IMÁGENES -->
-                <div class="relative group">
-                    <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20 transition duration-200"></div>
-                    <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
-                        <label class="block text-sm font-bold text-slate-700 mb-1">📸 Carpeta de Imágenes</label>
-                        <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer transition-colors"/>
-                    </div>
+                <div class="relative bg-white/60 border border-white/80 p-5 rounded-2xl backdrop-blur-sm">
+                    <label class="block text-sm font-bold text-slate-700 mb-1">📸 Carpeta de Imágenes</label>
+                    <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-sm text-slate-600 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer transition-colors"/>
                 </div>
             </div>
 
-            <!-- MODO DE DISEÑO CON MOCKUP EN VIVO -->
+            <!-- Previsualización en Vivo con Controles Globales -->
             <div class="mb-6 bg-slate-50/80 p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
-                
-                <!-- Controles Globales -->
-                <div class="w-full lg:w-1/2 space-y-5">
-                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales (Aplica a todas)</h3>
+                <div class="w-full lg:w-1/2 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales</h3>
                     
-                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Modo de Diseño Base</label>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Modo Base</label>
                             <select id="global-mode" class="custom-select w-full">
                                 <option value="margin">🖼️ Lienzo c/ Márgenes</option>
                                 <option value="overlay">📸 Texto Superpuesto</option>
@@ -107,67 +105,56 @@
                         </div>
                     </div>
 
-                    <div>
-                        <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
-                            <span>Tamaño del Texto General</span>
-                            <span id="val-global-scale" class="text-pink-600 font-bold">100%</span>
-                        </label>
-                        <input type="range" id="global-scale" min="10" max="300" value="100">
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                                <span>Escala Texto</span><span id="val-global-scale" class="text-pink-600 font-bold">100%</span>
+                            </label>
+                            <input type="range" id="global-scale" min="10" max="300" value="100">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                                <span>Posición Imagen (Y)</span><span id="val-global-img-y" class="text-pink-600 font-bold">0px</span>
+                            </label>
+                            <input type="range" id="global-img-y" min="-400" max="400" value="0">
+                        </div>
                     </div>
 
-                    <div class="space-y-4 pt-2 border-t border-slate-200">
+                    <div class="space-y-3 pt-2 border-t border-slate-200">
                         <div>
                             <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
-                                <span>Altura TÍTULO</span><span id="val-global-y-top">0px</span>
+                                <span>Altura Título (Y)</span><span id="val-global-y-top">0px</span>
                             </label>
                             <input type="range" id="global-y-top" min="-500" max="500" value="0">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-amber-600 uppercase flex justify-between">
-                                <span>Altura SUBTÍTULO</span><span id="val-global-y-sub">0px</span>
+                                <span>Altura Subtítulo (Y)</span><span id="val-global-y-sub">0px</span>
                             </label>
                             <input type="range" id="global-y-sub" min="-500" max="500" value="0">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-emerald-600 uppercase flex justify-between">
-                                <span>Altura TEXTO ABAJO</span><span id="val-global-y-bot">0px</span>
+                                <span>Altura Texto Abajo (Y)</span><span id="val-global-y-bot">0px</span>
                             </label>
                             <input type="range" id="global-y-bot" min="-500" max="500" value="0">
                         </div>
                     </div>
                 </div>
 
-                <!-- Previsualización / Mockup en Vivo -->
                 <div class="w-full lg:w-1/2 flex flex-col">
-                    <h3 class="text-sm font-bold text-pink-700 border-b border-pink-200 pb-2 mb-3">👁️ Previsualización en Vivo</h3>
-                    
-                    <!-- Toggles para habilitar/deshabilitar textos en la vista previa -->
-                    <div class="flex flex-wrap gap-4 mb-3 justify-center text-[10px] font-bold uppercase text-slate-600 bg-white p-2 rounded-lg border border-slate-200">
-                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-blue-600 transition-colors">
-                            <input type="checkbox" id="mock-show-top" checked class="accent-blue-600 w-3.5 h-3.5"> Ver Título
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-amber-500 transition-colors">
-                            <input type="checkbox" id="mock-show-sub" checked class="accent-amber-500 w-3.5 h-3.5"> Ver Subtítulo
-                        </label>
-                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-emerald-600 transition-colors">
-                            <input type="checkbox" id="mock-show-bot" checked class="accent-emerald-600 w-3.5 h-3.5"> Ver Abajo
-                        </label>
-                    </div>
-
+                    <h3 class="text-sm font-bold text-pink-700 border-b border-pink-200 pb-2 mb-3">👁️ Previsualización Global</h3>
                     <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[250px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
-                        
                         <div id="mockup-placeholder" class="text-center">
                             <span class="text-4xl mb-2 block">📸</span>
-                            <span class="text-xs text-slate-500 font-bold">Subí fotos en el paso 1<br>para ver el borrador en vivo</span>
+                            <span class="text-xs text-slate-500 font-bold">Cargá imágenes para ver la previa</span>
                         </div>
-                        
                         <img id="global-mockup-img" class="hidden max-h-[300px] w-auto object-contain drop-shadow-md rounded" />
                     </div>
                 </div>
-
             </div>
 
-            <!-- SECCIÓN MAPEO EXCEL -->
+            <!-- Mapeo Excel -->
             <div id="mapping-section" class="hidden bg-pink-50/50 p-5 rounded-2xl border border-pink-100/50 mb-6">
                 <h3 class="text-sm font-bold text-pink-800 mb-4">Mapeo de Columnas (Excel)</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -178,106 +165,145 @@
                 </div>
             </div>
 
-            <!-- SECCIÓN CARGA MANUAL -->
+            <!-- Manual Inputs -->
             <div id="manual-input-section" class="hidden bg-indigo-50/50 p-4 md:p-5 rounded-2xl border border-indigo-100/50 mb-6 max-h-[60vh] ios-scroll">
                 <h3 class="text-sm font-bold text-indigo-800 mb-4 sticky top-0 bg-indigo-50/90 backdrop-blur pb-2 z-10">Textos Manuales por Foto</h3>
-                <div id="manual-text-list" class="space-y-4">
-                    <p class="text-xs text-slate-500 italic">Seleccioná las imágenes para poder cargarles el texto a cada una.</p>
-                </div>
+                <div id="manual-text-list" class="space-y-4"></div>
             </div>
 
-            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/30 transform transition-all duration-200 active:scale-95 hover:-translate-y-0.5 text-sm uppercase tracking-wide">
+            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/30 transform transition-all duration-200 active:scale-95 text-sm uppercase tracking-wide">
                 🎨 Procesar Lote Completo
             </button>
         </div>
 
+        <!-- Resultados -->
         <div id="results-section" class="hidden space-y-6">
-            
-            <!-- ALERTA DE ERRORES -->
             <div id="error-alerts" class="w-full"></div>
-
-            <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500">
-                <div class="mb-4 md:mb-0 w-full md:w-auto text-center md:text-left">
+            <div class="glass-panel p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500 gap-4">
+                <div>
                     <h3 class="text-lg font-bold text-slate-800" id="results-text">Borradores generados</h3>
-                    <p class="text-sm text-slate-500 font-medium mt-1" id="results-subtext">Revisá, editá individualmente y descargá.</p>
+                    <p class="text-sm text-slate-500 font-medium" id="results-subtext">Podés pintar con pincel, borrar o mover elementos en X e Y.</p>
                 </div>
-                <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform hover:-translate-y-0.5">
+                <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
                     Descargar ZIP Final
                 </button>
             </div>
-
             <div class="glass-panel rounded-3xl p-4 md:p-6">
-                <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-                    <!-- Cards de imágenes -->
-                </div>
+                <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6"></div>
             </div>
         </div>
     </main>
 
-    <!-- MODAL EDITOR INDIVIDUAL -->
+    <!-- MODAL EDITOR INDIVIDUAL CON PINCELES, BORRADOR Y MOVIMIENTO TOTAL X / Y -->
     <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-5xl h-[95vh] md:h-auto md:max-h-[90vh] flex flex-col md:flex-row overflow-hidden relative">
-            
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[96vh] flex flex-col md:flex-row overflow-hidden relative">
             <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/80 backdrop-blur w-8 h-8 flex items-center justify-center rounded-full text-red-500 font-bold shadow">&times;</button>
 
-            <div class="w-full md:w-1/2 bg-slate-100 flex items-center justify-center p-4 border-b md:border-b-0 md:border-r border-slate-200 h-[40vh] md:h-auto shrink-0" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
-                <img id="modal-preview-img" class="max-w-full max-h-full object-contain drop-shadow-md rounded bg-white" />
+            <!-- ZONA DE DIBUJO Y CANVAS INTERACTIVO -->
+            <div class="w-full md:w-1/2 bg-slate-100 flex flex-col items-center justify-between p-3 border-b md:border-b-0 md:border-r border-slate-200 h-[48vh] md:h-auto shrink-0 select-none">
+                
+                <!-- Barra de herramientas de pintura -->
+                <div class="w-full bg-white/90 backdrop-blur rounded-xl p-2 border border-slate-200 shadow-sm flex flex-wrap items-center justify-between gap-2 z-10">
+                    <div class="flex items-center gap-1.5">
+                        <button id="tool-draw" onclick="setDrawingTool('brush')" class="tool-btn active px-3 py-1.5 rounded-lg border text-xs font-bold transition-all">🖌️ Pincel</button>
+                        <button id="tool-erase" onclick="setDrawingTool('eraser')" class="tool-btn px-3 py-1.5 rounded-lg border text-xs font-bold transition-all">🧹 Borrador</button>
+                        <button onclick="clearPaintCanvas()" class="px-2.5 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 text-xs font-bold transition-all">🗑️ Limpiar</button>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input type="color" id="brush-color" value="#ff0000" class="w-7 h-7 rounded border border-slate-300">
+                        <label class="text-[10px] font-bold text-slate-500 flex items-center gap-1">
+                            Grosor:
+                            <input type="range" id="brush-size" min="2" max="60" value="12" class="w-16">
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Contenedor del Canvas Táctil -->
+                <div class="relative flex-grow flex items-center justify-center w-full overflow-hidden my-2 paint-canvas-container" id="paint-container">
+                    <canvas id="editor-canvas" class="max-w-full max-h-[38vh] md:max-h-[72vh] object-contain drop-shadow-md rounded bg-white"></canvas>
+                </div>
+
+                <span class="text-[11px] font-bold text-slate-400">💡 Dibujá o borrá directamente sobre el banner con el dedo o mouse</span>
             </div>
 
+            <!-- CONTROLES DE MOVIMIENTO TOTAL (X e Y) Y TEXTOS -->
             <div class="w-full md:w-1/2 p-4 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
-                <div class="hidden md:flex justify-between items-center mb-4 pb-2 border-b border-slate-200">
-                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste Individual</h2>
+                <div class="hidden md:flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste de Posición X/Y y Estilo</h2>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-red-500 font-bold text-2xl">&times;</button>
                 </div>
 
-                <div class="space-y-5 ios-scroll flex-grow pr-2 pb-6">
-                    <div class="bg-slate-50 p-4 rounded-xl border border-slate-200">
-                        <label class="text-[11px] font-bold text-slate-700 uppercase mb-2 block">Estilo de Fondo</label>
-                        <select id="edit-mode" class="custom-select mb-4">
-                            <option value="margin">Con Márgenes (Lienzo Blanco)</option>
-                            <option value="overlay">Superpuesto (Foto Original)</option>
-                        </select>
-
-                        <div class="flex justify-between gap-4">
-                            <div class="w-1/2">
-                                <label class="text-[11px] font-bold text-slate-700 uppercase mb-2 block">Color</label>
-                                <input type="color" id="edit-color" class="w-full h-[36px] rounded cursor-pointer border border-slate-300 bg-white p-1">
+                <div class="space-y-4 ios-scroll flex-grow pr-2 pb-6">
+                    
+                    <!-- Ajustes Base & Imagen -->
+                    <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-3">
+                        <div class="grid grid-cols-2 gap-3">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-700 uppercase mb-1 block">Estilo Fondo</label>
+                                <select id="edit-mode" class="custom-select text-xs">
+                                    <option value="margin">Con Márgenes (Lienzo)</option>
+                                    <option value="overlay">Superpuesto (Foto)</option>
+                                </select>
                             </div>
-                            <div class="w-1/2">
-                                <label class="text-[11px] font-bold text-slate-700 uppercase flex justify-between mb-2">
-                                    <span>Tamaño</span><span id="val-edit-scale" class="text-pink-600">100%</span>
-                                </label>
-                                <input type="range" id="edit-scale" min="10" max="300" value="100">
+                            <div>
+                                <label class="text-[10px] font-bold text-slate-700 uppercase mb-1 block">Color Textos</label>
+                                <input type="color" id="edit-color" class="w-full h-[32px] rounded border border-slate-300 bg-white p-1">
+                            </div>
+                        </div>
+
+                        <!-- Movimiento de la Imagen X e Y -->
+                        <div class="p-2.5 bg-purple-50/60 rounded-lg border border-purple-100">
+                            <span class="text-[10px] font-bold text-purple-700 uppercase block mb-1">🖼️ Mover Imagen Principal</span>
+                            <div class="grid grid-cols-2 gap-3 text-[9px] font-bold text-slate-500 uppercase">
+                                <div><span>Posición X</span><input type="range" id="edit-img-x" min="-400" max="400" value="0"></div>
+                                <div><span>Posición Y</span><input type="range" id="edit-img-y" min="-400" max="400" value="0"></div>
                             </div>
                         </div>
                     </div>
 
-                    <div class="space-y-4">
-                        <div>
-                            <label class="text-[11px] font-bold text-blue-600 uppercase mb-1 block">Título</label>
-                            <textarea id="edit-txt-top" class="custom-input mb-1 text-xs" rows="2" placeholder="Podés agregarlo acá aunque lo hayas ocultado antes..."></textarea>
-                            <label class="text-[9px] font-bold text-slate-400 flex justify-between uppercase"><span>↑ Subir</span><span>Bajar ↓</span></label>
-                            <input type="range" id="edit-y-top" min="-500" max="500" value="0">
+                    <!-- Título (X e Y) -->
+                    <div class="p-3 bg-blue-50/50 rounded-xl border border-blue-100 space-y-2">
+                        <label class="text-[10px] font-bold text-blue-700 uppercase block">Título ARRIBA</label>
+                        <textarea id="edit-txt-top" class="custom-input text-xs" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-3 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>Mover X</span><input type="range" id="edit-x-top" min="-500" max="500" value="0"></div>
+                            <div><span>Mover Y</span><input type="range" id="edit-y-top" min="-500" max="500" value="0"></div>
                         </div>
-                        <div>
-                            <label class="text-[11px] font-bold text-amber-600 uppercase mb-1 block">Subtítulo</label>
-                            <textarea id="edit-txt-sub" class="custom-input mb-1 text-xs" rows="2" placeholder="Ej: Agregá un subtítulo manual a esta foto..."></textarea>
-                            <label class="text-[9px] font-bold text-slate-400 flex justify-between uppercase"><span>↑ Subir</span><span>Bajar ↓</span></label>
-                            <input type="range" id="edit-y-sub" min="-500" max="500" value="0">
+                    </div>
+
+                    <!-- Subtítulo (X e Y) -->
+                    <div class="p-3 bg-amber-50/50 rounded-xl border border-amber-100 space-y-2">
+                        <label class="text-[10px] font-bold text-amber-700 uppercase block">Subtítulo ARRIBA</label>
+                        <textarea id="edit-txt-sub" class="custom-input text-xs" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-3 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>Mover X</span><input type="range" id="edit-x-sub" min="-500" max="500" value="0"></div>
+                            <div><span>Mover Y</span><input type="range" id="edit-y-sub" min="-500" max="500" value="0"></div>
                         </div>
-                        <div>
-                            <label class="text-[11px] font-bold text-emerald-600 uppercase mb-1 block">Texto Abajo</label>
-                            <textarea id="edit-txt-bot" class="custom-input mb-1 text-xs" rows="2" placeholder="Ej: Precio, código..."></textarea>
-                            <label class="text-[9px] font-bold text-slate-400 flex justify-between uppercase"><span>↑ Subir</span><span>Bajar ↓</span></label>
-                            <input type="range" id="edit-y-bot" min="-500" max="500" value="0">
+                    </div>
+
+                    <!-- Texto Abajo (X e Y) -->
+                    <div class="p-3 bg-emerald-50/50 rounded-xl border border-emerald-100 space-y-2">
+                        <label class="text-[10px] font-bold text-emerald-700 uppercase block">Texto ABAJO</label>
+                        <textarea id="edit-txt-bot" class="custom-input text-xs" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-3 text-[9px] font-bold text-slate-500 uppercase">
+                            <div><span>Mover X</span><input type="range" id="edit-x-bot" min="-500" max="500" value="0"></div>
+                            <div><span>Mover Y</span><input type="range" id="edit-y-bot" min="-500" max="500" value="0"></div>
                         </div>
+                    </div>
+
+                    <div>
+                        <label class="text-[10px] font-bold text-slate-700 uppercase flex justify-between mb-1">
+                            <span>Escala de Letra</span><span id="val-edit-scale" class="text-pink-600">100%</span>
+                        </label>
+                        <input type="range" id="edit-scale" min="10" max="300" value="100">
                     </div>
                 </div>
 
-                <div class="mt-4 pt-3 border-t border-slate-200 shrink-0 bg-white">
+                <div class="mt-3 pt-3 border-t border-slate-200 shrink-0 bg-white">
                     <button onclick="saveModalChanges()" class="w-full bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition-colors text-sm">
-                        ✅ Aplicar Cambios
+                        ✅ Guardar y Aplicar Cambios
                     </button>
                 </div>
             </div>
@@ -291,62 +317,62 @@
         let activeEditIndex = -1; 
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-        // --- SISTEMA DE MOCKUP EN VIVO ---
         let globalMockupImgObj = null;
 
+        // Variables de Dibujo / Pincel / Borrador
+        let isDrawing = false;
+        let currentDrawingTool = 'brush'; // 'brush' o 'eraser'
+        let drawingCanvas = document.createElement('canvas'); // Capa donde se guardan los trazos
+        let drawingCtx = drawingCanvas.getContext('2d');
+
         const updateVal = (id, suffix) => {
-            document.getElementById(id).addEventListener('input', (e) => {
+            const el = document.getElementById(id);
+            const fn = (e) => {
                 document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
-            });
+                updateGlobalPreview();
+            };
+            el.addEventListener('input', fn);
+            el.addEventListener('touchmove', fn, { passive: true });
         };
         updateVal('global-scale', '%');
+        updateVal('global-img-y', 'px');
         updateVal('global-y-top', 'px');
         updateVal('global-y-sub', 'px');
         updateVal('global-y-bot', 'px');
         updateVal('edit-scale', '%');
 
-        // Actualizar Mockup
         function updateGlobalPreview() {
             if (!globalMockupImgObj) return;
 
             const mode = document.getElementById('global-mode').value;
             const color = document.getElementById('global-color').value;
             const scale = parseInt(document.getElementById('global-scale').value);
+            const imgY = parseInt(document.getElementById('global-img-y').value);
             const yTop = parseInt(document.getElementById('global-y-top').value);
             const ySub = parseInt(document.getElementById('global-y-sub').value);
             const yBot = parseInt(document.getElementById('global-y-bot').value);
-
-            // Leer Toggles de Visibilidad
-            const showTop = document.getElementById('mock-show-top').checked;
-            const showSub = document.getElementById('mock-show-sub').checked;
-            const showBot = document.getElementById('mock-show-bot').checked;
 
             const mockupConfig = {
                 imgObj: globalMockupImgObj,
                 mode: mode,
                 textColor: color,
                 textScale: scale,
-                top: showTop ? "TÍTULO DE PRODUCTO\nSEGUNDO RENGLÓN" : "",
-                sub: showSub ? "Subtítulo descriptivo" : "",
-                bot: showBot ? "COD: PRUEBA-001\nPRECIO: $99.999" : "",
-                yTop: yTop,
-                ySub: ySub,
-                yBot: yBot
+                top: "TÍTULO DE PRODUCTO\nSEGUNDO RENGLÓN",
+                sub: "Subtítulo descriptivo",
+                bot: "COD: PRUEBA-001\nPRECIO: \$99.999",
+                imgX: 0, imgY: imgY,
+                xTop: 0, yTop: yTop,
+                xSub: 0, ySub: ySub,
+                xBot: 0, yBot: yBot
             };
 
             const dataUrl = renderCanvasDataUrl(mockupConfig);
             document.getElementById('global-mockup-img').src = dataUrl;
         }
 
-        // Listeners para todo lo que afecta al mockup
-        ['global-mode', 'global-color', 'global-scale', 'global-y-top', 'global-y-sub', 'global-y-bot', 'mock-show-top', 'mock-show-sub', 'mock-show-bot'].forEach(id => {
+        ['global-mode', 'global-color'].forEach(id => {
             document.getElementById(id).addEventListener('input', updateGlobalPreview);
-            // Para checkboxes, capturar también el evento change
-            if (document.getElementById(id).type === 'checkbox') {
-                document.getElementById(id).addEventListener('change', updateGlobalPreview);
-            }
         });
-        // ---------------------------------
 
         const modeRadios = document.getElementsByName('input-mode');
         const excelInputContainer = document.getElementById('excel-input-container');
@@ -435,11 +461,9 @@
             if (!text) return [];
             let lines = [];
             let explicitLines = text.split('\n');
-            
             explicitLines.forEach(explicitLine => {
                 let words = explicitLine.split(" ");
                 if(words.length === 0) return;
-                
                 let currentLine = words[0];
                 for (let i = 1; i < words.length; i++) {
                     let word = words[i];
@@ -458,30 +482,41 @@
         function loadImgObj(file) {
             return new Promise((resolve, reject) => {
                 const img = new Image();
+                img.crossOrigin = "anonymous";
                 img.onload = () => resolve(img);
                 img.onerror = () => reject(new Error("Error leyendo imagen"));
                 img.src = URL.createObjectURL(file);
             });
         }
 
-        // RENDERIZADO CORE
-        function renderCanvasDataUrl(config) {
+        // RENDERIZADO CON MOVIMIENTO TOTAL (X e Y) Y CAPA DE DIBUJO
+        function renderCanvasDataUrl(config, includeDrawings = true) {
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = config.imgObj;
-            
             const scaleFactor = (config.textScale || 100) / 100;
+
+            let sizeW = img.width;
+            let sizeH = img.height;
 
             if (config.mode === 'margin') {
                 const maxDim = Math.max(img.width, img.height);
                 const margin = Math.max(maxDim * 0.22, 120); 
                 const size = maxDim + (margin * 2);
                 canvas.width = size; canvas.height = size;
+                sizeW = size; sizeH = size;
 
-                ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
-                ctx.drawImage(img, (size - img.width) / 2, (size - img.height) / 2, img.width, img.height);
+                ctx.fillStyle = '#ffffff'; 
+                ctx.fillRect(0, 0, size, size);
 
-                ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                // Dibujar imagen con offset X e Y
+                const imgX = ((size - img.width) / 2) + (config.imgX || 0);
+                const imgY = ((size - img.height) / 2) + (config.imgY || 0);
+                ctx.drawImage(img, imgX, imgY, img.width, img.height);
+
+                ctx.fillStyle = config.textColor; 
+                ctx.textAlign = 'center'; 
+                ctx.textBaseline = 'middle';
 
                 let fontTop = (margin * 0.35) * scaleFactor;
                 let fontSub = fontTop * 0.7;
@@ -495,17 +530,22 @@
 
                 let blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
                 if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
-
                 let y = ((margin - blockH) / 2) + 30; 
                 
                 if (tLines.length > 0) {
                     ctx.font = `normal ${fontTop}px ${fontFamily}`;
-                    tLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhTop/2) + config.yTop); y += lhTop; });
+                    tLines.forEach(l => { 
+                        ctx.fillText(l, (size / 2) + (config.xTop || 0), y + (lhTop/2) + (config.yTop || 0)); 
+                        y += lhTop; 
+                    });
                     if (sLines.length > 0) y += (fontTop * 0.2);
                 }
                 if (sLines.length > 0) {
                     ctx.font = `normal ${fontSub}px ${fontFamily}`;
-                    sLines.forEach(l => { ctx.fillText(l, size / 2, y + (lhSub/2) + config.ySub); y += lhSub; });
+                    sLines.forEach(l => { 
+                        ctx.fillText(l, (size / 2) + (config.xSub || 0), y + (lhSub/2) + (config.ySub || 0)); 
+                        y += lhSub; 
+                    });
                 }
 
                 if (config.bot) {
@@ -514,15 +554,20 @@
                     let bLines = getLines(ctx, config.bot, size * 0.85);
                     let lhBot = fontBot * 1.2;
                     let botH = bLines.length * lhBot;
-                    
-                    let botY = size - (margin / 2) - (botH / 2) + (lhBot/2) + config.yBot;
-                    bLines.forEach(l => { ctx.fillText(l, size / 2, botY); botY += lhBot; });
+                    let botY = size - (margin / 2) - (botH / 2) + (lhBot/2) + (config.yBot || 0);
+                    bLines.forEach(l => { 
+                        ctx.fillText(l, (size / 2) + (config.xBot || 0), botY); 
+                        botY += lhBot; 
+                    });
                 }
 
             } else {
                 canvas.width = img.width; canvas.height = img.height;
-                ctx.drawImage(img, 0, 0, img.width, img.height);
-                ctx.fillStyle = config.textColor; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.drawImage(img, (config.imgX || 0), (config.imgY || 0), img.width, img.height);
+
+                ctx.fillStyle = config.textColor; 
+                ctx.textAlign = 'center'; 
+                ctx.textBaseline = 'middle';
 
                 let fontTop = (img.height * 0.08) * scaleFactor;
                 let fontSub = fontTop * 0.7;
@@ -538,12 +583,18 @@
                 
                 if (tLines.length > 0) {
                     ctx.font = `normal ${fontTop}px ${fontFamily}`;
-                    tLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.yTop); y += lhTop; });
+                    tLines.forEach(l => { 
+                        ctx.fillText(l, (img.width / 2) + (config.xTop || 0), y + (config.yTop || 0)); 
+                        y += lhTop; 
+                    });
                     if (sLines.length > 0) y += (fontTop * 0.2);
                 }
                 if (sLines.length > 0) {
                     ctx.font = `normal ${fontSub}px ${fontFamily}`;
-                    sLines.forEach(l => { ctx.fillText(l, img.width / 2, y + config.ySub); y += lhSub; });
+                    sLines.forEach(l => { 
+                        ctx.fillText(l, (img.width / 2) + (config.xSub || 0), y + (config.ySub || 0)); 
+                        y += lhSub; 
+                    });
                 }
 
                 if (config.bot) {
@@ -552,11 +603,21 @@
                     let bLines = getLines(ctx, config.bot, img.width * 0.9);
                     let lhBot = fontBot * 1.2;
                     let botH = bLines.length * lhBot;
-
-                    let botY = (img.height * 0.92) - (botH / 2) + config.yBot;
-                    bLines.forEach(l => { ctx.fillText(l, img.width / 2, botY); botY += lhBot; });
+                    let botY = (img.height * 0.92) - (botH / 2) + (config.yBot || 0);
+                    bLines.forEach(l => { 
+                        ctx.fillText(l, (img.width / 2) + (config.xBot || 0), botY); 
+                        botY += lhBot; 
+                    });
                 }
             }
+
+            // Superponer capa de pintura dibujada encima
+            if (includeDrawings && config.drawingDataUrl) {
+                const drawImg = new Image();
+                drawImg.src = config.drawingDataUrl;
+                ctx.drawImage(drawImg, 0, 0, sizeW, sizeH);
+            }
+
             return canvas.toDataURL('image/jpeg', 0.95);
         }
 
@@ -567,7 +628,7 @@
             const globalMode = document.getElementById('global-mode').value;
             const globalColor = document.getElementById('global-color').value;
             const globalScale = parseInt(document.getElementById('global-scale').value);
-            
+            const gImgY = parseInt(document.getElementById('global-img-y').value);
             const gYTop = parseInt(document.getElementById('global-y-top').value);
             const gYSub = parseInt(document.getElementById('global-y-sub').value);
             const gYBot = parseInt(document.getElementById('global-y-bot').value);
@@ -584,7 +645,7 @@
                 const colSub = document.getElementById('col-texto-sub').value;
                 const colBot = document.getElementById('col-texto-abajo').value;
 
-                if (!colCod) { alert("Seleccioná la columna del código para vincular las fotos."); return; }
+                if (!colCod) { alert("Seleccioná la columna del código."); return; }
 
                 excelData.forEach(row => {
                     let cod = String(row[colCod]||"").trim().toUpperCase();
@@ -636,7 +697,11 @@
                         top: txtTop, sub: txtSub, bot: txtBot,
                         mode: globalMode, textColor: globalColor,
                         textScale: globalScale, 
-                        yTop: gYTop, ySub: gYSub, yBot: gYBot
+                        imgX: 0, imgY: gImgY,
+                        xTop: 0, yTop: gYTop,
+                        xSub: 0, ySub: gYSub,
+                        xBot: 0, yBot: gYBot,
+                        drawingDataUrl: null
                     };
                     
                     config.dataUrl = renderCanvasDataUrl(config);
@@ -646,28 +711,9 @@
                 }
             }
 
-            // Reporte de Errores e Ignorados
-            let errorHtml = '';
-            if (unmatchedFiles.length > 0) {
-                errorHtml += `
-                    <div class="bg-amber-50 border-l-4 border-amber-500 p-4 mb-4 rounded-r-xl shadow-sm">
-                        <p class="text-sm text-amber-800 font-bold flex items-center gap-2">⚠️ ${unmatchedFiles.length} Fotos sin código en el Excel (Omitidas):</p>
-                        <p class="text-xs text-amber-700 mt-1 max-h-20 overflow-y-auto ios-scroll">${unmatchedFiles.join(', ')}</p>
-                    </div>`;
-            }
-            if (errorFiles.length > 0) {
-                errorHtml += `
-                    <div class="bg-red-50 border-l-4 border-red-500 p-4 mb-4 rounded-r-xl shadow-sm">
-                        <p class="text-sm text-red-800 font-bold flex items-center gap-2">❌ Error procesando ${errorFiles.length} fotos:</p>
-                        <p class="text-xs text-red-700 mt-1">${errorFiles.join(', ')}</p>
-                    </div>`;
-            }
-            document.getElementById('error-alerts').innerHTML = errorHtml;
-
             renderGrid();
         });
 
-        // DESCARGA INDIVIDUAL DE IMAGEN
         window.downloadSingle = function(index) {
             const item = imagesData[index];
             const link = document.createElement('a');
@@ -683,7 +729,7 @@
             grid.innerHTML = '';
             
             if(imagesData.length === 0) {
-                grid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold py-4">No se generó ninguna imagen (Revisá códigos o errores).</p>';
+                grid.innerHTML = '<p class="col-span-full text-center text-red-500 font-bold py-4">No se generó ninguna imagen.</p>';
                 document.getElementById('results-subtext').textContent = `0 imágenes generadas.`;
                 return;
             }
@@ -697,19 +743,31 @@
                         <div class="p-3 bg-white flex flex-col gap-2 border-t border-slate-100">
                             <p class="text-[11px] font-bold text-slate-700 truncate" title="${item.name}">${item.name}</p>
                             <div class="flex gap-2 w-full">
-                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-100 text-pink-600 hover:bg-pink-200 py-2 rounded-lg transition-colors text-center active:scale-95 shadow-sm">✏️ Editar</button>
+                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-100 text-pink-600 hover:bg-pink-200 py-2 rounded-lg transition-colors text-center active:scale-95 shadow-sm">✏️ Editar / Pintar</button>
                                 <button onclick="downloadSingle(${index})" class="flex-1 text-[11px] font-bold bg-emerald-100 text-emerald-600 hover:bg-emerald-200 py-2 rounded-lg transition-colors text-center active:scale-95 shadow-sm">⬇️ Bajar</button>
                             </div>
                         </div>
                     </div>
                 `;
             });
-            document.getElementById('results-subtext').textContent = `Se armaron ${imagesData.length} imágenes. Editá o descargá.`;
+            document.getElementById('results-subtext').textContent = `Se armaron ${imagesData.length} imágenes.`;
         }
 
-        // LÓGICA DEL EDITOR MODAL
+        // LÓGICA DEL EDITOR MODAL Y PINTURA TÁCTIL
         const modal = document.getElementById('editor-modal');
-        const previewImg = document.getElementById('modal-preview-img');
+        const editorCanvas = document.getElementById('editor-canvas');
+        const editorCtx = editorCanvas.getContext('2d');
+
+        window.setDrawingTool = function(tool) {
+            currentDrawingTool = tool;
+            document.getElementById('tool-draw').classList.toggle('active', tool === 'brush');
+            document.getElementById('tool-erase').classList.toggle('active', tool === 'eraser');
+        };
+
+        window.clearPaintCanvas = function() {
+            drawingCtx.clearRect(0, 0, drawingCanvas.width, drawingCanvas.height);
+            redrawEditorCanvas();
+        };
 
         window.openEditor = function(index) {
             activeEditIndex = index;
@@ -720,43 +778,158 @@
             document.getElementById('edit-scale').value = config.textScale;
             document.getElementById('val-edit-scale').textContent = config.textScale + '%';
 
-            document.getElementById('edit-txt-top').value = config.top;
-            document.getElementById('edit-txt-sub').value = config.sub;
-            document.getElementById('edit-txt-bot').value = config.bot;
-            
-            document.getElementById('edit-y-top').value = config.yTop;
-            document.getElementById('edit-y-sub').value = config.ySub;
-            document.getElementById('edit-y-bot').value = config.yBot;
+            document.getElementById('edit-img-x').value = config.imgX || 0;
+            document.getElementById('edit-img-y').value = config.imgY || 0;
 
-            updateModalPreview();
+            document.getElementById('edit-txt-top').value = config.top;
+            document.getElementById('edit-x-top').value = config.xTop || 0;
+            document.getElementById('edit-y-top').value = config.yTop || 0;
+
+            document.getElementById('edit-txt-sub').value = config.sub;
+            document.getElementById('edit-x-sub').value = config.xSub || 0;
+            document.getElementById('edit-y-sub').value = config.ySub || 0;
+
+            document.getElementById('edit-txt-bot').value = config.bot;
+            document.getElementById('edit-x-bot').value = config.xBot || 0;
+            document.getElementById('edit-y-bot').value = config.yBot || 0;
+
+            // Inicializar capa de dibujo
+            let size = config.mode === 'margin' ? Math.max(config.imgObj.width, config.imgObj.height) + (Math.max(Math.max(config.imgObj.width, config.imgObj.height) * 0.22, 120) * 2) : config.imgObj.width;
+            let sizeH = config.mode === 'margin' ? size : config.imgObj.height;
+
+            drawingCanvas.width = size;
+            drawingCanvas.height = sizeH;
+            drawingCtx.clearRect(0, 0, size, sizeH);
+
+            if (config.drawingDataUrl) {
+                const imgOld = new Image();
+                imgOld.onload = () => {
+                    drawingCtx.drawImage(imgOld, 0, 0);
+                    redrawEditorCanvas();
+                };
+                imgOld.src = config.drawingDataUrl;
+            }
+
             modal.classList.remove('hidden');
-            document.body.style.overflow = 'hidden'; // Bloquea scroll fondo iOS
+            document.body.style.overflow = 'hidden';
+            setTimeout(redrawEditorCanvas, 50);
         };
 
         window.closeModal = function() { 
             modal.classList.add('hidden'); 
-            document.body.style.overflow = 'auto'; // Restaura scroll
+            document.body.style.overflow = 'auto'; 
         };
 
-        function updateModalPreview() {
-            if(activeEditIndex === -1) return;
-            const tempConfig = {
+        function getTempConfig() {
+            if(activeEditIndex === -1) return null;
+            return {
                 ...imagesData[activeEditIndex],
                 mode: document.getElementById('edit-mode').value,
                 textColor: document.getElementById('edit-color').value,
                 textScale: parseInt(document.getElementById('edit-scale').value),
+                imgX: parseInt(document.getElementById('edit-img-x').value),
+                imgY: parseInt(document.getElementById('edit-img-y').value),
                 top: document.getElementById('edit-txt-top').value,
-                sub: document.getElementById('edit-txt-sub').value,
-                bot: document.getElementById('edit-txt-bot').value,
+                xTop: parseInt(document.getElementById('edit-x-top').value),
                 yTop: parseInt(document.getElementById('edit-y-top').value),
+                sub: document.getElementById('edit-txt-sub').value,
+                xSub: parseInt(document.getElementById('edit-x-sub').value),
                 ySub: parseInt(document.getElementById('edit-y-sub').value),
-                yBot: parseInt(document.getElementById('edit-y-bot').value),
+                bot: document.getElementById('edit-txt-bot').value,
+                xBot: parseInt(document.getElementById('edit-x-bot').value),
+                yBot: parseInt(document.getElementById('edit-y-bot').value)
             };
-            previewImg.src = renderCanvasDataUrl(tempConfig);
         }
 
-        ['edit-mode', 'edit-color', 'edit-scale', 'edit-txt-top', 'edit-txt-sub', 'edit-txt-bot', 'edit-y-top', 'edit-y-sub', 'edit-y-bot'].forEach(id => {
-            document.getElementById(id).addEventListener('input', updateModalPreview);
+        function redrawEditorCanvas() {
+            const config = getTempConfig();
+            if(!config) return;
+
+            const baseDataUrl = renderCanvasDataUrl(config, false);
+            const baseImg = new Image();
+            baseImg.onload = () => {
+                editorCanvas.width = baseImg.width;
+                editorCanvas.height = baseImg.height;
+                editorCtx.clearRect(0, 0, editorCanvas.width, editorCanvas.height);
+                editorCtx.drawImage(baseImg, 0, 0);
+
+                // Dibujar encima los trazos de pintura
+                editorCtx.drawImage(drawingCanvas, 0, 0, editorCanvas.width, editorCanvas.height);
+            };
+            baseImg.src = baseDataUrl;
+        }
+
+        // Eventos táctiles y de mouse para pintar/borrar directamente en el canvas
+        function getCanvasCoordinates(e) {
+            const rect = editorCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const scaleX = drawingCanvas.width / rect.width;
+            const scaleY = drawingCanvas.height / rect.height;
+            return {
+                x: (clientX - rect.left) * scaleX,
+                y: (clientY - rect.top) * scaleY
+            };
+        }
+
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            const pos = getCanvasCoordinates(e);
+            drawingCtx.beginPath();
+            drawingCtx.moveTo(pos.x, pos.y);
+            draw(e);
+        }
+
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            const pos = getCanvasCoordinates(e);
+            const brushColor = document.getElementById('brush-color').value;
+            const brushSize = parseInt(document.getElementById('brush-size').value);
+
+            drawingCtx.lineWidth = brushSize;
+            drawingCtx.lineCap = 'round';
+            drawingCtx.lineJoin = 'round';
+
+            if (currentDrawingTool === 'eraser') {
+                drawingCtx.globalCompositeOperation = 'destination-out';
+            } else {
+                drawingCtx.globalCompositeOperation = 'source-over';
+                drawingCtx.strokeStyle = brushColor;
+            }
+
+            drawingCtx.lineTo(pos.x, pos.y);
+            drawingCtx.stroke();
+
+            // Refrescar canvas en pantalla
+            redrawEditorCanvas();
+        }
+
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            isDrawing = false;
+            drawingCtx.closePath();
+            drawingCtx.globalCompositeOperation = 'source-over';
+        }
+
+        // Listeners táctiles (iPad / Tablet) y de Mouse
+        editorCanvas.addEventListener('mousedown', startDrawing);
+        editorCanvas.addEventListener('mousemove', draw);
+        window.addEventListener('mouseup', stopDrawing);
+
+        editorCanvas.addEventListener('touchstart', startDrawing, { passive: false });
+        editorCanvas.addEventListener('touchmove', draw, { passive: false });
+        window.addEventListener('touchend', stopDrawing);
+
+        // Listeners para sliders del modal
+        ['edit-mode', 'edit-color', 'edit-scale', 'edit-img-x', 'edit-img-y', 
+         'edit-txt-top', 'edit-x-top', 'edit-y-top', 
+         'edit-txt-sub', 'edit-x-sub', 'edit-y-sub', 
+         'edit-txt-bot', 'edit-x-bot', 'edit-y-bot'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', redrawEditorCanvas);
+            el.addEventListener('touchmove', redrawEditorCanvas, { passive: true });
         });
 
         window.saveModalChanges = function() {
@@ -766,16 +939,26 @@
             config.mode = document.getElementById('edit-mode').value;
             config.textColor = document.getElementById('edit-color').value;
             config.textScale = parseInt(document.getElementById('edit-scale').value);
+            config.imgX = parseInt(document.getElementById('edit-img-x').value);
+            config.imgY = parseInt(document.getElementById('edit-img-y').value);
+
             config.top = document.getElementById('edit-txt-top').value;
-            config.sub = document.getElementById('edit-txt-sub').value;
-            config.bot = document.getElementById('edit-txt-bot').value;
+            config.xTop = parseInt(document.getElementById('edit-x-top').value);
             config.yTop = parseInt(document.getElementById('edit-y-top').value);
+
+            config.sub = document.getElementById('edit-txt-sub').value;
+            config.xSub = parseInt(document.getElementById('edit-x-sub').value);
             config.ySub = parseInt(document.getElementById('edit-y-sub').value);
+
+            config.bot = document.getElementById('edit-txt-bot').value;
+            config.xBot = parseInt(document.getElementById('edit-x-bot').value);
             config.yBot = parseInt(document.getElementById('edit-y-bot').value);
-            
-            config.dataUrl = renderCanvasDataUrl(config);
+
+            // Guardar la capa de pintura realizada
+            config.drawingDataUrl = drawingCanvas.toDataURL('image/png');
+            config.dataUrl = renderCanvasDataUrl(config, true);
+
             document.getElementById(`grid-img-${activeEditIndex}`).src = config.dataUrl;
-            
             closeModal();
         };
 
@@ -794,7 +977,10 @@
             const link = document.createElement('a');
             link.href = URL.createObjectURL(content);
             link.download = "XFish_Banners_Finales.zip";
+            document.body.appendChild(link);
             link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
         });
     </script>
 </body>
