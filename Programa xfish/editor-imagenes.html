@@ -3,26 +3,29 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Estampador Dinámico de Banners & Editor por Capas | X-Fish</title>
+    <title>Estampador Dinámico de Banners | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
     <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #0f172a; -webkit-tap-highlight-color: transparent; }
-        .glass-panel { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4); }
-        .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #334155; border-radius: 8px; font-size: 13px; background-color: #1e293b; outline: none; transition: all 0.2s; font-weight: 600; color: #f8fafc; }
-        .custom-select:focus, .custom-input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.3); background-color: #0f172a; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; -webkit-tap-highlight-color: transparent; }
+        .glass-panel { background: rgba(255, 255, 255, 0.78); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.9); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
+        .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } 100% { transform: translateY(0px) scale(1); } }
+        
+        .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 8px; font-size: 13px; background-color: rgba(255, 255, 255, 0.85); outline: none; transition: all 0.2s; font-weight: 600; color: #334155; }
+        .custom-select:focus, .custom-input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.2); background-color: #fff; }
         
         ::-webkit-scrollbar { width: 6px; height: 6px; }
-        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
         
-        .modal-overlay { background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(12px); z-index: 100; }
+        .modal-overlay { background: rgba(15, 23, 42, 0.82); backdrop-filter: blur(6px); z-index: 100; }
         .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
         
-        input[type=range] { width: 100%; accent-color: #ec4899; touch-action: none; cursor: pointer; height: 6px; border-radius: 3px; background: #334155; }
-        input[type=color] { border: none; border-radius: 6px; padding: 0; cursor: pointer; background: transparent; }
+        input[type=range] { width: 100%; accent-color: #ec4899; touch-action: none; cursor: pointer; height: 6px; border-radius: 3px; }
+        input[type=color] { border: none; border-radius: 4px; padding: 0; cursor: pointer; }
         textarea.custom-input { resize: vertical; min-height: 48px; }
 
         .tool-btn.active {
@@ -45,8 +48,8 @@
             width: 100vw !important;
             height: 100vh !important;
             z-index: 999999 !important;
-            background: #020617 !important;
-            padding: 0 !important;
+            background: #f8fafc !important;
+            padding: 8px !important;
             margin: 0 !important;
             border-radius: 0 !important;
             display: flex !important;
@@ -54,71 +57,167 @@
             justify-content: space-between !important;
         }
         .fullscreen-active #main-editor-canvas {
-            max-height: 85vh !important;
-            max-width: 95vw !important;
+            max-height: 86vh !important;
+            max-width: 96vw !important;
         }
     </style>
 </head>
-<body class="relative min-h-screen text-slate-100 selection:bg-pink-500 selection:text-white pb-10">
+<body class="relative min-h-screen text-slate-800 selection:bg-pink-500 selection:text-white pb-10">
+
+    <div class="blob bg-pink-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
+    <div class="blob bg-indigo-200 w-[400px] h-[400px] bottom-[100px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
+    <div class="blob bg-purple-200 w-[300px] h-[300px] top-[40%] left-[50%] opacity-40" style="animation-delay: -4s;"></div>
 
     <header class="glass-panel sticky top-0 z-50 px-4 md:px-8 py-3 md:py-4 mb-6">
         <div class="max-w-7xl mx-auto flex items-center justify-between">
-            <h1 class="text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2 md:gap-3">
+            <h1 class="text-lg md:text-2xl font-extrabold text-slate-800 tracking-tight flex items-center gap-2 md:gap-3">
                 <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                 </div>
-                <span>Estampador Pro & Editor por Capas</span>
+                <span>Estampador Dinámico & Editor por Capas</span>
             </h1>
-            <a href="index.html" class="text-xs md:text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors">← Volver</a>
+            <a href="index.html" class="text-xs md:text-sm font-semibold text-pink-600 hover:text-pink-800 transition-colors">← Volver</a>
         </div>
     </header>
 
     <main class="max-w-7xl mx-auto w-full px-3 md:px-6 space-y-6 relative z-10">
         
-        <!-- SECCIÓN 1: CARGA DE ARCHIVOS -->
+        <!-- SECCIÓN 1: CARGAR DATOS E IMÁGENES -->
         <div class="glass-panel rounded-3xl p-5 md:p-8">
-            <h2 class="text-base md:text-lg font-bold text-slate-200 mb-4 border-b border-slate-700 pb-3">1. Cargar Archivos</h2>
+            <h2 class="text-base md:text-lg font-bold text-slate-700 mb-4 border-b border-slate-200/60 pb-3">1. Cargar Datos e Imágenes</h2>
             
-            <div class="mb-5 flex flex-col sm:flex-row gap-3 sm:gap-6 border-b border-slate-700/60 pb-4 text-xs md:text-sm">
-                <label class="flex items-center gap-2 font-bold text-slate-300 cursor-pointer hover:text-pink-400 p-2 rounded-lg hover:bg-slate-800">
+            <div class="mb-5 flex flex-col sm:flex-row gap-3 sm:gap-6 border-b border-slate-100 pb-4 text-xs md:text-sm">
+                <label class="flex items-center gap-2 font-bold text-slate-700 cursor-pointer hover:text-pink-600 p-2 rounded-lg hover:bg-white/50">
                     <input type="radio" name="input-mode" value="excel" checked class="accent-pink-600 w-4 h-4">
-                    Modo Excel (Lote Automático)
+                    Usar Excel (Automático)
                 </label>
-                <label class="flex items-center gap-2 font-bold text-slate-300 cursor-pointer hover:text-pink-400 p-2 rounded-lg hover:bg-slate-800">
+                <label class="flex items-center gap-2 font-bold text-slate-700 cursor-pointer hover:text-pink-600 p-2 rounded-lg hover:bg-white/50">
                     <input type="radio" name="input-mode" value="manual" class="accent-pink-600 w-4 h-4">
-                    Modo Manual (Foto por foto)
+                    Carga Manual (Foto por foto)
                 </label>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
-                <div id="excel-input-container" class="bg-slate-800/80 border border-slate-700 p-4 md:p-5 rounded-2xl">
-                    <label class="block text-xs md:text-sm font-bold text-slate-200 mb-2">📊 Archivo Excel (.xlsx, .csv)</label>
-                    <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-600 file:text-white hover:file:bg-pink-500 cursor-pointer"/>
+                <div id="excel-input-container" class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-pink-400 to-rose-400 rounded-2xl blur opacity-20"></div>
+                    <div class="relative bg-white/60 border border-white/80 p-4 md:p-5 rounded-2xl backdrop-blur-sm">
+                        <label class="block text-xs md:text-sm font-bold text-slate-700 mb-1">📊 Excel con Textos</label>
+                        <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-100 file:text-pink-700 hover:file:bg-pink-200 cursor-pointer transition-colors"/>
+                    </div>
                 </div>
 
-                <div class="bg-slate-800/80 border border-slate-700 p-4 md:p-5 rounded-2xl">
-                    <label class="block text-xs md:text-sm font-bold text-slate-200 mb-2">📸 Carpeta de Imágenes</label>
-                    <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"/>
+                <div class="relative group">
+                    <div class="absolute -inset-0.5 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-2xl blur opacity-20"></div>
+                    <div class="relative bg-white/60 border border-white/80 p-4 md:p-5 rounded-2xl backdrop-blur-sm">
+                        <label class="block text-xs md:text-sm font-bold text-slate-700 mb-1">📸 Carpeta de Imágenes</label>
+                        <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-xs text-slate-600 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer transition-colors"/>
+                    </div>
+                </div>
+            </div>
+
+            <!-- AJUSTES GLOBALES Y MOCKUP EN VIVO -->
+            <div class="mb-6 bg-slate-50/80 p-4 md:p-5 rounded-xl border border-slate-200 shadow-inner flex flex-col lg:flex-row gap-6">
+                <div class="w-full lg:w-1/2 space-y-4">
+                    <h3 class="text-sm font-bold text-slate-700 border-b border-slate-200 pb-2">⚙️ Ajustes Globales (Aplica a todas)</h3>
+                    
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Modo Base</label>
+                            <select id="global-mode" class="custom-select w-full">
+                                <option value="margin">🖼️ Lienzo c/ Márgenes</option>
+                                <option value="overlay">📸 Texto Superpuesto</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 mb-1 block uppercase">Color General</label>
+                            <input type="color" id="global-color" value="#000000" class="w-full h-[36px] rounded border border-slate-300 bg-white p-1">
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                                <span>Tamaño Texto</span><span id="val-global-scale" class="text-pink-600 font-bold">100%</span>
+                            </label>
+                            <input type="range" id="global-scale" min="10" max="300" value="100">
+                        </div>
+                        <div>
+                            <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
+                                <span>Posición Foto (Y)</span><span id="val-global-img-y" class="text-pink-600 font-bold">0px</span>
+                            </label>
+                            <input type="range" id="global-img-y" min="-400" max="400" value="0">
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-2 border-t border-slate-200">
+                        <div>
+                            <label class="text-[10px] font-bold text-blue-600 uppercase flex justify-between">
+                                <span>Altura TÍTULO</span><span id="val-global-y-top">0px</span>
+                            </label>
+                            <input type="range" id="global-y-top" min="-500" max="500" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-amber-600 uppercase flex justify-between">
+                                <span>Altura SUBTÍTULO</span><span id="val-global-y-sub">0px</span>
+                            </label>
+                            <input type="range" id="global-y-sub" min="-500" max="500" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-emerald-600 uppercase flex justify-between">
+                                <span>Altura TEXTO ABAJO</span><span id="val-global-y-bot">0px</span>
+                            </label>
+                            <input type="range" id="global-y-bot" min="-500" max="500" value="0">
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Previsualización en Vivo con Toggles -->
+                <div class="w-full lg:w-1/2 flex flex-col">
+                    <h3 class="text-sm font-bold text-pink-700 border-b border-pink-200 pb-2 mb-3">👁️ Previsualización en Vivo</h3>
+                    
+                    <div class="flex flex-wrap gap-3 mb-3 justify-center text-[10px] font-bold uppercase text-slate-600 bg-white p-2 rounded-lg border border-slate-200">
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-blue-600">
+                            <input type="checkbox" id="mock-show-top" checked class="accent-blue-600 w-3.5 h-3.5"> Ver Título
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-amber-500">
+                            <input type="checkbox" id="mock-show-sub" checked class="accent-amber-500 w-3.5 h-3.5"> Ver Subtítulo
+                        </label>
+                        <label class="flex items-center gap-1.5 cursor-pointer hover:text-emerald-600">
+                            <input type="checkbox" id="mock-show-bot" checked class="accent-emerald-600 w-3.5 h-3.5"> Ver Abajo
+                        </label>
+                    </div>
+
+                    <div class="bg-slate-200 border border-slate-300 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[240px] relative overflow-hidden" style="background: repeating-conic-gradient(#e2e8f0 0% 25%, transparent 0% 50%) 50% / 20px 20px;">
+                        <div id="mockup-placeholder" class="text-center">
+                            <span class="text-4xl mb-2 block">📸</span>
+                            <span class="text-xs text-slate-500 font-bold">Subí fotos en el paso 1<br>para ver el borrador en vivo</span>
+                        </div>
+                        <img id="global-mockup-img" class="hidden max-h-[290px] w-auto object-contain drop-shadow-md rounded" />
+                    </div>
                 </div>
             </div>
 
             <!-- Mapeo Excel -->
-            <div id="mapping-section" class="hidden bg-slate-800/50 p-4 md:p-5 rounded-2xl border border-slate-700 mb-6">
-                <h3 class="text-xs md:text-sm font-bold text-pink-400 mb-3">Vincular Columnas del Excel</h3>
+            <div id="mapping-section" class="hidden bg-pink-50/50 p-4 md:p-5 rounded-2xl border border-pink-100/50 mb-6">
+                <h3 class="text-sm font-bold text-pink-800 mb-3">Mapeo de Columnas (Excel)</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div><label class="text-xs font-semibold text-slate-400 mb-1 block">Código (Nombre foto)</label><select id="col-cod" class="custom-select"></select></div>
-                    <div><label class="text-xs font-semibold text-slate-400 mb-1 block">Título ARRIBA</label><select id="col-texto-arriba" class="custom-select"></select></div>
-                    <div><label class="text-xs font-semibold text-amber-400 mb-1 block">Subtítulo ARRIBA</label><select id="col-texto-sub" class="custom-select"></select></div>
-                    <div><label class="text-xs font-semibold text-emerald-400 mb-1 block">Texto ABAJO</label><select id="col-texto-abajo" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Vincular Código</label><select id="col-cod" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Título ARRIBA</label><select id="col-texto-arriba" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-amber-600 mb-1 block">Subtítulo ARRIBA</label><select id="col-texto-sub" class="custom-select border-amber-300 bg-amber-50/30"></select></div>
+                    <div><label class="text-xs font-semibold text-slate-600 mb-1 block">Texto ABAJO</label><select id="col-texto-abajo" class="custom-select"></select></div>
                 </div>
             </div>
 
-            <div id="manual-input-section" class="hidden bg-slate-800/50 p-3 md:p-4 rounded-2xl border border-slate-700 mb-6 max-h-[50vh] ios-scroll">
-                <div id="manual-text-list" class="space-y-3"></div>
+            <!-- Carga Manual -->
+            <div id="manual-input-section" class="hidden bg-indigo-50/50 p-3 md:p-5 rounded-2xl border border-indigo-100/50 mb-6 max-h-[55vh] ios-scroll">
+                <h3 class="text-sm font-bold text-indigo-800 mb-3 sticky top-0 bg-indigo-50/90 backdrop-blur pb-2 z-10">Textos Manuales por Foto</h3>
+                <div id="manual-text-list" class="space-y-3">
+                    <p class="text-xs text-slate-500 italic">Seleccioná las imágenes primero.</p>
+                </div>
             </div>
 
-            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/25 active:scale-95 text-xs md:text-sm uppercase tracking-wide transition-all">
-                🎨 Procesar Lote
+            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/30 transform transition-all duration-200 active:scale-95 text-xs md:text-sm uppercase tracking-wide">
+                🎨 Procesar Lote Completo
             </button>
         </div>
 
@@ -127,47 +226,48 @@
             <div id="error-alerts" class="w-full"></div>
             <div class="glass-panel p-4 md:p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500 gap-4">
                 <div class="text-center md:text-left">
-                    <h3 class="text-base md:text-lg font-bold text-white" id="results-text">Borradores Generados</h3>
-                    <p class="text-xs md:text-sm text-slate-400 font-medium" id="results-subtext">Ajustá capas, pintá o descargá individualmente.</p>
+                    <h3 class="text-base md:text-lg font-bold text-slate-800" id="results-text">Borradores generados</h3>
+                    <p class="text-xs md:text-sm text-slate-500 font-medium" id="results-subtext">Revisá, editá individualmente y descargá.</p>
                 </div>
-                <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-all text-xs md:text-sm">
+                <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-transform text-xs md:text-sm">
                     <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
-                    Descargar Lote Completo (ZIP)
+                    Descargar ZIP Final
                 </button>
             </div>
+
             <div class="glass-panel rounded-3xl p-3 md:p-6">
                 <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"></div>
             </div>
         </div>
     </main>
 
-    <!-- MODAL EDITOR POR CAPAS CON PANTALLA COMPLETA TOTAL -->
-    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-1 sm:p-4">
-        <div class="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-6xl h-[98vh] flex flex-col md:flex-row overflow-hidden relative">
-            <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-slate-800 text-rose-400 font-bold w-8 h-8 rounded-full shadow border border-slate-700 flex items-center justify-center text-xl">&times;</button>
+    <!-- MODAL EDITOR INDIVIDUAL CON PANTALLA COMPLETA, PINCELES Y CAPAS Z -->
+    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
+        <div class="bg-white rounded-3xl shadow-2xl w-full max-w-6xl h-[96vh] flex flex-col md:flex-row overflow-hidden relative">
+            <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-white/90 backdrop-blur text-rose-500 font-bold w-8 h-8 rounded-full shadow border border-slate-200 flex items-center justify-center text-xl">&times;</button>
 
-            <!-- LADO IZQUIERDO: CANVAS, HERRAMIENTAS Y PANTALLA COMPLETA -->
-            <div id="canvas-column" class="w-full md:w-1/2 bg-slate-950 flex flex-col items-center justify-between p-2.5 md:p-3 border-b md:border-b-0 md:border-r border-slate-800 h-[50vh] md:h-auto shrink-0 select-none transition-all">
+            <!-- LADO IZQUIERDO: CANVAS Y HERRAMIENTAS DE PINTURA -->
+            <div id="canvas-column" class="w-full md:w-1/2 bg-slate-100 flex flex-col items-center justify-between p-2.5 md:p-3 border-b md:border-b-0 md:border-r border-slate-200 h-[50vh] md:h-auto shrink-0 select-none transition-all">
                 
                 <!-- Barra de herramientas superior -->
-                <div class="w-full bg-slate-900/90 backdrop-blur rounded-xl p-2 border border-slate-800 shadow flex items-center justify-between gap-1.5 z-10 overflow-x-auto ios-scroll">
+                <div class="w-full bg-white/90 backdrop-blur rounded-xl p-2 border border-slate-200 shadow-sm flex items-center justify-between gap-1.5 z-10 overflow-x-auto ios-scroll">
                     <div class="flex items-center gap-1 shrink-0">
-                        <button id="tool-brush" onclick="setTool('brush')" class="tool-btn active px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-bold text-slate-200">🖌️ Pincel</button>
-                        <button id="tool-eraser" onclick="setTool('eraser')" class="tool-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-bold text-slate-200">🧹 Borrar</button>
-                        <button onclick="clearCurrentLayerPaint()" class="px-2 py-1.5 bg-rose-950/60 text-rose-300 hover:bg-rose-900 rounded-lg border border-rose-800 text-xs font-bold">🗑️ Capa</button>
+                        <button id="tool-brush" onclick="setTool('brush')" class="tool-btn active px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700">🖌️ Pincel</button>
+                        <button id="tool-eraser" onclick="setTool('eraser')" class="tool-btn px-2.5 py-1.5 rounded-lg border border-slate-300 bg-white text-xs font-bold text-slate-700">🧹 Borrar</button>
+                        <button onclick="clearCurrentLayerPaint()" class="px-2 py-1.5 bg-rose-50 text-rose-600 hover:bg-rose-100 rounded-lg border border-rose-200 text-xs font-bold">🗑️ Limpiar</button>
                     </div>
 
                     <div class="flex items-center gap-1.5 shrink-0">
-                        <select id="active-paint-layer" class="custom-select py-1 px-1.5 text-[11px] w-24 bg-slate-800 border-slate-700" onchange="switchPaintLayer(this.value)">
+                        <select id="active-paint-layer" class="custom-select py-1 px-1.5 text-[11px] w-24 bg-white border-slate-300" onchange="switchPaintLayer(this.value)">
                             <option value="over">Encima</option>
                             <option value="under">Detrás</option>
                         </select>
-                        <input type="color" id="brush-color" value="#ff0055" class="w-6 h-6 rounded border border-slate-700">
+                        <input type="color" id="brush-color" value="#ff0055" class="w-6 h-6 rounded border border-slate-300">
                         
-                        <!-- Pincel con tamaño libre (slider + número sin límite) -->
-                        <div class="flex items-center gap-1 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
+                        <!-- Pincel con slider + input numérico libre -->
+                        <div class="flex items-center gap-1 bg-white px-1.5 py-0.5 rounded border border-slate-300">
                             <input type="range" id="brush-size" min="1" max="300" value="15" class="w-14" oninput="syncBrushInput(this.value)">
-                            <input type="number" id="brush-size-number" min="1" max="1000" value="15" class="w-10 bg-transparent text-center font-bold text-xs text-pink-400 outline-none" oninput="syncBrushSlider(this.value)">
+                            <input type="number" id="brush-size-number" min="1" max="1000" value="15" class="w-10 bg-transparent text-center font-bold text-xs text-pink-600 outline-none" oninput="syncBrushSlider(this.value)">
                         </div>
 
                         <!-- Botón Fullscreen Total -->
@@ -177,122 +277,122 @@
                     </div>
                 </div>
 
-                <!-- Canvas de dibujo interactivo -->
+                <!-- Canvas de renderizado continuo -->
                 <div class="relative flex-grow flex items-center justify-center w-full overflow-hidden my-2">
-                    <canvas id="main-editor-canvas" class="max-w-full max-h-[38vh] md:max-h-[75vh] object-contain drop-shadow-2xl rounded bg-white"></canvas>
+                    <canvas id="main-editor-canvas" class="max-w-full max-h-[38vh] md:max-h-[74vh] object-contain drop-shadow-md rounded bg-white"></canvas>
                 </div>
 
                 <div class="w-full flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
-                    <span>⚡ 60 FPS Táctil Fluido</span>
-                    <button onclick="toggleFullscreenCanvas()" class="text-indigo-400 hover:underline md:hidden">⛶ Pantalla Completa</button>
+                    <span>💡 Pintá con el dedo o mouse</span>
+                    <button onclick="toggleFullscreenCanvas()" class="text-indigo-600 hover:underline md:hidden">⛶ Pantalla Completa</button>
                 </div>
             </div>
 
             <!-- LADO DERECHO: STACK DE CAPAS (Z-INDEX) Y MOVIMIENTO TOTAL X / Y -->
-            <div class="w-full md:w-1/2 p-3 md:p-6 flex flex-col flex-grow overflow-hidden bg-slate-900">
-                <div class="hidden md:flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-                    <h2 class="text-xl font-extrabold text-white">Capas & Posición (X / Y / Z)</h2>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-rose-400 font-bold text-2xl">&times;</button>
+            <div class="w-full md:w-1/2 p-3 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
+                <div class="hidden md:flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste de Capas & Posición (X / Y / Z)</h2>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-rose-500 font-bold text-2xl">&times;</button>
                 </div>
 
                 <div class="space-y-3.5 ios-scroll flex-grow pr-1 pb-6">
                     
                     <!-- 1. Capa Imagen Principal -->
-                    <div class="bg-slate-800/60 p-2.5 md:p-3 rounded-xl border border-slate-700 space-y-1.5">
+                    <div class="bg-slate-50 p-2.5 md:p-3 rounded-xl border border-slate-200 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-purple-400 uppercase">🖼️ Capa Imagen Principal</span>
+                            <span class="text-xs font-bold text-purple-700 uppercase">🖼️ Capa Imagen Principal</span>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] text-slate-400 uppercase font-bold">Orden Capa (Z):</span>
-                                <input type="number" id="z-img" min="1" max="10" value="1" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold">Orden Capa (Z):</span>
+                                <input type="number" id="z-img" min="1" max="10" value="1" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs text-slate-800 font-bold" oninput="scheduleRender()">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div><span>Posición X</span><input type="range" id="x-img" min="-600" max="600" value="0"></div>
                             <div><span>Posición Y</span><input type="range" id="y-img" min="-600" max="600" value="0"></div>
                         </div>
                     </div>
 
                     <!-- 2. Capas de Pintura Pincel (Z-Index) -->
-                    <div class="bg-slate-800/60 p-2.5 md:p-3 rounded-xl border border-slate-700 space-y-1.5">
-                        <span class="text-xs font-bold text-pink-400 uppercase">🎨 Profundidad Z de Pinceles</span>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                            <div class="flex items-center justify-between bg-slate-900 p-1.5 rounded border border-slate-800">
+                    <div class="bg-slate-50 p-2.5 md:p-3 rounded-xl border border-slate-200 space-y-1.5">
+                        <span class="text-xs font-bold text-pink-700 uppercase">🎨 Profundidad Z de Pinceles</span>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
+                            <div class="flex items-center justify-between bg-white p-1.5 rounded border border-slate-200">
                                 <span>Pintura Detrás (Z):</span>
-                                <input type="number" id="z-paint-under" min="1" max="10" value="2" class="w-10 py-0.5 px-1 bg-slate-800 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <input type="number" id="z-paint-under" min="1" max="10" value="2" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
                             </div>
-                            <div class="flex items-center justify-between bg-slate-900 p-1.5 rounded border border-slate-800">
+                            <div class="flex items-center justify-between bg-white p-1.5 rounded border border-slate-200">
                                 <span>Pintura Encima (Z):</span>
-                                <input type="number" id="z-paint-over" min="1" max="10" value="6" class="w-10 py-0.5 px-1 bg-slate-800 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <input type="number" id="z-paint-over" min="1" max="10" value="6" class="w-10 py-0.5 px-1 bg-slate-50 border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
                             </div>
                         </div>
                     </div>
 
                     <!-- 3. Capa Título -->
-                    <div class="p-2.5 md:p-3 bg-blue-950/40 rounded-xl border border-blue-900/60 space-y-1.5">
+                    <div class="p-2.5 md:p-3 bg-blue-50/60 rounded-xl border border-blue-200 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-blue-400 uppercase">Título Principal</label>
+                            <label class="text-xs font-bold text-blue-700 uppercase">Título Principal</label>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] text-slate-400 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-top" min="1" max="10" value="3" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold">Capa Z:</span>
+                                <input type="number" id="z-top" min="1" max="10" value="3" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
                             </div>
                         </div>
                         <textarea id="txt-top" class="custom-input text-xs" rows="1"></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-top" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-top" min="-600" max="600" value="0"></div>
                         </div>
                     </div>
 
                     <!-- 4. Capa Subtítulo -->
-                    <div class="p-2.5 md:p-3 bg-amber-950/40 rounded-xl border border-amber-900/60 space-y-1.5">
+                    <div class="p-2.5 md:p-3 bg-amber-50/60 rounded-xl border border-amber-200 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-amber-400 uppercase">Subtítulo</label>
+                            <label class="text-xs font-bold text-amber-700 uppercase">Subtítulo</label>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] text-slate-400 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-sub" min="1" max="10" value="4" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold">Capa Z:</span>
+                                <input type="number" id="z-sub" min="1" max="10" value="4" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
                             </div>
                         </div>
                         <textarea id="txt-sub" class="custom-input text-xs" rows="1"></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-sub" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-sub" min="-600" max="600" value="0"></div>
                         </div>
                     </div>
 
                     <!-- 5. Capa Texto Abajo -->
-                    <div class="p-2.5 md:p-3 bg-emerald-950/40 rounded-xl border border-emerald-900/60 space-y-1.5">
+                    <div class="p-2.5 md:p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-emerald-400 uppercase">Texto Abajo</label>
+                            <label class="text-xs font-bold text-emerald-700 uppercase">Texto Abajo</label>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] text-slate-400 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-bot" min="1" max="10" value="5" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <span class="text-[10px] text-slate-500 uppercase font-bold">Capa Z:</span>
+                                <input type="number" id="z-bot" min="1" max="10" value="5" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs font-bold text-slate-800" oninput="scheduleRender()">
                             </div>
                         </div>
                         <textarea id="txt-bot" class="custom-input text-xs" rows="1"></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-bot" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-bot" min="-600" max="600" value="0"></div>
                         </div>
                     </div>
 
                     <!-- Color & Escala General -->
-                    <div class="grid grid-cols-2 gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700">
+                    <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                         <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Color Textos</label>
-                            <input type="color" id="edit-color" class="w-full h-[32px] rounded border border-slate-700 bg-slate-900 p-1">
+                            <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Color Textos</label>
+                            <input type="color" id="edit-color" class="w-full h-[32px] rounded border border-slate-300 bg-white p-1">
                         </div>
                         <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase flex justify-between mb-1">
-                                <span>Escala Letra</span><span id="val-edit-scale" class="text-pink-400">100%</span>
+                            <label class="text-[10px] font-bold text-slate-600 uppercase flex justify-between mb-1">
+                                <span>Escala Letra</span><span id="val-edit-scale" class="text-pink-600">100%</span>
                             </label>
                             <input type="range" id="edit-scale" min="20" max="250" value="100">
                         </div>
                     </div>
                 </div>
 
-                <div class="mt-2 pt-2 border-t border-slate-800 shrink-0">
-                    <button onclick="saveModalChanges()" class="w-full bg-pink-600 hover:bg-pink-500 active:bg-pink-700 text-white font-bold py-2.5 md:py-3 px-6 rounded-xl shadow-lg transition-all text-xs md:text-sm">
-                        ✅ Aplicar Cambios
+                <div class="mt-2 pt-2 border-t border-slate-200 shrink-0 bg-white">
+                    <button onclick="saveModalChanges()" class="w-full bg-pink-500 hover:bg-pink-600 active:bg-pink-700 text-white font-bold py-2.5 md:py-3 px-6 rounded-xl shadow-lg transition-all text-xs md:text-sm">
+                        ✅ Guardar y Aplicar Cambios
                     </button>
                 </div>
             </div>
@@ -317,6 +417,7 @@
         let isPainting = false;
         let renderRequested = false;
         let isFullscreenCanvas = false;
+        let globalMockupImgObj = null;
 
         const mainEditorCanvas = document.getElementById('main-editor-canvas');
         const mainEditorCtx = mainEditorCanvas.getContext('2d');
@@ -340,7 +441,6 @@
             scheduleRender();
         }
 
-        // Sincronización del tamaño de pincel libre
         function syncBrushInput(val) {
             document.getElementById('brush-size-number').value = val;
         }
@@ -348,7 +448,6 @@
             document.getElementById('brush-size').value = Math.min(300, Math.max(1, parseInt(val) || 1));
         }
 
-        // Alternar Pantalla Completa Total para el Canvas
         function toggleFullscreenCanvas() {
             const col = document.getElementById('canvas-column');
             isFullscreenCanvas = !isFullscreenCanvas;
@@ -369,7 +468,118 @@
             if (e.key === 'Escape' && isFullscreenCanvas) toggleFullscreenCanvas();
         });
 
-        // Bucle continuo con requestAnimationFrame a 60 FPS
+        const updateVal = (id, suffix) => {
+            const el = document.getElementById(id);
+            const fn = (e) => {
+                document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
+                updateGlobalPreview();
+            };
+            el.addEventListener('input', fn);
+            el.addEventListener('touchmove', fn, { passive: true });
+        };
+        updateVal('global-scale', '%');
+        updateVal('global-img-y', 'px');
+        updateVal('global-y-top', 'px');
+        updateVal('global-y-sub', 'px');
+        updateVal('global-y-bot', 'px');
+        updateVal('edit-scale', '%');
+
+        function updateGlobalPreview() {
+            if (!globalMockupImgObj) return;
+
+            const mode = document.getElementById('global-mode').value;
+            const color = document.getElementById('global-color').value;
+            const scale = parseInt(document.getElementById('global-scale').value);
+            const imgY = parseInt(document.getElementById('global-img-y').value);
+            const yTop = parseInt(document.getElementById('global-y-top').value);
+            const ySub = parseInt(document.getElementById('global-y-sub').value);
+            const yBot = parseInt(document.getElementById('global-y-bot').value);
+
+            const showTop = document.getElementById('mock-show-top').checked;
+            const showSub = document.getElementById('mock-show-sub').checked;
+            const showBot = document.getElementById('mock-show-bot').checked;
+
+            const mockupConfig = {
+                imgObj: globalMockupImgObj,
+                mode: mode,
+                textColor: color,
+                textScale: scale,
+                top: showTop ? "TÍTULO DE PRODUCTO\nSEGUNDO RENGLÓN" : "",
+                sub: showSub ? "Subtítulo descriptivo" : "",
+                bot: showBot ? "COD: PRUEBA-001\nPRECIO: \$99.999" : "",
+                imgX: 0, imgY: imgY,
+                xTop: 0, yTop: yTop,
+                xSub: 0, ySub: ySub,
+                xBot: 0, yBot: yBot
+            };
+
+            const dataUrl = renderCanvasDataUrl(mockupConfig);
+            document.getElementById('global-mockup-img').src = dataUrl;
+        }
+
+        ['global-mode', 'global-color', 'mock-show-top', 'mock-show-sub', 'mock-show-bot'].forEach(id => {
+            const el = document.getElementById(id);
+            el.addEventListener('input', updateGlobalPreview);
+            if (el.type === 'checkbox') el.addEventListener('change', updateGlobalPreview);
+        });
+
+        const modeRadios = document.getElementsByName('input-mode');
+        const excelInputContainer = document.getElementById('excel-input-container');
+        const mappingSection = document.getElementById('mapping-section');
+        const manualInputSection = document.getElementById('manual-input-section');
+        const fileImages = document.getElementById('file-images');
+
+        function renderManualInputs() {
+            const list = document.getElementById('manual-text-list');
+            list.innerHTML = '';
+            if(fileImages.files.length === 0) {
+                list.innerHTML = '<p class="text-xs text-slate-500 italic">Seleccioná las imágenes primero.</p>';
+                return;
+            }
+            Array.from(fileImages.files).forEach((file, index) => {
+                list.innerHTML += `
+                    <div class="bg-white p-3 md:p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col gap-2">
+                        <span class="text-xs font-bold text-slate-700 border-b border-slate-100 pb-2 truncate" title="${file.name}"><span class="text-indigo-500">#${index+1}</span> ${file.name}</span>
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <textarea id="man-top-${index}" placeholder="Título ARRIBA" class="custom-input text-xs border-blue-200 focus:border-blue-500" rows="2"></textarea>
+                            <textarea id="man-sub-${index}" placeholder="Subtítulo ARRIBA" class="custom-input text-xs border-amber-200 focus:border-amber-500" rows="2"></textarea>
+                            <textarea id="man-bot-${index}" placeholder="Texto ABAJO" class="custom-input text-xs border-emerald-200 focus:border-emerald-500" rows="2"></textarea>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        modeRadios.forEach(radio => {
+            radio.addEventListener('change', (e) => {
+                if(e.target.value === 'excel') {
+                    excelInputContainer.classList.remove('hidden');
+                    if(excelHeaders.length > 0) mappingSection.classList.remove('hidden');
+                    manualInputSection.classList.add('hidden');
+                } else {
+                    excelInputContainer.classList.add('hidden');
+                    mappingSection.classList.add('hidden');
+                    manualInputSection.classList.remove('hidden');
+                    renderManualInputs();
+                }
+            });
+        });
+
+        fileImages.addEventListener('change', async () => {
+            if (document.querySelector('input[name="input-mode"]:checked').value === 'manual') {
+                renderManualInputs();
+            }
+            if(fileImages.files.length > 0) {
+                try {
+                    globalMockupImgObj = await loadImgObj(fileImages.files[0]);
+                    document.getElementById('mockup-placeholder').classList.add('hidden');
+                    document.getElementById('global-mockup-img').classList.remove('hidden');
+                    updateGlobalPreview();
+                } catch(e) { console.error("Error cargando mockup", e); }
+            }
+        });
+
+        // Bucle de renderizado continuo (60 FPS)
         function scheduleRender() {
             if (!renderRequested) {
                 renderRequested = true;
@@ -411,7 +621,75 @@
             });
         }
 
-        // Renderizado del Canvas ordenado por Z-Index
+        function renderCanvasDataUrl(config) {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = config.imgObj;
+            const scaleFactor = (config.textScale || 100) / 100;
+
+            const maxDim = Math.max(img.width, img.height);
+            const margin = Math.max(maxDim * 0.22, 120); 
+            const size = maxDim + (margin * 2);
+            canvas.width = size; canvas.height = size;
+
+            ctx.fillStyle = '#ffffff'; 
+            ctx.fillRect(0, 0, size, size);
+
+            const imgX = ((size - img.width) / 2) + (config.imgX || 0);
+            const imgY = ((size - img.height) / 2) + (config.imgY || 0);
+            ctx.drawImage(img, imgX, imgY, img.width, img.height);
+
+            ctx.fillStyle = config.textColor || '#000000'; 
+            ctx.textAlign = 'center'; 
+            ctx.textBaseline = 'middle';
+
+            let fontTop = (margin * 0.35) * scaleFactor;
+            let fontSub = fontTop * 0.7;
+            let lhTop = fontTop * 1.2;
+            let lhSub = fontSub * 1.2;
+
+            ctx.font = `normal ${fontTop}px ${fontFamily}`;
+            let tLines = config.top ? getLines(ctx, config.top, size * 0.85) : [];
+            ctx.font = `normal ${fontSub}px ${fontFamily}`;
+            let sLines = config.sub ? getLines(ctx, config.sub, size * 0.85) : [];
+
+            let blockH = (tLines.length * lhTop) + (sLines.length * lhSub);
+            if (tLines.length > 0 && sLines.length > 0) blockH += (fontTop * 0.2);
+            let y = ((margin - blockH) / 2) + 30; 
+            
+            if (tLines.length > 0) {
+                ctx.font = `normal ${fontTop}px ${fontFamily}`;
+                tLines.forEach(l => { 
+                    ctx.fillText(l, (size / 2) + (config.xTop || 0), y + (lhTop/2) + (config.yTop || 0)); 
+                    y += lhTop; 
+                });
+                if (sLines.length > 0) y += (fontTop * 0.2);
+            }
+            if (sLines.length > 0) {
+                ctx.font = `normal ${fontSub}px ${fontFamily}`;
+                sLines.forEach(l => { 
+                    ctx.fillText(l, (size / 2) + (config.xSub || 0), y + (lhSub/2) + (config.ySub || 0)); 
+                    y += lhSub; 
+                });
+            }
+
+            if (config.bot) {
+                let fontBot = (margin * 0.45) * scaleFactor; 
+                ctx.font = `normal ${fontBot}px ${fontFamily}`;
+                let bLines = getLines(ctx, config.bot, size * 0.85);
+                let lhBot = fontBot * 1.2;
+                let botH = bLines.length * lhBot;
+                let botY = size - (margin / 2) - (botH / 2) + (lhBot/2) + (config.yBot || 0);
+                bLines.forEach(l => { 
+                    ctx.fillText(l, (size / 2) + (config.xBot || 0), botY); 
+                    botY += lhBot; 
+                });
+            }
+
+            return canvas.toDataURL('image/jpeg', 0.95);
+        }
+
+        // Renderizado del Canvas interactivo por capas Z
         function executeRender() {
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
@@ -511,7 +789,7 @@
             layers.sort((a, b) => a.z - b.z).forEach(layer => layer.render());
         }
 
-        // Coordenadas táctiles fluidas
+        // Trazado táctil de pincel fluido
         function getCoords(e) {
             const rect = mainEditorCanvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -573,7 +851,6 @@
         mainEditorCanvas.addEventListener('touchmove', doPaint, { passive: false });
         window.addEventListener('touchend', stopPaint);
 
-        // Sliders reactivos
         ['x-img', 'y-img', 'z-img', 'x-top', 'y-top', 'z-top', 'x-sub', 'y-sub', 'z-sub', 'x-bot', 'y-bot', 'z-bot',
          'z-paint-under', 'z-paint-over', 'txt-top', 'txt-sub', 'txt-bot', 'edit-color', 'edit-scale'].forEach(id => {
             const el = document.getElementById(id);
@@ -689,7 +966,7 @@
             closeModal();
         };
 
-        // EXCEL & ARCHIVOS
+        // EXCEL
         document.getElementById('file-excel').addEventListener('change', (e) => {
             if (!e.target.files.length) return;
             const reader = new FileReader();
@@ -712,6 +989,7 @@
             reader.readAsArrayBuffer(e.target.files[0]);
         });
 
+        // PROCESAMIENTO POR LOTE
         document.getElementById('btn-process').addEventListener('click', async () => {
             const files = document.getElementById('file-images').files;
             if (!files.length) { alert("Seleccioná las fotos primero."); return; }
@@ -738,7 +1016,7 @@
             }
 
             imagesData = [];
-            document.getElementById('preview-grid').innerHTML = '<p class="col-span-full text-center text-slate-400 font-bold animate-pulse">Generando borradores...</p>';
+            document.getElementById('preview-grid').innerHTML = '<p class="col-span-full text-center text-slate-500 font-bold animate-pulse">Generando borradores...</p>';
             document.getElementById('results-section').classList.remove('hidden');
 
             for (let i = 0; i < files.length; i++) {
@@ -746,10 +1024,16 @@
                 let nameNoExt = file.name.substring(0, file.name.lastIndexOf('.') !== -1 ? file.name.lastIndexOf('.') : file.name.length).trim().toUpperCase();
                 
                 let top = "", sub = "", bot = "";
-                if (mode === 'excel' && dictExcel[nameNoExt]) {
-                    top = dictExcel[nameNoExt].top;
-                    sub = dictExcel[nameNoExt].sub;
-                    bot = dictExcel[nameNoExt].bot;
+                if (mode === 'excel') {
+                    if (dictExcel[nameNoExt]) {
+                        top = dictExcel[nameNoExt].top;
+                        sub = dictExcel[nameNoExt].sub;
+                        bot = dictExcel[nameNoExt].bot;
+                    }
+                } else {
+                    top = document.getElementById(`man-top-${i}`)?.value || "";
+                    sub = document.getElementById(`man-sub-${i}`)?.value || "";
+                    bot = document.getElementById(`man-bot-${i}`)?.value || "";
                 }
 
                 try {
@@ -758,24 +1042,26 @@
                         name: file.name,
                         imgObj: imgObj,
                         top: top, sub: sub, bot: bot,
-                        textColor: "#000000", textScale: 100,
-                        xImg: 0, yImg: 0, zImg: 1,
+                        textColor: document.getElementById('global-color').value,
+                        textScale: parseInt(document.getElementById('global-scale').value),
+                        xImg: 0, yImg: parseInt(document.getElementById('global-img-y').value), zImg: 1,
                         zPaintUnder: 2,
-                        xTop: 0, yTop: 0, zTop: 3,
-                        xSub: 0, ySub: 0, zSub: 4,
-                        xBot: 0, yBot: 0, zBot: 5,
+                        xTop: 0, yTop: parseInt(document.getElementById('global-y-top').value), zTop: 3,
+                        xSub: 0, ySub: parseInt(document.getElementById('global-y-sub').value), zSub: 4,
+                        xBot: 0, yBot: parseInt(document.getElementById('global-y-bot').value), zBot: 5,
                         zPaintOver: 6
                     };
 
-                    const maxDim = Math.max(imgObj.width, imgObj.height);
-                    const margin = Math.max(maxDim * 0.22, 120);
-                    const size = maxDim + (margin * 2);
-                    const c = document.createElement('canvas');
-                    c.width = size; c.height = size;
-                    const ctx = c.getContext('2d');
-                    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
-                    ctx.drawImage(imgObj, (size - imgObj.width)/2, (size - imgObj.height)/2);
-                    item.dataUrl = c.toDataURL('image/jpeg', 0.85);
+                    item.dataUrl = renderCanvasDataUrl({
+                        imgObj: imgObj,
+                        textColor: item.textColor,
+                        textScale: item.textScale,
+                        top: item.top, sub: item.sub, bot: item.bot,
+                        imgX: item.xImg, imgY: item.yImg,
+                        xTop: item.xTop, yTop: item.yTop,
+                        xSub: item.xSub, ySub: item.ySub,
+                        xBot: item.xBot, yBot: item.yBot
+                    });
 
                     imagesData.push(item);
                 } catch(e) {}
@@ -789,15 +1075,15 @@
             grid.innerHTML = '';
             imagesData.forEach((item, index) => {
                 grid.innerHTML += `
-                    <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
-                        <div class="aspect-square bg-slate-900 flex items-center justify-center p-2">
+                    <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden flex flex-col shadow-sm">
+                        <div class="aspect-square bg-slate-100 flex items-center justify-center p-2">
                             <img id="grid-img-${index}" src="${item.dataUrl}" class="w-full h-full object-contain drop-shadow" />
                         </div>
-                        <div class="p-2.5 bg-slate-800 flex flex-col gap-2 border-t border-slate-700">
-                            <p class="text-[11px] font-bold text-slate-200 truncate">${item.name}</p>
+                        <div class="p-2.5 bg-white flex flex-col gap-2 border-t border-slate-100">
+                            <p class="text-[11px] font-bold text-slate-700 truncate">${item.name}</p>
                             <div class="flex gap-1.5">
-                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-600 hover:bg-pink-500 py-1.5 rounded-lg text-white">✏️ Capas / Pintar</button>
-                                <button onclick="downloadSingle(${index})" class="flex-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded-lg text-white">⬇️ Bajar</button>
+                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-100 text-pink-700 hover:bg-pink-200 py-1.5 rounded-lg">✏️ Capas / Pintar</button>
+                                <button onclick="downloadSingle(${index})" class="flex-1 text-[11px] font-bold bg-emerald-100 text-emerald-700 hover:bg-emerald-200 py-1.5 rounded-lg">⬇️ Bajar</button>
                             </div>
                         </div>
                     </div>
