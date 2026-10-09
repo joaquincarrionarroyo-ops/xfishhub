@@ -315,7 +315,15 @@
                         <!-- Generado dinámicamente con drag & drop -->
                     </div>
                 </div>
-
+<!-- ESCALA GLOBAL DE TODAS LAS CAPAS -->
+<div class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-1.5">
+    <div class="flex items-center justify-between text-xs font-bold text-slate-700">
+        <span class="uppercase tracking-wider">🌐 Escala Global (Todas)</span>
+        <span id="val-global-mesa-scale" class="text-pink-600 font-extrabold">100%</span>
+    </div>
+    <input type="range" id="global-mesa-scale" min="20" max="300" value="100" oninput="ajustarEscalaGlobalMesa(this.value)">
+    <span class="text-[10px] text-slate-400 font-medium block">💡 O hacé pinza con dos dedos en la pantalla para zoom gestual</span>
+</div>
                 <!-- PROPIEDADES DEL ELEMENTO SELECCIONADO (PNG O TEXTO) -->
                 <div id="panel-objeto-seleccionado" class="bg-white p-3.5 rounded-2xl border border-slate-200 shadow-sm space-y-2.5">
                     <div class="flex items-center justify-between border-b border-slate-100 pb-2">
@@ -1965,7 +1973,48 @@ window.addEventListener('touchend', () => { isDraggingElemento = false; });
 // ==============================================================
 // DESCARGAS (INDIVIDUAL Y ZIP)
 // ==============================================================
-function descargarMesaActual() {
+// Función auxiliar para descargar o guardar en el Carrete (iPhone / PC / Android)
+async function guardarArchivoUniversal(blob, nombreArchivo, mimeType = 'image/jpeg') {
+    const esIPhone = /iPhone|iPad|iPod/i.test(navigator.userAgent);
+
+    // 1. En iPhone/iPad: si es imagen y soporta share, abre el menú para "Guardar imagen" en Fotos
+    if (esIPhone && navigator.canShare && mimeType.startsWith('image/')) {
+        try {
+            const file = new File([blob], nombreArchivo, { type: mimeType });
+            if (navigator.canShare({ files: [file] })) {
+                await navigator.share({
+                    files: [file],
+                    title: nombreArchivo
+                });
+                return;
+            }
+        } catch (e) {
+            if (e.name === 'AbortError') return; // El usuario canceló el menú compartir
+            console.warn("Share fallback:", e);
+        }
+    }
+
+    // 2. Método estándar para PC / Android y ZIPs
+    const blobUrl = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = blobUrl;
+    a.download = nombreArchivo;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+
+    // 3. Respaldo para iOS si el navegador no inicia la descarga automática del ZIP
+    if (esIPhone && !mimeType.startsWith('image/')) {
+        setTimeout(() => {
+            window.location.href = blobUrl;
+        }, 300);
+    }
+
+    setTimeout(() => URL.revokeObjectURL(blobUrl), 30000);
+}
+
+// Descarga individual compatible con iPhone (guarda en Fotos) y PC
+async function descargarMesaActual() {
     const mesa = getMesaActiva();
     if (!mesa) return;
 
@@ -1976,12 +2025,13 @@ function descargarMesaActual() {
 
     dibujarMesaEnContexto(ctx, mesa, 1200, 1200, false);
 
-    const a = document.createElement('a');
-    a.href = exportCanvas.toDataURL('image/jpeg', 0.95);
-    a.download = `${mesa.nombre}_HD.jpg`;
-    a.click();
+    exportCanvas.toBlob(async (blob) => {
+        if (!blob) return;
+        await guardarArchivoUniversal(blob, `${mesa.nombre || 'Mesa'}_HD.jpg`, 'image/jpeg');
+    }, 'image/jpeg', 0.95);
 }
 
+// Descarga masiva ZIP compatible con PC y navegadores móviles
 async function descargarTodasMesasZip() {
     if (!mesasTrabajo.length) return;
     const zip = new JSZip();
@@ -2000,11 +2050,7 @@ async function descargarTodasMesasZip() {
     });
 
     const content = await zip.generateAsync({ type: "blob" });
-    const a = document.createElement('a');
-    a.href = URL.createObjectURL(content);
-    a.download = "Mesas_De_Trabajo_XFish.zip";
-    a.click();
-    URL.revokeObjectURL(a.href);
+    await guardarArchivoUniversal(content, "Mesas_De_Trabajo_XFish.zip", "application/zip");
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -2090,6 +2136,95 @@ function habilitarDropDirectoEnLienzo() {
 document.addEventListener('DOMContentLoaded', () => {
     bindArtboardEvents();
     habilitarDropDirectoEnLienzo();
+});
+        // ==============================================================
+// 1. ESCALA GLOBAL DE TODAS LAS CAPAS JUNTAS
+// ==============================================================
+let escalaGlobalMesaAnterior = 1;
+
+window.ajustarEscalaGlobalMesa = function(val) {
+    const mesa = getMesaActiva();
+    if (!mesa || !mesa.elementos.length) return;
+
+    const nuevaEscalaGlobal = (parseInt(val) || 100) / 100;
+    const factor = nuevaEscalaGlobal / escalaGlobalMesaAnterior;
+
+    // Escalar tamaño y distancia de cada objeto respecto al centro (600, 600)
+    mesa.elementos.forEach(el => {
+        el.scale = Math.max(0.1, el.scale * factor);
+        el.x = 600 + (el.x - 600) * factor;
+        el.y = 600 + (el.y - 600) * factor;
+    });
+
+    escalaGlobalMesaAnterior = nuevaEscalaGlobal;
+    document.getElementById('val-global-mesa-scale').textContent = `${val}%`;
+
+    actualizarPanelPropiedades();
+    redibujarMesaActual();
+};
+
+// ==============================================================
+// 2. SOPORTE MULTI-TOUCH / PINCH-TO-ZOOM (IPHONE / IPAD)
+// ==============================================================
+let initialPinchDistance = null;
+let initialTargetScale = 1;
+
+function calcularDistanciaTouch(e) {
+    const t1 = e.touches[0];
+    const t2 = e.touches[1];
+    const dx = t1.clientX - t2.clientX;
+    const dy = t1.clientY - t2.clientY;
+    return Math.hypot(dx, dy);
+}
+
+const canvasEl = document.getElementById('multi-artboard-canvas');
+
+canvasEl?.addEventListener('touchstart', (e) => {
+    if (e.touches.length === 2) {
+        e.preventDefault();
+        isDraggingElemento = false; // Cancelar arrastre si se usan 2 dedos
+        initialPinchDistance = calcularDistanciaTouch(e);
+
+        const mesa = getMesaActiva();
+        if (elementoSeleccionadoIdx !== -1 && mesa?.elementos[elementoSeleccionadoIdx]) {
+            initialTargetScale = mesa.elementos[elementoSeleccionadoIdx].scale;
+        } else {
+            initialTargetScale = escalaGlobalMesaAnterior;
+        }
+    }
+}, { passive: false });
+
+canvasEl?.addEventListener('touchmove', (e) => {
+    if (e.touches.length === 2 && initialPinchDistance) {
+        e.preventDefault();
+        const currentDistance = calcularDistanciaTouch(e);
+        const ratio = currentDistance / initialPinchDistance;
+        const mesa = getMesaActiva();
+        if (!mesa) return;
+
+        if (elementoSeleccionadoIdx !== -1 && mesa.elementos[elementoSeleccionadoIdx]) {
+            // Pinza sobre elemento seleccionado: escala individual
+            const el = mesa.elementos[elementoSeleccionadoIdx];
+            el.scale = Math.min(3, Math.max(0.1, initialTargetScale * ratio));
+            const slider = document.getElementById('prop-scale');
+            if (slider) slider.value = Math.round(el.scale * 100);
+            const valLabel = document.getElementById('val-prop-scale');
+            if (valLabel) valLabel.textContent = `${Math.round(el.scale * 100)}%`;
+        } else {
+            // Pinza libre: escala global de todas las capas
+            const nuevaEscala = Math.min(300, Math.max(20, Math.round(initialTargetScale * ratio * 100)));
+            const globalSlider = document.getElementById('global-mesa-scale');
+            if (globalSlider) globalSlider.value = nuevaEscala;
+            window.ajustarEscalaGlobalMesa(nuevaEscala);
+        }
+        redibujarMesaActual();
+    }
+}, { passive: false });
+
+canvasEl?.addEventListener('touchend', (e) => {
+    if (e.touches.length < 2) {
+        initialPinchDistance = null;
+    }
 });
     </script>
 </body>
