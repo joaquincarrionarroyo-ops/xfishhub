@@ -3,103 +3,32 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-    <title>Estampador Dinámico de Banners y Fichas | X-Fish</title>
-    <!-- Tailwind CSS -->
+    <title>Estampador Dinámico de Banners & Editor por Capas | X-Fish</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS (Excel) & JSZip (Compresión) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, "Helvetica Neue", sans-serif;
-            background-color: #0b0f19;
-            color: #f1f5f9;
-            -webkit-tap-highlight-color: transparent;
-            overscroll-behavior-y: none;
-        }
-
-        .glass-panel {
-            background: rgba(17, 24, 39, 0.78);
-            backdrop-filter: blur(18px);
-            -webkit-backdrop-filter: blur(18px);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            box-shadow: 0 16px 36px -10px rgba(0, 0, 0, 0.6);
-        }
-
-        .blob {
-            position: fixed;
-            filter: blur(100px);
-            z-index: -1;
-            border-radius: 50%;
-            animation: float 12s ease-in-out infinite alternate;
-            pointer-events: none;
-        }
-
-        @keyframes float {
-            0% { transform: translate(0px, 0px) scale(1); }
-            50% { transform: translate(25px, -30px) scale(1.08); }
-            100% { transform: translate(-20px, 20px) scale(0.95); }
-        }
-
-        .custom-select, .custom-input {
-            width: 100%;
-            padding: 8px 12px;
-            border: 1px solid #334155;
-            border-radius: 10px;
-            font-size: 13px;
-            background-color: rgba(15, 23, 42, 0.85);
-            outline: none;
-            transition: all 0.2s ease;
-            font-weight: 600;
-            color: #f8fafc;
-        }
-        .custom-select:focus, .custom-input:focus {
-            border-color: #ec4899;
-            box-shadow: 0 0 0 3px rgba(236, 72, 153, 0.25);
-            background-color: #0f172a;
-        }
-
-        /* Touch sliders */
-        input[type=range] {
-            width: 100%;
-            accent-color: #ec4899;
-            touch-action: none;
-            cursor: pointer;
-            height: 6px;
-            border-radius: 3px;
-            background: #1e293b;
-        }
-        input[type=color] {
-            border: none;
-            border-radius: 6px;
-            padding: 0;
-            cursor: pointer;
-            background: transparent;
-        }
-
-        /* Smooth iOS Scrolling */
-        .ios-scroll {
-            -webkit-overflow-scrolling: touch;
-            overflow-y: auto;
-        }
-        ::-webkit-scrollbar { width: 5px; height: 5px; }
-        ::-webkit-scrollbar-track { background: rgba(0, 0, 0, 0.2); border-radius: 4px; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
-        ::-webkit-scrollbar-thumb:hover { background: #475569; }
-
-        .modal-overlay {
-            background: rgba(3, 7, 18, 0.88);
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            z-index: 100;
-        }
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #0f172a; -webkit-tap-highlight-color: transparent; }
+        .glass-panel { background: rgba(30, 41, 59, 0.85); backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.1); box-shadow: 0 12px 40px 0 rgba(0, 0, 0, 0.4); }
+        .custom-select, .custom-input { width: 100%; padding: 8px 12px; border: 1px solid #334155; border-radius: 8px; font-size: 13px; background-color: #1e293b; outline: none; transition: all 0.2s; font-weight: 600; color: #f8fafc; }
+        .custom-select:focus, .custom-input:focus { border-color: #ec4899; box-shadow: 0 0 0 3px rgba(236,72,153,0.3); background-color: #0f172a; }
+        
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.2); border-radius: 4px; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 4px; }
+        ::-webkit-scrollbar-thumb:hover { background: #64748b; }
+        
+        .modal-overlay { background: rgba(15, 23, 42, 0.94); backdrop-filter: blur(12px); z-index: 100; }
+        .ios-scroll { -webkit-overflow-scrolling: touch; overflow-y: auto; }
+        
+        input[type=range] { width: 100%; accent-color: #ec4899; touch-action: none; cursor: pointer; height: 6px; border-radius: 3px; background: #334155; }
+        input[type=color] { border: none; border-radius: 6px; padding: 0; cursor: pointer; background: transparent; }
+        textarea.custom-input { resize: vertical; min-height: 48px; }
 
         .tool-btn.active {
             background-color: #ec4899 !important;
             color: #ffffff !important;
             border-color: #db2777 !important;
-            box-shadow: 0 4px 12px rgba(236, 72, 153, 0.35);
         }
 
         canvas {
@@ -107,399 +36,250 @@
             user-select: none;
             -webkit-user-select: none;
         }
+
+        /* Modo Pantalla Completa Total */
+        .fullscreen-active {
+            position: fixed !important;
+            top: 0 !important;
+            left: 0 !important;
+            width: 100vw !important;
+            height: 100vh !important;
+            z-index: 999999 !important;
+            background: #020617 !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: space-between !important;
+        }
+        .fullscreen-active #main-editor-canvas {
+            max-height: 85vh !important;
+            max-width: 95vw !important;
+        }
     </style>
 </head>
-<body class="relative min-h-screen text-slate-100 selection:bg-pink-500 selection:text-white pb-14">
+<body class="relative min-h-screen text-slate-100 selection:bg-pink-500 selection:text-white pb-10">
 
-    <!-- Decorative background blobs -->
-    <div class="blob bg-pink-600/20 w-[420px] h-[420px] top-[-80px] left-[-80px]"></div>
-    <div class="blob bg-indigo-600/20 w-[480px] h-[480px] bottom-[60px] right-[-60px]" style="animation-delay: -3s;"></div>
-    <div class="blob bg-blue-600/15 w-[360px] h-[360px] top-[40%] left-[45%]" style="animation-delay: -6s;"></div>
-
-    <header class="glass-panel sticky top-0 z-40 px-4 sm:px-6 md:px-8 py-3.5 mb-6 border-b border-white/5">
-        <div class="max-w-7xl mx-auto flex items-center justify-between gap-3">
-            <div class="flex items-center gap-3">
-                <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center shrink-0">
-                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path>
-                    </svg>
+    <header class="glass-panel sticky top-0 z-50 px-4 md:px-8 py-3 md:py-4 mb-6">
+        <div class="max-w-7xl mx-auto flex items-center justify-between">
+            <h1 class="text-lg md:text-2xl font-extrabold text-white tracking-tight flex items-center gap-2 md:gap-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-pink-500 to-rose-600 shadow-lg shadow-pink-500/30 flex items-center justify-center shrink-0">
+                    <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
                 </div>
-                <div>
-                    <h1 class="text-base sm:text-lg md:text-xl font-extrabold text-white tracking-tight leading-tight">
-                        Estampador & Editor Pro
-                    </h1>
-                    <span class="text-[10px] sm:text-xs font-semibold text-pink-400 block">X-Fish • Capas Z & 60 FPS</span>
-                </div>
-            </div>
-            <div class="flex items-center gap-2">
-                <button onclick="window.scrollTo({top: 0, behavior: 'smooth'})" class="text-xs font-bold text-slate-400 hover:text-white px-2.5 py-1.5 rounded-lg bg-slate-800/60 border border-slate-700/60 transition-colors">
-                    ↑ Inicio
-                </button>
-            </div>
+                <span>Estampador Pro & Editor por Capas</span>
+            </h1>
+            <a href="index.html" class="text-xs md:text-sm font-semibold text-pink-400 hover:text-pink-300 transition-colors">← Volver</a>
         </div>
     </header>
 
-    <main class="max-w-7xl mx-auto w-full px-3 sm:px-6 space-y-6 relative z-10">
+    <main class="max-w-7xl mx-auto w-full px-3 md:px-6 space-y-6 relative z-10">
+        
+        <!-- SECCIÓN 1: CARGA DE ARCHIVOS -->
+        <div class="glass-panel rounded-3xl p-5 md:p-8">
+            <h2 class="text-base md:text-lg font-bold text-slate-200 mb-4 border-b border-slate-700 pb-3">1. Cargar Archivos</h2>
+            
+            <div class="mb-5 flex flex-col sm:flex-row gap-3 sm:gap-6 border-b border-slate-700/60 pb-4 text-xs md:text-sm">
+                <label class="flex items-center gap-2 font-bold text-slate-300 cursor-pointer hover:text-pink-400 p-2 rounded-lg hover:bg-slate-800">
+                    <input type="radio" name="input-mode" value="excel" checked class="accent-pink-600 w-4 h-4">
+                    Modo Excel (Lote Automático)
+                </label>
+                <label class="flex items-center gap-2 font-bold text-slate-300 cursor-pointer hover:text-pink-400 p-2 rounded-lg hover:bg-slate-800">
+                    <input type="radio" name="input-mode" value="manual" class="accent-pink-600 w-4 h-4">
+                    Modo Manual (Foto por foto)
+                </label>
+            </div>
 
-        <!-- 1. Cargar Datos e Imágenes -->
-        <div class="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6 md:p-8">
-            <div class="flex flex-col sm:flex-row sm:items-center justify-between pb-4 mb-5 border-b border-slate-700/60 gap-3">
-                <div>
-                    <h2 class="text-base sm:text-lg font-bold text-white flex items-center gap-2">
-                        <span>1. Cargar Datos e Imágenes</span>
-                    </h2>
-                    <p class="text-xs text-slate-400 mt-0.5">Compatible con planillas de catálogo masivas o edición manual por fotografía.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+                <div id="excel-input-container" class="bg-slate-800/80 border border-slate-700 p-4 md:p-5 rounded-2xl">
+                    <label class="block text-xs md:text-sm font-bold text-slate-200 mb-2">📊 Archivo Excel (.xlsx, .csv)</label>
+                    <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-pink-600 file:text-white hover:file:bg-pink-500 cursor-pointer"/>
                 </div>
 
-                <!-- Selector de Modo de Ingesta -->
-                <div class="inline-flex p-1 rounded-xl bg-slate-800/80 border border-slate-700/60 shrink-0">
-                    <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 cursor-pointer px-3 py-1.5 rounded-lg has-[:checked]:bg-pink-600 has-[:checked]:text-white transition-all">
-                        <input type="radio" name="input-mode" value="excel" checked class="hidden">
-                        <span>📊 Modo Excel</span>
-                    </label>
-                    <label class="flex items-center gap-1.5 text-xs font-bold text-slate-300 cursor-pointer px-3 py-1.5 rounded-lg has-[:checked]:bg-pink-600 has-[:checked]:text-white transition-all">
-                        <input type="radio" name="input-mode" value="manual" class="hidden">
-                        <span>✍️ Manual</span>
-                    </label>
+                <div class="bg-slate-800/80 border border-slate-700 p-4 md:p-5 rounded-2xl">
+                    <label class="block text-xs md:text-sm font-bold text-slate-200 mb-2">📸 Carpeta de Imágenes</label>
+                    <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer"/>
                 </div>
             </div>
 
-            <!-- Uploaders Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 sm:gap-6 mb-6">
-                <!-- Excel file -->
-                <div id="excel-input-container" class="bg-slate-900/60 border border-slate-800 p-4 sm:p-5 rounded-2xl">
-                    <label class="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">📊 Planilla Excel (.xlsx, .xls, .csv)</label>
-                    <p class="text-[11px] text-slate-400 mb-3">Vinculará cada fila con la imagen que comparta el mismo código o SKU.</p>
-                    <input type="file" id="file-excel" accept=".xlsx, .xls, .csv" class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-pink-600 file:text-white hover:file:bg-pink-500 cursor-pointer transition-colors"/>
-                </div>
-
-                <!-- Photos Folder -->
-                <div class="bg-slate-900/60 border border-slate-800 p-4 sm:p-5 rounded-2xl">
-                    <label class="block text-xs sm:text-sm font-bold text-slate-200 mb-1.5">📸 Carpeta de Imágenes</label>
-                    <p class="text-[11px] text-slate-400 mb-3">Soporta JPG, PNG y WEBP en alta resolución.</p>
-                    <input type="file" id="file-images" accept="image/*" multiple class="block w-full text-xs text-slate-400 file:mr-3 file:py-2 file:px-3.5 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-indigo-600 file:text-white hover:file:bg-indigo-500 cursor-pointer transition-colors"/>
-                </div>
-            </div>
-
-            <!-- Dynamic Excel Column Mapping Panel -->
-            <div id="mapping-section" class="hidden bg-slate-900/70 p-4 sm:p-5 rounded-2xl border border-pink-500/20 mb-6">
-                <div class="flex items-center justify-between mb-3">
-                    <h3 class="text-xs sm:text-sm font-bold text-pink-400">🔗 Mapeo de Columnas Detectadas</h3>
-                    <span class="text-[10px] text-slate-400 font-semibold bg-slate-800 px-2.5 py-1 rounded-full border border-slate-700">Detectadas del archivo</span>
-                </div>
+            <!-- Mapeo Excel -->
+            <div id="mapping-section" class="hidden bg-slate-800/50 p-4 md:p-5 rounded-2xl border border-slate-700 mb-6">
+                <h3 class="text-xs md:text-sm font-bold text-pink-400 mb-3">Vincular Columnas del Excel</h3>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-                    <div>
-                        <label class="text-[11px] font-semibold text-slate-300 mb-1 block">Código (Nombre archivo)</label>
-                        <select id="col-cod" class="custom-select"></select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-semibold text-blue-400 mb-1 block">Título ARRIBA</label>
-                        <select id="col-texto-arriba" class="custom-select"></select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-semibold text-amber-400 mb-1 block">Subtítulo ARRIBA</label>
-                        <select id="col-texto-sub" class="custom-select"></select>
-                    </div>
-                    <div>
-                        <label class="text-[11px] font-semibold text-emerald-400 mb-1 block">Texto / Código ABAJO</label>
-                        <select id="col-texto-abajo" class="custom-select"></select>
-                    </div>
+                    <div><label class="text-xs font-semibold text-slate-400 mb-1 block">Código (Nombre foto)</label><select id="col-cod" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-slate-400 mb-1 block">Título ARRIBA</label><select id="col-texto-arriba" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-amber-400 mb-1 block">Subtítulo ARRIBA</label><select id="col-texto-sub" class="custom-select"></select></div>
+                    <div><label class="text-xs font-semibold text-emerald-400 mb-1 block">Texto ABAJO</label><select id="col-texto-abajo" class="custom-select"></select></div>
                 </div>
             </div>
 
-            <!-- Manual Input Panel (photo by photo) -->
-            <div id="manual-input-section" class="hidden bg-slate-900/70 p-4 sm:p-5 rounded-2xl border border-slate-800 mb-6 max-h-[50vh] ios-scroll">
-                <h3 class="text-xs sm:text-sm font-bold text-indigo-400 mb-3 sticky top-0 bg-slate-900/90 backdrop-blur pb-2 z-10 border-b border-slate-800">
-                    ✍️ Edición de Textos por Fotografía
-                </h3>
-                <div id="manual-text-list" class="space-y-3">
-                    <p class="text-xs text-slate-500 italic">Seleccioná las imágenes primero para cargarlas individualmente.</p>
-                </div>
+            <div id="manual-input-section" class="hidden bg-slate-800/50 p-3 md:p-4 rounded-2xl border border-slate-700 mb-6 max-h-[50vh] ios-scroll">
+                <div id="manual-text-list" class="space-y-3"></div>
             </div>
 
-            <div class="mb-6 bg-slate-900/90 p-4 sm:p-6 rounded-2xl border border-slate-800 flex flex-col lg:flex-row gap-6 shadow-inner">
-                <!-- Global Controls -->
-                <div class="w-full lg:w-1/2 space-y-4">
-                    <div class="flex items-center justify-between border-b border-slate-800 pb-2">
-                        <h3 class="text-xs sm:text-sm font-bold text-white flex items-center gap-2">
-                            <span>⚙️ Ajustes Globales de Plantilla</span>
-                        </h3>
-                        <span class="text-[10px] text-pink-400 font-bold uppercase tracking-wider bg-pink-500/10 px-2 py-0.5 rounded-md border border-pink-500/20">Aplica a todas</span>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                            <label class="text-[11px] font-semibold text-slate-300 mb-1 block uppercase">Modo de Diseño</label>
-                            <select id="global-mode" class="custom-select">
-                                <option value="margin">🖼️ Lienzo c/ Márgenes</option>
-                                <option value="overlay">📸 Texto Superpuesto</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[11px] font-semibold text-slate-300 mb-1 block uppercase">Color Tipografía</label>
-                            <div class="flex items-center gap-2 bg-slate-950 p-1.5 rounded-xl border border-slate-800">
-                                <input type="color" id="global-color" value="#000000" class="w-8 h-8 rounded-lg cursor-pointer">
-                                <span id="global-color-label" class="text-xs font-mono text-slate-300">#000000</span>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="grid grid-cols-2 gap-3 sm:gap-4">
-                        <div>
-                            <label class="text-[11px] font-semibold text-slate-300 flex justify-between mb-1 uppercase">
-                                <span>Escala Texto</span><span id="val-global-scale" class="text-pink-400 font-bold">100%</span>
-                            </label>
-                            <input type="range" id="global-scale" min="20" max="250" value="100">
-                        </div>
-                        <div>
-                            <label class="text-[11px] font-semibold text-slate-300 flex justify-between mb-1 uppercase">
-                                <span>Posición Foto (Y)</span><span id="val-global-img-y" class="text-pink-400 font-bold">0px</span>
-                            </label>
-                            <input type="range" id="global-img-y" min="-400" max="400" value="0">
-                        </div>
-                    </div>
-
-                    <div class="space-y-3 pt-2 border-t border-slate-800">
-                        <div>
-                            <label class="text-[10px] font-bold text-blue-400 uppercase flex justify-between">
-                                <span>Altura TÍTULO (Y)</span><span id="val-global-y-top">0px</span>
-                            </label>
-                            <input type="range" id="global-y-top" min="-500" max="500" value="0">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-amber-400 uppercase flex justify-between">
-                                <span>Altura SUBTÍTULO (Y)</span><span id="val-global-y-sub">0px</span>
-                            </label>
-                            <input type="range" id="global-y-sub" min="-500" max="500" value="0">
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-emerald-400 uppercase flex justify-between">
-                                <span>Altura TEXTO ABAJO (Y)</span><span id="val-global-y-bot">0px</span>
-                            </label>
-                            <input type="range" id="global-y-bot" min="-500" max="500" value="0">
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Live Mockup Container with Toggles -->
-                <div class="w-full lg:w-1/2 flex flex-col justify-between">
-                    <div>
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-2 mb-2">
-                            <h3 class="text-xs sm:text-sm font-bold text-pink-400 flex items-center gap-1.5">
-                                <span>👁️ Previsualización Dinámica</span>
-                            </h3>
-                            <span class="text-[10px] text-slate-400 font-medium">Borrador en tiempo real</span>
-                        </div>
-
-                        <!-- Visibility Toggles -->
-                        <div class="flex flex-wrap gap-2 mb-3 justify-center text-[10px] font-bold uppercase text-slate-300 bg-slate-950/70 p-2 rounded-xl border border-slate-800">
-                            <label class="flex items-center gap-1.5 cursor-pointer hover:text-blue-400 transition-colors">
-                                <input type="checkbox" id="mock-show-top" checked class="accent-blue-500 w-3.5 h-3.5 rounded"> Ver Título
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-pointer hover:text-amber-400 transition-colors">
-                                <input type="checkbox" id="mock-show-sub" checked class="accent-amber-500 w-3.5 h-3.5 rounded"> Ver Subtítulo
-                            </label>
-                            <label class="flex items-center gap-1.5 cursor-pointer hover:text-emerald-400 transition-colors">
-                                <input type="checkbox" id="mock-show-bot" checked class="accent-emerald-500 w-3.5 h-3.5 rounded"> Ver Abajo
-                            </label>
-                        </div>
-                    </div>
-
-                    <!-- Canvas preview box -->
-                    <div class="bg-slate-950 border border-slate-800 rounded-xl flex-grow flex items-center justify-center p-2 min-h-[240px] max-h-[340px] relative overflow-hidden" style="background: repeating-conic-gradient(#1e293b 0% 25%, #0f172a 0% 50%) 50% / 20px 20px;">
-                        <div id="mockup-placeholder" class="text-center p-4">
-                            <span class="text-4xl mb-1.5 block">📸</span>
-                            <span class="text-xs text-slate-400 font-bold leading-relaxed block">Subí imágenes arriba para ver<br>la plantilla en tiempo real</span>
-                        </div>
-                        <img id="global-mockup-img" class="hidden max-h-[290px] w-auto object-contain drop-shadow-xl rounded bg-white" alt="Borrador en vivo" />
-                    </div>
-                </div>
-            </div>
-
-            <!-- Process button -->
-            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 via-rose-500 to-pink-600 hover:from-pink-600 hover:to-rose-600 text-white font-extrabold py-3.5 px-8 rounded-xl shadow-lg shadow-pink-500/25 active:scale-95 text-xs sm:text-sm uppercase tracking-wider flex items-center justify-center gap-2 transition-all">
-                <span>🎨 Procesar y Generar Lote Completo</span>
+            <button id="btn-process" class="w-full sm:w-auto bg-gradient-to-r from-pink-500 to-rose-500 hover:from-pink-600 hover:to-rose-600 text-white font-bold py-3 px-8 rounded-xl shadow-lg shadow-pink-500/25 active:scale-95 text-xs md:text-sm uppercase tracking-wide transition-all">
+                🎨 Procesar Lote
             </button>
         </div>
 
+        <!-- SECCIÓN 2: RESULTADOS -->
         <div id="results-section" class="hidden space-y-6">
             <div id="error-alerts" class="w-full"></div>
-
-            <div class="glass-panel p-4 sm:p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500 gap-4">
+            <div class="glass-panel p-4 md:p-5 rounded-2xl flex flex-col md:flex-row items-center justify-between border-l-4 border-l-pink-500 gap-4">
                 <div class="text-center md:text-left">
-                    <h3 class="text-base sm:text-lg font-bold text-white" id="results-text">Fichas y Banners Generados</h3>
-                    <p class="text-xs sm:text-sm text-slate-400 font-medium mt-0.5" id="results-subtext">Edición táctil individual por capas o descarga directa en HD.</p>
+                    <h3 class="text-base md:text-lg font-bold text-white" id="results-text">Borradores Generados</h3>
+                    <p class="text-xs md:text-sm text-slate-400 font-medium" id="results-subtext">Ajustá capas, pintá o descargá individualmente.</p>
                 </div>
-                <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-all text-xs sm:text-sm">
-                    <svg class="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path>
-                    </svg>
-                    <span>Descargar Todo en ZIP (2000px HD)</span>
+                <button id="btn-dl-zip" class="w-full md:w-auto bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-indigo-500/30 flex items-center justify-center gap-2 active:scale-95 transition-all text-xs md:text-sm">
+                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                    Descargar Lote Completo (ZIP)
                 </button>
             </div>
-
-            <div class="glass-panel rounded-2xl sm:rounded-3xl p-4 sm:p-6">
-                <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6"></div>
+            <div class="glass-panel rounded-3xl p-3 md:p-6">
+                <div id="preview-grid" class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-6"></div>
             </div>
         </div>
-
     </main>
 
-    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-2 sm:p-4">
-        <div class="bg-slate-900 border border-slate-700/80 rounded-2xl sm:rounded-3xl shadow-2xl w-full max-w-6xl h-[94vh] flex flex-col md:flex-row overflow-hidden relative">
-            
-            <!-- Mobile Close Button -->
-            <button onclick="closeModal()" class="md:hidden absolute top-2.5 right-2.5 z-50 bg-slate-800/90 text-rose-400 font-bold w-8 h-8 rounded-full shadow border border-slate-700 flex items-center justify-center text-lg active:scale-95">
-                &times;
-            </button>
+    <!-- MODAL EDITOR POR CAPAS CON PANTALLA COMPLETA TOTAL -->
+    <div id="editor-modal" class="fixed inset-0 modal-overlay hidden flex items-center justify-center p-1 sm:p-4">
+        <div class="bg-slate-900 border border-slate-700 rounded-3xl shadow-2xl w-full max-w-6xl h-[98vh] flex flex-col md:flex-row overflow-hidden relative">
+            <button onclick="closeModal()" class="md:hidden absolute top-2 right-2 z-50 bg-slate-800 text-rose-400 font-bold w-8 h-8 rounded-full shadow border border-slate-700 flex items-center justify-center text-xl">&times;</button>
 
-            <!-- LEFT COLUMN: Canvas and Interactive Painting Engine -->
-            <div class="w-full md:w-1/2 bg-slate-950 flex flex-col items-center justify-between p-2.5 sm:p-3 border-b md:border-b-0 md:border-r border-slate-800 h-[48vh] md:h-auto shrink-0 select-none">
+            <!-- LADO IZQUIERDO: CANVAS, HERRAMIENTAS Y PANTALLA COMPLETA -->
+            <div id="canvas-column" class="w-full md:w-1/2 bg-slate-950 flex flex-col items-center justify-between p-2.5 md:p-3 border-b md:border-b-0 md:border-r border-slate-800 h-[50vh] md:h-auto shrink-0 select-none transition-all">
                 
-                <!-- Paint Toolbar -->
-                <div class="w-full bg-slate-900/90 backdrop-blur rounded-xl p-2 border border-slate-800 shadow-md flex flex-wrap items-center justify-between gap-2 z-10">
-                    <div class="flex items-center gap-1.5">
-                        <button id="tool-brush" onclick="setTool('brush')" class="tool-btn active px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-[11px] sm:text-xs font-bold text-slate-200 transition-all">
-                            🖌️ Pincel
-                        </button>
-                        <button id="tool-eraser" onclick="setTool('eraser')" class="tool-btn px-2.5 sm:px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-[11px] sm:text-xs font-bold text-slate-200 transition-all">
-                            🧹 Borrador
-                        </button>
-                        <button onclick="clearCurrentLayerPaint()" class="px-2 py-1.5 bg-rose-950/50 text-rose-300 hover:bg-rose-900/80 rounded-lg border border-rose-800/60 text-[11px] sm:text-xs font-bold transition-all">
-                            🗑️ Limpiar
-                        </button>
+                <!-- Barra de herramientas superior -->
+                <div class="w-full bg-slate-900/90 backdrop-blur rounded-xl p-2 border border-slate-800 shadow flex items-center justify-between gap-1.5 z-10 overflow-x-auto ios-scroll">
+                    <div class="flex items-center gap-1 shrink-0">
+                        <button id="tool-brush" onclick="setTool('brush')" class="tool-btn active px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-bold text-slate-200">🖌️ Pincel</button>
+                        <button id="tool-eraser" onclick="setTool('eraser')" class="tool-btn px-2.5 py-1.5 rounded-lg border border-slate-700 bg-slate-800 text-xs font-bold text-slate-200">🧹 Borrar</button>
+                        <button onclick="clearCurrentLayerPaint()" class="px-2 py-1.5 bg-rose-950/60 text-rose-300 hover:bg-rose-900 rounded-lg border border-rose-800 text-xs font-bold">🗑️ Capa</button>
                     </div>
 
-                    <div class="flex items-center gap-2">
-                        <!-- Active Paint Layer Selector -->
-                        <div class="flex items-center gap-1 bg-slate-950 p-1 rounded-lg border border-slate-800">
-                            <span class="text-[9px] font-bold text-slate-400 uppercase">Pintar en:</span>
-                            <select id="active-paint-layer" class="bg-transparent text-[10px] font-bold text-pink-400 outline-none cursor-pointer" onchange="switchPaintLayer(this.value)">
-                                <option value="over" class="bg-slate-900 text-slate-200">Por Encima</option>
-                                <option value="under" class="bg-slate-900 text-slate-200">Por Detrás</option>
-                            </select>
+                    <div class="flex items-center gap-1.5 shrink-0">
+                        <select id="active-paint-layer" class="custom-select py-1 px-1.5 text-[11px] w-24 bg-slate-800 border-slate-700" onchange="switchPaintLayer(this.value)">
+                            <option value="over">Encima</option>
+                            <option value="under">Detrás</option>
+                        </select>
+                        <input type="color" id="brush-color" value="#ff0055" class="w-6 h-6 rounded border border-slate-700">
+                        
+                        <!-- Pincel con tamaño libre (slider + número sin límite) -->
+                        <div class="flex items-center gap-1 bg-slate-800 px-1.5 py-0.5 rounded border border-slate-700">
+                            <input type="range" id="brush-size" min="1" max="300" value="15" class="w-14" oninput="syncBrushInput(this.value)">
+                            <input type="number" id="brush-size-number" min="1" max="1000" value="15" class="w-10 bg-transparent text-center font-bold text-xs text-pink-400 outline-none" oninput="syncBrushSlider(this.value)">
                         </div>
-                        <input type="color" id="brush-color" value="#ec4899" class="w-6 h-6 sm:w-7 sm:h-7 rounded border border-slate-700">
-                        <input type="range" id="brush-size" min="2" max="90" value="15" class="w-14 sm:w-18" title="Grosor">
+
+                        <!-- Botón Fullscreen Total -->
+                        <button onclick="toggleFullscreenCanvas()" id="btn-fullscreen-toggle" class="p-1.5 bg-indigo-600 hover:bg-indigo-500 rounded-lg text-white font-bold text-xs shadow flex items-center justify-center gap-1" title="Pantalla Completa Total">
+                            <span id="fs-icon">⛶</span>
+                        </button>
                     </div>
                 </div>
 
-                <!-- Main Viewport Canvas -->
-                <div class="relative flex-grow flex items-center justify-center w-full overflow-hidden my-1.5">
-                    <canvas id="main-editor-canvas" class="max-w-full max-h-[34vh] md:max-h-[72vh] object-contain drop-shadow-2xl rounded bg-white"></canvas>
+                <!-- Canvas de dibujo interactivo -->
+                <div class="relative flex-grow flex items-center justify-center w-full overflow-hidden my-2">
+                    <canvas id="main-editor-canvas" class="max-w-full max-h-[38vh] md:max-h-[75vh] object-contain drop-shadow-2xl rounded bg-white"></canvas>
                 </div>
 
-                <div class="flex items-center justify-between w-full px-2 text-[10px] font-bold text-slate-400">
-                    <span>⚡ Respuesta táctil a 60 FPS</span>
-                    <span id="canvas-resolution-badge" class="font-mono text-pink-400">2000 x 2000</span>
+                <div class="w-full flex items-center justify-between text-[11px] font-bold text-slate-400 px-1">
+                    <span>⚡ 60 FPS Táctil Fluido</span>
+                    <button onclick="toggleFullscreenCanvas()" class="text-indigo-400 hover:underline md:hidden">⛶ Pantalla Completa</button>
                 </div>
             </div>
 
-            <!-- RIGHT COLUMN: Layer Z-Index Stack and Movement Coordinates -->
-            <div class="w-full md:w-1/2 p-3 sm:p-5 md:p-6 flex flex-col flex-grow overflow-hidden bg-slate-900">
+            <!-- LADO DERECHO: STACK DE CAPAS (Z-INDEX) Y MOVIMIENTO TOTAL X / Y -->
+            <div class="w-full md:w-1/2 p-3 md:p-6 flex flex-col flex-grow overflow-hidden bg-slate-900">
                 <div class="hidden md:flex justify-between items-center mb-3 pb-2 border-b border-slate-800">
-                    <div>
-                        <h2 class="text-base sm:text-lg font-extrabold text-white">Ajuste por Capas (X / Y / Z)</h2>
-                        <span class="text-[11px] text-slate-400 font-medium">Reordená el Z-Index y mové los elementos libremente</span>
-                    </div>
-                    <button onclick="closeModal()" class="text-slate-400 hover:text-rose-400 font-bold text-2xl transition-colors">&times;</button>
+                    <h2 class="text-xl font-extrabold text-white">Capas & Posición (X / Y / Z)</h2>
+                    <button onclick="closeModal()" class="text-slate-400 hover:text-rose-400 font-bold text-2xl">&times;</button>
                 </div>
 
-                <!-- Scrollable controls pane -->
-                <div class="space-y-3.5 ios-scroll flex-grow pr-1 sm:pr-2 pb-6">
-
-                    <!-- 1. Background / Image Layer -->
-                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700 space-y-2">
+                <div class="space-y-3.5 ios-scroll flex-grow pr-1 pb-6">
+                    
+                    <!-- 1. Capa Imagen Principal -->
+                    <div class="bg-slate-800/60 p-2.5 md:p-3 rounded-xl border border-slate-700 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <span class="text-xs font-bold text-purple-400 uppercase flex items-center gap-1.5">
-                                <span>🖼️ Foto / Imagen Principal</span>
-                            </span>
+                            <span class="text-xs font-bold text-purple-400 uppercase">🖼️ Capa Imagen Principal</span>
                             <div class="flex items-center gap-1.5">
-                                <span class="text-[10px] text-slate-400 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-img" min="1" max="10" value="1" class="w-11 py-0.5 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <span class="text-[10px] text-slate-400 uppercase font-bold">Orden Capa (Z):</span>
+                                <input type="number" id="z-img" min="1" max="10" value="1" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-400 uppercase">
-                            <div><span>Mover X</span><input type="range" id="x-img" min="-600" max="600" value="0"></div>
-                            <div><span>Mover Y</span><input type="range" id="y-img" min="-600" max="600" value="0"></div>
-                        </div>
-                    </div>
-
-                    <!-- 2. Paint Layers (Z-Index controls) -->
-                    <div class="bg-slate-800/60 p-3 rounded-xl border border-slate-700 space-y-2">
-                        <span class="text-xs font-bold text-pink-400 uppercase">🎨 Orden de Pinceles (Z-Index)</span>
                         <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
-                            <div class="flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800">
-                                <span>Detrás (Z):</span>
-                                <input type="number" id="z-paint-under" min="1" max="10" value="2" class="w-10 py-0.5 bg-slate-800 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                            <div><span>Posición X</span><input type="range" id="x-img" min="-600" max="600" value="0"></div>
+                            <div><span>Posición Y</span><input type="range" id="y-img" min="-600" max="600" value="0"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Capas de Pintura Pincel (Z-Index) -->
+                    <div class="bg-slate-800/60 p-2.5 md:p-3 rounded-xl border border-slate-700 space-y-1.5">
+                        <span class="text-xs font-bold text-pink-400 uppercase">🎨 Profundidad Z de Pinceles</span>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
+                            <div class="flex items-center justify-between bg-slate-900 p-1.5 rounded border border-slate-800">
+                                <span>Pintura Detrás (Z):</span>
+                                <input type="number" id="z-paint-under" min="1" max="10" value="2" class="w-10 py-0.5 px-1 bg-slate-800 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
                             </div>
-                            <div class="flex items-center justify-between bg-slate-900 p-2 rounded-lg border border-slate-800">
-                                <span>Encima (Z):</span>
-                                <input type="number" id="z-paint-over" min="1" max="10" value="6" class="w-10 py-0.5 bg-slate-800 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                            <div class="flex items-center justify-between bg-slate-900 p-1.5 rounded border border-slate-800">
+                                <span>Pintura Encima (Z):</span>
+                                <input type="number" id="z-paint-over" min="1" max="10" value="6" class="w-10 py-0.5 px-1 bg-slate-800 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
                             </div>
                         </div>
                     </div>
 
-                    <!-- 3. Title Layer -->
-                    <div class="p-3 bg-blue-950/40 rounded-xl border border-blue-900/60 space-y-2">
+                    <!-- 3. Capa Título -->
+                    <div class="p-2.5 md:p-3 bg-blue-950/40 rounded-xl border border-blue-900/60 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-blue-400 uppercase">Título ARRIBA</label>
+                            <label class="text-xs font-bold text-blue-400 uppercase">Título Principal</label>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-400 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-top" min="1" max="10" value="3" class="w-11 py-0.5 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <input type="number" id="z-top" min="1" max="10" value="3" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
                             </div>
                         </div>
-                        <textarea id="txt-top" class="custom-input text-xs" rows="1" placeholder="Título..."></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-400 uppercase">
+                        <textarea id="txt-top" class="custom-input text-xs" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-top" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-top" min="-600" max="600" value="0"></div>
                         </div>
                     </div>
 
-                    <!-- 4. Subtitle Layer -->
-                    <div class="p-3 bg-amber-950/40 rounded-xl border border-amber-900/60 space-y-2">
+                    <!-- 4. Capa Subtítulo -->
+                    <div class="p-2.5 md:p-3 bg-amber-950/40 rounded-xl border border-amber-900/60 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-amber-400 uppercase">Subtítulo ARRIBA</label>
+                            <label class="text-xs font-bold text-amber-400 uppercase">Subtítulo</label>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-400 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-sub" min="1" max="10" value="4" class="w-11 py-0.5 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <input type="number" id="z-sub" min="1" max="10" value="4" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
                             </div>
                         </div>
-                        <textarea id="txt-sub" class="custom-input text-xs" rows="1" placeholder="Subtítulo..."></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-400 uppercase">
+                        <textarea id="txt-sub" class="custom-input text-xs" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-sub" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-sub" min="-600" max="600" value="0"></div>
                         </div>
                     </div>
 
-                    <!-- 5. Bottom Text Layer -->
-                    <div class="p-3 bg-emerald-950/40 rounded-xl border border-emerald-900/60 space-y-2">
+                    <!-- 5. Capa Texto Abajo -->
+                    <div class="p-2.5 md:p-3 bg-emerald-950/40 rounded-xl border border-emerald-900/60 space-y-1.5">
                         <div class="flex items-center justify-between">
-                            <label class="text-xs font-bold text-emerald-400 uppercase">Texto / Código ABAJO</label>
+                            <label class="text-xs font-bold text-emerald-400 uppercase">Texto Abajo</label>
                             <div class="flex items-center gap-1.5">
                                 <span class="text-[10px] text-slate-400 uppercase font-bold">Capa Z:</span>
-                                <input type="number" id="z-bot" min="1" max="10" value="5" class="w-11 py-0.5 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
+                                <input type="number" id="z-bot" min="1" max="10" value="5" class="w-12 py-0.5 px-1 bg-slate-900 border border-slate-700 rounded text-center text-xs text-white font-bold" oninput="scheduleRender()">
                             </div>
                         </div>
-                        <textarea id="txt-bot" class="custom-input text-xs" rows="1" placeholder="Código o precio..."></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[9px] font-bold text-slate-400 uppercase">
+                        <textarea id="txt-bot" class="custom-input text-xs" rows="1"></textarea>
+                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-400 uppercase">
                             <div><span>Mover X</span><input type="range" id="x-bot" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-bot" min="-600" max="600" value="0"></div>
                         </div>
                     </div>
 
-                    <!-- Individual Design Mode, Color & Font Scale -->
-                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 bg-slate-800/60 p-3 rounded-xl border border-slate-700">
+                    <!-- Color & Escala General -->
+                    <div class="grid grid-cols-2 gap-2 bg-slate-800/60 p-2.5 rounded-xl border border-slate-700">
                         <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Estilo Fondo</label>
-                            <select id="edit-mode" class="custom-select py-1.5 text-xs">
-                                <option value="margin">Lienzo con Margen</option>
-                                <option value="overlay">Superpuesto</option>
-                            </select>
-                        </div>
-                        <div>
-                            <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Color Letras</label>
-                            <input type="color" id="edit-color" class="w-full h-[34px] rounded-lg border border-slate-700 bg-slate-900 p-1">
+                            <label class="text-[10px] font-bold text-slate-400 uppercase mb-1 block">Color Textos</label>
+                            <input type="color" id="edit-color" class="w-full h-[32px] rounded border border-slate-700 bg-slate-900 p-1">
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-400 uppercase flex justify-between mb-1">
@@ -508,13 +288,11 @@
                             <input type="range" id="edit-scale" min="20" max="250" value="100">
                         </div>
                     </div>
-
                 </div>
 
-                <!-- Apply Button -->
-                <div class="mt-2.5 pt-2.5 border-t border-slate-800 shrink-0">
-                    <button onclick="saveModalChanges()" class="w-full bg-gradient-to-r from-pink-500 to-rose-600 hover:from-pink-600 hover:to-rose-700 active:scale-95 text-white font-bold py-3 px-6 rounded-xl shadow-lg shadow-pink-500/25 transition-all text-xs sm:text-sm uppercase tracking-wide">
-                        ✅ Aplicar Cambios a la Ficha
+                <div class="mt-2 pt-2 border-t border-slate-800 shrink-0">
+                    <button onclick="saveModalChanges()" class="w-full bg-pink-600 hover:bg-pink-500 active:bg-pink-700 text-white font-bold py-2.5 md:py-3 px-6 rounded-xl shadow-lg transition-all text-xs md:text-sm">
+                        ✅ Aplicar Cambios
                     </button>
                 </div>
             </div>
@@ -528,7 +306,7 @@
         let activeEditIndex = -1;
         const fontFamily = '"Berlin Sans FB", "Century Gothic", "Tw Cen MT", "Arial Rounded MT Bold", sans-serif';
 
-        // Offscreen high-speed drawing buffers
+        // Capas Offscreen para Pincel Ultrarrápido
         const paintUnderCanvas = document.createElement('canvas');
         const paintUnderCtx = paintUnderCanvas.getContext('2d');
         const paintOverCanvas = document.createElement('canvas');
@@ -538,482 +316,10 @@
         let currentTool = 'brush';
         let isPainting = false;
         let renderRequested = false;
+        let isFullscreenCanvas = false;
 
         const mainEditorCanvas = document.getElementById('main-editor-canvas');
         const mainEditorCtx = mainEditorCanvas.getContext('2d');
-        let globalMockupImgObj = null;
-
-        // UI Slider value updates
-        const updateSliderVal = (id, suffix) => {
-            const el = document.getElementById(id);
-            if (!el) return;
-            const updateFn = () => {
-                const target = document.getElementById(`val-${id}`);
-                if (target) target.textContent = el.value + suffix;
-                updateGlobalMockup();
-            };
-            el.addEventListener('input', updateFn);
-            el.addEventListener('touchmove', updateFn, { passive: true });
-        };
-
-        updateSliderVal('global-scale', '%');
-        updateSliderVal('global-img-y', 'px');
-        updateSliderVal('global-y-top', 'px');
-        updateSliderVal('global-y-sub', 'px');
-        updateSliderVal('global-y-bot', 'px');
-
-        document.getElementById('global-color').addEventListener('input', (e) => {
-            document.getElementById('global-color-label').textContent = e.target.value.toUpperCase();
-            updateGlobalMockup();
-        });
-
-        // Toggle visibility and global mockup listeners
-        ['global-mode', 'mock-show-top', 'mock-show-sub', 'mock-show-bot'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) {
-                el.addEventListener('input', updateGlobalMockup);
-                el.addEventListener('change', updateGlobalMockup);
-            }
-        });
-
-        // Mode switch: Excel vs Manual
-        document.querySelectorAll('input[name="input-mode"]').forEach(radio => {
-            radio.addEventListener('change', (e) => {
-                const isExcel = e.target.value === 'excel';
-                document.getElementById('excel-input-container').classList.toggle('hidden', !isExcel);
-                document.getElementById('mapping-section').classList.toggle('hidden', !isExcel || excelHeaders.length === 0);
-                document.getElementById('manual-input-section').classList.toggle('hidden', isExcel);
-                if (!isExcel) renderManualInputRows();
-            });
-        });
-
-        // Image loader
-        function loadImgObj(fileOrBlob) {
-            return new Promise((resolve, reject) => {
-                const img = new Image();
-                img.crossOrigin = "anonymous";
-                img.onload = () => resolve(img);
-                img.onerror = () => reject(new Error("Fallo al decodificar imagen"));
-                img.src = typeof fileOrBlob === 'string' ? fileOrBlob : URL.createObjectURL(fileOrBlob);
-            });
-        }
-
-        // Multiline text wrapping algorithm
-        function getWrappedLines(ctx, text, maxWidth) {
-            if (!text) return [];
-            let lines = [];
-            text.split('\n').forEach(explicitLine => {
-                let words = explicitLine.split(" ");
-                if (words.length === 0) return;
-                let currentLine = words[0];
-                for (let i = 1; i < words.length; i++) {
-                    let word = words[i];
-                    if (ctx.measureText(currentLine + " " + word).width <= maxWidth) {
-                        currentLine += " " + word;
-                    } else {
-                        lines.push(currentLine);
-                        currentLine = word;
-                    }
-                }
-                lines.push(currentLine);
-            });
-            return lines;
-        }
-
-        async function updateGlobalMockup() {
-            if (!globalMockupImgObj) return;
-
-            const mode = document.getElementById('global-mode').value;
-            const color = document.getElementById('global-color').value;
-            const scale = parseInt(document.getElementById('global-scale').value);
-            const imgY = parseInt(document.getElementById('global-img-y').value);
-            const yTop = parseInt(document.getElementById('global-y-top').value);
-            const ySub = parseInt(document.getElementById('global-y-sub').value);
-            const yBot = parseInt(document.getElementById('global-y-bot').value);
-
-            const showTop = document.getElementById('mock-show-top').checked;
-            const showSub = document.getElementById('mock-show-sub').checked;
-            const showBot = document.getElementById('mock-show-bot').checked;
-
-            const mockupConfig = {
-                imgObj: globalMockupImgObj,
-                mode: mode,
-                textColor: color,
-                textScale: scale,
-                top: showTop ? "TÍTULO DE PRODUCTO\nEDICIÓN PROFESIONAL" : "",
-                sub: showSub ? "2 Tramos / Grafito IM8" : "",
-                bot: showBot ? "COD: XFISH-2026\nPRECIO MAYORISTA" : "",
-                imgX: 0, imgY: imgY,
-                xTop: 0, yTop: yTop,
-                xSub: 0, ySub: ySub,
-                xBot: 0, yBot: yBot,
-                zImg: 1, zTop: 3, zSub: 4, zBot: 5, zPaintUnder: 2, zPaintOver: 6
-            };
-
-            const dataUrl = renderCanvasToDataUrl(mockupConfig, 1000);
-            const mockImgEl = document.getElementById('global-mockup-img');
-            mockImgEl.src = dataUrl;
-            mockImgEl.classList.remove('hidden');
-            document.getElementById('mockup-placeholder').classList.add('hidden');
-        }
-
-        // Render any configuration into a data URL
-        function renderCanvasToDataUrl(config, exportSize = 2000) {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const img = config.imgObj;
-            const scaleFactor = (config.textScale || 100) / 100;
-
-            let canvasWidth = exportSize;
-            let canvasHeight = exportSize;
-            const scaleRef = exportSize / 1000;
-
-            canvas.width = canvasWidth;
-            canvas.height = canvasHeight;
-
-            ctx.fillStyle = '#ffffff';
-            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
-            ctx.imageSmoothingEnabled = true;
-            ctx.imageSmoothingQuality = 'high';
-
-            const layers = [
-                {
-                    name: 'image',
-                    z: config.zImg !== undefined ? config.zImg : 1,
-                    draw: () => {
-                        let imgW = img.width;
-                        let imgH = img.height;
-
-                        if (config.mode === 'margin') {
-                            const maxAllowed = canvasWidth * 0.76;
-                            const r = Math.min(maxAllowed / imgW, maxAllowed / imgH);
-                            imgW = imgW * r;
-                            imgH = imgH * r;
-                        } else {
-                            const r = Math.min(canvasWidth / imgW, canvasHeight / imgH);
-                            imgW = imgW * r;
-                            imgH = imgH * r;
-                        }
-
-                        const posX = ((canvasWidth - imgW) / 2) + ((config.imgX || 0) * scaleRef);
-                        const posY = ((canvasHeight - imgH) / 2) + ((config.imgY || 0) * scaleRef);
-                        ctx.drawImage(img, posX, posY, imgW, imgH);
-                    }
-                },
-                {
-                    name: 'paint-under',
-                    z: config.zPaintUnder !== undefined ? config.zPaintUnder : 2,
-                    draw: () => {
-                        if (config.paintUnderCanvas) {
-                            ctx.drawImage(config.paintUnderCanvas, 0, 0, canvasWidth, canvasHeight);
-                        }
-                    }
-                },
-                {
-                    name: 'title',
-                    z: config.zTop !== undefined ? config.zTop : 3,
-                    draw: () => {
-                        if (!config.top) return;
-                        ctx.fillStyle = config.textColor || '#000000';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        const font = Math.round(48 * scaleRef * scaleFactor);
-                        ctx.font = `normal ${font}px ${fontFamily}`;
-                        const lines = getWrappedLines(ctx, config.top, canvasWidth * 0.88);
-                        const lh = font * 1.25;
-                        const startY = (85 * scaleRef) + ((config.yTop || 0) * scaleRef);
-                        const posX = (canvasWidth / 2) + ((config.xTop || 0) * scaleRef);
-                        lines.forEach((l, idx) => ctx.fillText(l, posX, startY + (idx * lh)));
-                    }
-                },
-                {
-                    name: 'sub',
-                    z: config.zSub !== undefined ? config.zSub : 4,
-                    draw: () => {
-                        if (!config.sub) return;
-                        ctx.fillStyle = config.textColor || '#000000';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        const font = Math.round(36 * scaleRef * scaleFactor);
-                        ctx.font = `normal ${font}px ${fontFamily}`;
-                        const lines = getWrappedLines(ctx, config.sub, canvasWidth * 0.88);
-                        const lh = font * 1.22;
-                        const startY = (160 * scaleRef) + ((config.ySub || 0) * scaleRef);
-                        const posX = (canvasWidth / 2) + ((config.xSub || 0) * scaleRef);
-                        lines.forEach((l, idx) => ctx.fillText(l, posX, startY + (idx * lh)));
-                    }
-                },
-                {
-                    name: 'bot',
-                    z: config.zBot !== undefined ? config.zBot : 5,
-                    draw: () => {
-                        if (!config.bot) return;
-                        ctx.fillStyle = config.textColor || '#000000';
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        const font = Math.round(38 * scaleRef * scaleFactor);
-                        ctx.font = `normal ${font}px ${fontFamily}`;
-                        const lines = getWrappedLines(ctx, config.bot, canvasWidth * 0.88);
-                        const lh = font * 1.25;
-                        const startY = canvasHeight - (75 * scaleRef) + ((config.yBot || 0) * scaleRef);
-                        const posX = (canvasWidth / 2) + ((config.xBot || 0) * scaleRef);
-                        lines.forEach((l, idx) => ctx.fillText(l, posX, startY + (idx * lh)));
-                    }
-                },
-                {
-                    name: 'paint-over',
-                    z: config.zPaintOver !== undefined ? config.zPaintOver : 6,
-                    draw: () => {
-                        if (config.paintOverCanvas) {
-                            ctx.drawImage(config.paintOverCanvas, 0, 0, canvasWidth, canvasHeight);
-                        }
-                    }
-                }
-            ];
-
-            layers.sort((a, b) => a.z - b.z).forEach(layer => layer.draw());
-            return canvas.toDataURL('image/jpeg', 0.96);
-        }
-
-        document.getElementById('file-excel').addEventListener('change', (e) => {
-            const file = e.target.files[0];
-            if (!file) return;
-
-            const reader = new FileReader();
-            reader.onload = function(evt) {
-                try {
-                    const data = new Uint8Array(evt.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
-                    const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
-                    excelData = XLSX.utils.sheet_to_json(firstSheet, { defval: "" });
-                    excelHeaders = XLSX.utils.sheet_to_json(firstSheet, { header: 1 })[0] || [];
-
-                    ['col-cod', 'col-texto-arriba', 'col-texto-sub', 'col-texto-abajo'].forEach(id => {
-                        const select = document.getElementById(id);
-                        select.innerHTML = id === 'col-cod' ? "" : "<option value=''>-- No utilizar --</option>";
-                        excelHeaders.forEach(opt => {
-                            if (opt && String(opt).trim()) {
-                                select.innerHTML += `<option value='${opt}'>${opt}</option>`;
-                            }
-                        });
-                    });
-
-                    // Smart auto-selection
-                    excelHeaders.forEach(h => {
-                        const s = String(h).toLowerCase();
-                        if (s.includes('cod') || s.includes('sku') || s.includes('referencia')) document.getElementById('col-cod').value = h;
-                        if (s.includes('nombre') || s.includes('titulo') || s.includes('descrip')) document.getElementById('col-texto-arriba').value = h;
-                        if (s.includes('sub') || s.includes('tipo') || s.includes('tramo')) document.getElementById('col-texto-sub').value = h;
-                        if (s.includes('precio') || s.includes('valor') || s.includes('pie')) document.getElementById('col-texto-abajo').value = h;
-                    });
-
-                    document.getElementById('mapping-section').classList.remove('hidden');
-                } catch(err) {
-                    alert("Error leyendo el archivo Excel. Asegurate de que sea un archivo válido.");
-                }
-            };
-            reader.readAsArrayBuffer(file);
-        });
-
-        document.getElementById('file-images').addEventListener('change', async (e) => {
-            const files = e.target.files;
-            if (files.length > 0) {
-                try {
-                    globalMockupImgObj = await loadImgObj(files[0]);
-                    updateGlobalMockup();
-                } catch(err) {
-                    console.error("Error al cargar imagen para borrador:", err);
-                }
-            }
-
-            if (document.querySelector('input[name="input-mode"]:checked').value === 'manual') {
-                renderManualInputRows();
-            }
-        });
-
-        function renderManualInputRows() {
-            const list = document.getElementById('manual-text-list');
-            const files = document.getElementById('file-images').files;
-            list.innerHTML = '';
-
-            if (files.length === 0) {
-                list.innerHTML = '<p class="text-xs text-slate-500 italic">Seleccioná las imágenes primero.</p>';
-                return;
-            }
-
-            Array.from(files).forEach((file, index) => {
-                list.innerHTML += `
-                    <div class="bg-slate-900/90 p-3.5 rounded-xl border border-slate-800 flex flex-col gap-2">
-                        <div class="flex items-center justify-between border-b border-slate-800 pb-1.5">
-                            <span class="text-xs font-bold text-slate-200 truncate" title="${file.name}">
-                                <span class="text-pink-400 font-mono">#${index + 1}</span> ${file.name}
-                            </span>
-                        </div>
-                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                            <textarea id="man-top-${index}" placeholder="Título ARRIBA" class="custom-input text-xs border-blue-900/60 focus:border-blue-500" rows="1"></textarea>
-                            <textarea id="man-sub-${index}" placeholder="Subtítulo ARRIBA" class="custom-input text-xs border-amber-900/60 focus:border-amber-500" rows="1"></textarea>
-                            <textarea id="man-bot-${index}" placeholder="Texto / Precio ABAJO" class="custom-input text-xs border-emerald-900/60 focus:border-emerald-500" rows="1"></textarea>
-                        </div>
-                    </div>
-                `;
-            });
-        }
-
-        document.getElementById('btn-process').addEventListener('click', async () => {
-            const files = document.getElementById('file-images').files;
-            if (files.length === 0) {
-                alert("Por favor seleccioná al menos una imagen.");
-                return;
-            }
-
-            const mode = document.querySelector('input[name="input-mode"]:checked').value;
-            const globalMode = document.getElementById('global-mode').value;
-            const globalColor = document.getElementById('global-color').value;
-            const globalScale = parseInt(document.getElementById('global-scale').value);
-            const gImgY = parseInt(document.getElementById('global-img-y').value);
-            const gYTop = parseInt(document.getElementById('global-y-top').value);
-            const gYSub = parseInt(document.getElementById('global-y-sub').value);
-            const gYBot = parseInt(document.getElementById('global-y-bot').value);
-
-            let dictExcel = {};
-            if (mode === 'excel') {
-                const colCod = document.getElementById('col-cod').value;
-                const colTop = document.getElementById('col-texto-arriba').value;
-                const colSub = document.getElementById('col-texto-sub').value;
-                const colBot = document.getElementById('col-texto-abajo').value;
-
-                if (!colCod) {
-                    alert("Seleccioná la columna del código para vincular las fotos con el Excel.");
-                    return;
-                }
-
-                excelData.forEach(row => {
-                    let cod = String(row[colCod] || "").trim().toUpperCase();
-                    if (cod) {
-                        let top = colTop ? String(row[colTop] || "").trim() : "";
-                        let sub = colSub ? String(row[colSub] || "").trim() : "";
-                        let bot = colBot ? String(row[colBot] || "").trim() : "";
-
-                        if (top.toLowerCase() === "undefined" || top === "-" || top === "0") top = "";
-                        if (sub.toLowerCase() === "undefined" || sub === "-" || sub === "0") sub = "";
-                        if (bot.toLowerCase() === "undefined" || bot === "-") bot = "";
-                        if (bot && colBot === colCod && !bot.toUpperCase().includes("COD")) bot = "COD: " + bot;
-
-                        dictExcel[cod] = { top, sub, bot };
-                    }
-                });
-            }
-
-            imagesData = [];
-            let unmatchedFiles = [];
-            let errorFiles = [];
-
-            const grid = document.getElementById('preview-grid');
-            grid.innerHTML = '<p class="col-span-full text-center text-pink-400 font-bold animate-pulse py-8">Procesando imágenes en alta resolución...</p>';
-            document.getElementById('results-section').classList.remove('hidden');
-
-            for (let i = 0; i < files.length; i++) {
-                const file = files[i];
-                let nameNoExt = file.name.substring(0, file.name.lastIndexOf('.') !== -1 ? file.name.lastIndexOf('.') : file.name.length).trim().toUpperCase();
-
-                let txtTop = "", txtSub = "", txtBot = "";
-
-                if (mode === 'excel') {
-                    if (dictExcel[nameNoExt]) {
-                        txtTop = dictExcel[nameNoExt].top;
-                        txtSub = dictExcel[nameNoExt].sub;
-                        txtBot = dictExcel[nameNoExt].bot;
-                    } else {
-                        unmatchedFiles.push(file.name);
-                        continue;
-                    }
-                } else {
-                    txtTop = document.getElementById(`man-top-${i}`)?.value || "";
-                    txtSub = document.getElementById(`man-sub-${i}`)?.value || "";
-                    txtBot = document.getElementById(`man-bot-${i}`)?.value || "";
-                }
-
-                try {
-                    const imgObj = await loadImgObj(file);
-                    const item = {
-                        name: file.name,
-                        imgObj: imgObj,
-                        mode: globalMode,
-                        textColor: globalColor,
-                        textScale: globalScale,
-                        top: txtTop, sub: txtSub, bot: txtBot,
-                        imgX: 0, imgY: gImgY, zImg: 1,
-                        xTop: 0, yTop: gYTop, zTop: 3,
-                        xSub: 0, ySub: gYSub, zSub: 4,
-                        xBot: 0, yBot: gYBot, zBot: 5,
-                        zPaintUnder: 2, zPaintOver: 6,
-                        paintUnderData: null,
-                        paintOverData: null
-                    };
-
-                    item.dataUrl = renderCanvasToDataUrl(item, 1000);
-                    imagesData.push(item);
-                } catch(err) {
-                    errorFiles.push(file.name);
-                }
-            }
-
-            // Report discrepancies
-            let errorHtml = '';
-            if (unmatchedFiles.length > 0) {
-                errorHtml += `
-                    <div class="bg-amber-950/40 border border-amber-800/80 p-3.5 mb-4 rounded-xl text-amber-200">
-                        <p class="text-xs font-bold">⚠️ ${unmatchedFiles.length} imágenes no se encontraron en el Excel (Omitidas):</p>
-                        <p class="text-[11px] text-amber-300/80 mt-1 max-h-16 ios-scroll font-mono">${unmatchedFiles.join(', ')}</p>
-                    </div>`;
-            }
-            if (errorFiles.length > 0) {
-                errorHtml += `
-                    <div class="bg-rose-950/40 border border-rose-800/80 p-3.5 mb-4 rounded-xl text-rose-200">
-                        <p class="text-xs font-bold">❌ Error decodificando ${errorFiles.length} archivos:</p>
-                        <p class="text-[11px] text-rose-300/80 mt-1">${errorFiles.join(', ')}</p>
-                    </div>`;
-            }
-            document.getElementById('error-alerts').innerHTML = errorHtml;
-
-            renderCardGrid();
-        });
-
-        function renderCardGrid() {
-            const grid = document.getElementById('preview-grid');
-            grid.innerHTML = '';
-
-            if (imagesData.length === 0) {
-                grid.innerHTML = '<p class="col-span-full text-center text-rose-400 font-bold py-6">No se generó ninguna imagen. Verificá los nombres de archivo y códigos de Excel.</p>';
-                document.getElementById('results-subtext').textContent = "0 fichas generadas.";
-                return;
-            }
-
-            imagesData.forEach((item, index) => {
-                grid.innerHTML += `
-                    <div class="bg-slate-900 rounded-xl sm:rounded-2xl border border-slate-800 overflow-hidden flex flex-col group shadow-md hover:border-slate-700 transition-all">
-                        <div class="aspect-square bg-slate-950 flex items-center justify-center p-2 relative">
-                            <img id="grid-img-${index}" src="${item.dataUrl}" class="w-full h-full object-contain drop-shadow" alt="${item.name}" />
-                        </div>
-                        <div class="p-2.5 sm:p-3 bg-slate-900 flex flex-col gap-2 border-t border-slate-800">
-                            <p class="text-[11px] font-bold text-slate-200 truncate" title="${item.name}">
-                                ${item.name}
-                            </p>
-                            <div class="flex gap-1.5 w-full">
-                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-600/20 text-pink-300 hover:bg-pink-600 hover:text-white py-1.5 rounded-lg border border-pink-500/30 transition-all text-center active:scale-95">
-                                    ✏️ Ajustar
-                                </button>
-                                <button onclick="downloadSingleHD(${index})" class="flex-1 text-[11px] font-bold bg-emerald-600/20 text-emerald-300 hover:bg-emerald-600 hover:text-white py-1.5 rounded-lg border border-emerald-500/30 transition-all text-center active:scale-95">
-                                    ⬇️ Bajar HD
-                                </button>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            });
-
-            document.getElementById('results-subtext').textContent = `Se procesaron ${imagesData.length} fichas con éxito.`;
-        }
 
         function setTool(tool) {
             currentTool = tool;
@@ -1034,6 +340,36 @@
             scheduleRender();
         }
 
+        // Sincronización del tamaño de pincel libre
+        function syncBrushInput(val) {
+            document.getElementById('brush-size-number').value = val;
+        }
+        function syncBrushSlider(val) {
+            document.getElementById('brush-size').value = Math.min(300, Math.max(1, parseInt(val) || 1));
+        }
+
+        // Alternar Pantalla Completa Total para el Canvas
+        function toggleFullscreenCanvas() {
+            const col = document.getElementById('canvas-column');
+            isFullscreenCanvas = !isFullscreenCanvas;
+            
+            if (isFullscreenCanvas) {
+                col.classList.add('fullscreen-active');
+                document.getElementById('fs-icon').textContent = '✕ Salir';
+                document.getElementById('btn-fullscreen-toggle').classList.replace('bg-indigo-600', 'bg-rose-600');
+            } else {
+                col.classList.remove('fullscreen-active');
+                document.getElementById('fs-icon').textContent = '⛶';
+                document.getElementById('btn-fullscreen-toggle').classList.replace('bg-rose-600', 'bg-indigo-600');
+            }
+            scheduleRender();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && isFullscreenCanvas) toggleFullscreenCanvas();
+        });
+
+        // Bucle continuo con requestAnimationFrame a 60 FPS
         function scheduleRender() {
             if (!renderRequested) {
                 renderRequested = true;
@@ -1044,53 +380,139 @@
             }
         }
 
+        function getLines(ctx, text, maxWidth) {
+            if (!text) return [];
+            let lines = [];
+            text.split('\n').forEach(explicitLine => {
+                let words = explicitLine.split(" ");
+                if (words.length === 0) return;
+                let currentLine = words[0];
+                for (let i = 1; i < words.length; i++) {
+                    let word = words[i];
+                    if (ctx.measureText(currentLine + " " + word).width < maxWidth) {
+                        currentLine += " " + word;
+                    } else {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    }
+                }
+                lines.push(currentLine);
+            });
+            return lines;
+        }
+
+        function loadImgObj(file) {
+            return new Promise((resolve, reject) => {
+                const img = new Image();
+                img.crossOrigin = "anonymous";
+                img.onload = () => resolve(img);
+                img.onerror = () => reject(new Error("Error leyendo imagen"));
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        // Renderizado del Canvas ordenado por Z-Index
         function executeRender() {
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
-            const size = 2000;
+            const img = item.imgObj;
+
+            const scaleFactor = (parseInt(document.getElementById('edit-scale').value) || 100) / 100;
+            const textColor = document.getElementById('edit-color').value;
+
+            const maxDim = Math.max(img.width, img.height);
+            const margin = Math.max(maxDim * 0.22, 120);
+            const size = maxDim + (margin * 2);
 
             if (mainEditorCanvas.width !== size || mainEditorCanvas.height !== size) {
                 mainEditorCanvas.width = size;
                 mainEditorCanvas.height = size;
             }
 
-            const currentConfig = {
-                imgObj: item.imgObj,
-                mode: document.getElementById('edit-mode').value,
-                textColor: document.getElementById('edit-color').value,
-                textScale: parseInt(document.getElementById('edit-scale').value),
-                top: document.getElementById('txt-top').value,
-                sub: document.getElementById('txt-sub').value,
-                bot: document.getElementById('txt-bot').value,
-                imgX: parseInt(document.getElementById('x-img').value),
-                imgY: parseInt(document.getElementById('y-img').value),
-                zImg: parseInt(document.getElementById('z-img').value),
-                xTop: parseInt(document.getElementById('x-top').value),
-                yTop: parseInt(document.getElementById('y-top').value),
-                zTop: parseInt(document.getElementById('z-top').value),
-                xSub: parseInt(document.getElementById('x-sub').value),
-                ySub: parseInt(document.getElementById('y-sub').value),
-                zSub: parseInt(document.getElementById('z-sub').value),
-                xBot: parseInt(document.getElementById('x-bot').value),
-                yBot: parseInt(document.getElementById('y-bot').value),
-                zBot: parseInt(document.getElementById('z-bot').value),
-                zPaintUnder: parseInt(document.getElementById('z-paint-under').value),
-                zPaintOver: parseInt(document.getElementById('z-paint-over').value),
-                paintUnderCanvas: paintUnderCanvas,
-                paintOverCanvas: paintOverCanvas
-            };
+            mainEditorCtx.fillStyle = '#ffffff';
+            mainEditorCtx.fillRect(0, 0, size, size);
 
-            const dataUrl = renderCanvasToDataUrl(currentConfig, size);
-            const renderImg = new Image();
-            renderImg.onload = () => {
-                mainEditorCtx.clearRect(0, 0, size, size);
-                mainEditorCtx.drawImage(renderImg, 0, 0);
-            };
-            renderImg.src = dataUrl;
+            const layers = [
+                {
+                    name: 'image',
+                    z: parseInt(document.getElementById('z-img').value) || 1,
+                    render: () => {
+                        const x = ((size - img.width) / 2) + parseInt(document.getElementById('x-img').value);
+                        const y = ((size - img.height) / 2) + parseInt(document.getElementById('y-img').value);
+                        mainEditorCtx.drawImage(img, x, y, img.width, img.height);
+                    }
+                },
+                {
+                    name: 'paint-under',
+                    z: parseInt(document.getElementById('z-paint-under').value) || 2,
+                    render: () => mainEditorCtx.drawImage(paintUnderCanvas, 0, 0, size, size)
+                },
+                {
+                    name: 'title',
+                    z: parseInt(document.getElementById('z-top').value) || 3,
+                    render: () => {
+                        const text = document.getElementById('txt-top').value;
+                        if (!text) return;
+                        mainEditorCtx.fillStyle = textColor;
+                        mainEditorCtx.textAlign = 'center';
+                        mainEditorCtx.textBaseline = 'middle';
+                        let font = Math.round((margin * 0.35) * scaleFactor);
+                        mainEditorCtx.font = `normal ${font}px ${fontFamily}`;
+                        let lines = getLines(mainEditorCtx, text, size * 0.85);
+                        let lh = font * 1.2;
+                        let startY = 80 + parseInt(document.getElementById('y-top').value);
+                        let posX = (size / 2) + parseInt(document.getElementById('x-top').value);
+                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, startY + (idx * lh)));
+                    }
+                },
+                {
+                    name: 'sub',
+                    z: parseInt(document.getElementById('z-sub').value) || 4,
+                    render: () => {
+                        const text = document.getElementById('txt-sub').value;
+                        if (!text) return;
+                        mainEditorCtx.fillStyle = textColor;
+                        mainEditorCtx.textAlign = 'center';
+                        mainEditorCtx.textBaseline = 'middle';
+                        let font = Math.round((margin * 0.25) * scaleFactor);
+                        mainEditorCtx.font = `normal ${font}px ${fontFamily}`;
+                        let lines = getLines(mainEditorCtx, text, size * 0.85);
+                        let lh = font * 1.2;
+                        let startY = 150 + parseInt(document.getElementById('y-sub').value);
+                        let posX = (size / 2) + parseInt(document.getElementById('x-sub').value);
+                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, startY + (idx * lh)));
+                    }
+                },
+                {
+                    name: 'bot',
+                    z: parseInt(document.getElementById('z-bot').value) || 5,
+                    render: () => {
+                        const text = document.getElementById('txt-bot').value;
+                        if (!text) return;
+                        mainEditorCtx.fillStyle = textColor;
+                        mainEditorCtx.textAlign = 'center';
+                        mainEditorCtx.textBaseline = 'middle';
+                        let font = Math.round((margin * 0.40) * scaleFactor);
+                        mainEditorCtx.font = `normal ${font}px ${fontFamily}`;
+                        let lines = getLines(mainEditorCtx, text, size * 0.85);
+                        let lh = font * 1.2;
+                        let botY = size - 70 + parseInt(document.getElementById('y-bot').value);
+                        let posX = (size / 2) + parseInt(document.getElementById('x-bot').value);
+                        lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, botY + (idx * lh)));
+                    }
+                },
+                {
+                    name: 'paint-over',
+                    z: parseInt(document.getElementById('z-paint-over').value) || 6,
+                    render: () => mainEditorCtx.drawImage(paintOverCanvas, 0, 0, size, size)
+                }
+            ];
+
+            layers.sort((a, b) => a.z - b.z).forEach(layer => layer.render());
         }
 
-        // Touch & pointer coordinates on canvas
-        function getCanvasCoordinates(e) {
+        // Coordenadas táctiles fluidas
+        function getCoords(e) {
             const rect = mainEditorCanvas.getBoundingClientRect();
             const clientX = e.touches ? e.touches[0].clientX : e.clientX;
             const clientY = e.touches ? e.touches[0].clientY : e.clientY;
@@ -1106,20 +528,20 @@
             e.preventDefault();
             isPainting = true;
             const ctx = currentActivePaintLayer === 'over' ? paintOverCtx : paintUnderCtx;
-            const pos = getCanvasCoordinates(e);
+            const pos = getCoords(e);
             ctx.beginPath();
             ctx.moveTo(pos.x, pos.y);
-            paint(e);
+            doPaint(e);
         }
 
-        function paint(e) {
+        function doPaint(e) {
             if (!isPainting) return;
             e.preventDefault();
             const ctx = currentActivePaintLayer === 'over' ? paintOverCtx : paintUnderCtx;
-            const pos = getCanvasCoordinates(e);
+            const pos = getCoords(e);
 
-            const brushSize = parseInt(document.getElementById('brush-size').value) * (2000 / 500);
-            ctx.lineWidth = brushSize;
+            const bSize = parseInt(document.getElementById('brush-size-number').value) || 15;
+            ctx.lineWidth = bSize;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
 
@@ -1143,20 +565,17 @@
             ctx.globalCompositeOperation = 'source-over';
         }
 
-        // Pointer event bindings for mobile/touch and mouse
         mainEditorCanvas.addEventListener('mousedown', startPaint);
-        mainEditorCanvas.addEventListener('mousemove', paint);
+        mainEditorCanvas.addEventListener('mousemove', doPaint);
         window.addEventListener('mouseup', stopPaint);
 
         mainEditorCanvas.addEventListener('touchstart', startPaint, { passive: false });
-        mainEditorCanvas.addEventListener('touchmove', paint, { passive: false });
+        mainEditorCanvas.addEventListener('touchmove', doPaint, { passive: false });
         window.addEventListener('touchend', stopPaint);
 
-        // Bind all live sliders in modal
-        ['x-img', 'y-img', 'z-img', 'x-top', 'y-top', 'z-top',
-         'x-sub', 'y-sub', 'z-sub', 'x-bot', 'y-bot', 'z-bot',
-         'z-paint-under', 'z-paint-over', 'txt-top', 'txt-sub',
-         'txt-bot', 'edit-mode', 'edit-color', 'edit-scale'].forEach(id => {
+        // Sliders reactivos
+        ['x-img', 'y-img', 'z-img', 'x-top', 'y-top', 'z-top', 'x-sub', 'y-sub', 'z-sub', 'x-bot', 'y-bot', 'z-bot',
+         'z-paint-under', 'z-paint-over', 'txt-top', 'txt-sub', 'txt-bot', 'edit-color', 'edit-scale'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
             el.addEventListener('input', () => {
@@ -1166,46 +585,47 @@
             el.addEventListener('touchmove', () => scheduleRender(), { passive: true });
         });
 
-        // Open modal
+        // Abrir Modal
         window.openEditor = function(index) {
             activeEditIndex = index;
             const item = imagesData[index];
 
-            document.getElementById('edit-mode').value = item.mode || "margin";
+            document.getElementById('txt-top').value = item.top || "";
+            document.getElementById('txt-sub').value = item.sub || "";
+            document.getElementById('txt-bot').value = item.bot || "";
             document.getElementById('edit-color').value = item.textColor || "#000000";
             document.getElementById('edit-scale').value = item.textScale || 100;
             document.getElementById('val-edit-scale').textContent = (item.textScale || 100) + '%';
 
-            document.getElementById('txt-top').value = item.top || "";
+            document.getElementById('x-img').value = item.xImg || 0;
+            document.getElementById('y-img').value = item.yImg || 0;
+            document.getElementById('z-img').value = item.zImg || 1;
+
             document.getElementById('x-top').value = item.xTop || 0;
             document.getElementById('y-top').value = item.yTop || 0;
             document.getElementById('z-top').value = item.zTop || 3;
 
-            document.getElementById('txt-sub').value = item.sub || "";
             document.getElementById('x-sub').value = item.xSub || 0;
             document.getElementById('y-sub').value = item.ySub || 0;
             document.getElementById('z-sub').value = item.zSub || 4;
 
-            document.getElementById('txt-bot').value = item.bot || "";
             document.getElementById('x-bot').value = item.xBot || 0;
             document.getElementById('y-bot').value = item.yBot || 0;
             document.getElementById('z-bot').value = item.zBot || 5;
 
-            document.getElementById('x-img').value = item.imgX || 0;
-            document.getElementById('y-img').value = item.imgY || 0;
-            document.getElementById('z-img').value = item.zImg || 1;
-
             document.getElementById('z-paint-under').value = item.zPaintUnder || 2;
             document.getElementById('z-paint-over').value = item.zPaintOver || 6;
 
-            // Setup paint buffers at 2000px HD
-            paintUnderCanvas.width = 2000;
-            paintUnderCanvas.height = 2000;
-            paintOverCanvas.width = 2000;
-            paintOverCanvas.height = 2000;
+            const maxDim = Math.max(item.imgObj.width, item.imgObj.height);
+            const size = maxDim + (Math.max(maxDim * 0.22, 120) * 2);
 
-            paintUnderCtx.clearRect(0, 0, 2000, 2000);
-            paintOverCtx.clearRect(0, 0, 2000, 2000);
+            paintUnderCanvas.width = size;
+            paintUnderCanvas.height = size;
+            paintOverCanvas.width = size;
+            paintOverCanvas.height = size;
+
+            paintUnderCtx.clearRect(0, 0, size, size);
+            paintOverCtx.clearRect(0, 0, size, size);
 
             if (item.paintUnderData) {
                 const imgU = new Image();
@@ -1224,6 +644,7 @@
         };
 
         window.closeModal = function() {
+            if (isFullscreenCanvas) toggleFullscreenCanvas();
             document.getElementById('editor-modal').classList.add('hidden');
             document.body.style.overflow = 'auto';
             activeEditIndex = -1;
@@ -1233,90 +654,179 @@
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
 
-            item.mode = document.getElementById('edit-mode').value;
+            item.top = document.getElementById('txt-top').value;
+            item.sub = document.getElementById('txt-sub').value;
+            item.bot = document.getElementById('txt-bot').value;
             item.textColor = document.getElementById('edit-color').value;
             item.textScale = parseInt(document.getElementById('edit-scale').value);
 
-            item.top = document.getElementById('txt-top').value;
+            item.xImg = parseInt(document.getElementById('x-img').value);
+            item.yImg = parseInt(document.getElementById('y-img').value);
+            item.zImg = parseInt(document.getElementById('z-img').value);
+
             item.xTop = parseInt(document.getElementById('x-top').value);
             item.yTop = parseInt(document.getElementById('y-top').value);
             item.zTop = parseInt(document.getElementById('z-top').value);
 
-            item.sub = document.getElementById('txt-sub').value;
             item.xSub = parseInt(document.getElementById('x-sub').value);
             item.ySub = parseInt(document.getElementById('y-sub').value);
             item.zSub = parseInt(document.getElementById('z-sub').value);
 
-            item.bot = document.getElementById('txt-bot').value;
             item.xBot = parseInt(document.getElementById('x-bot').value);
             item.yBot = parseInt(document.getElementById('y-bot').value);
             item.zBot = parseInt(document.getElementById('z-bot').value);
 
-            item.imgX = parseInt(document.getElementById('x-img').value);
-            item.imgY = parseInt(document.getElementById('y-img').value);
-            item.zImg = parseInt(document.getElementById('z-img').value);
-
             item.zPaintUnder = parseInt(document.getElementById('z-paint-under').value);
             item.zPaintOver = parseInt(document.getElementById('z-paint-over').value);
 
-            // Store paint layers as PNG data URLs
             item.paintUnderData = paintUnderCanvas.toDataURL('image/png');
             item.paintOverData = paintOverCanvas.toDataURL('image/png');
 
-            item.paintUnderCanvas = paintUnderCanvas;
-            item.paintOverCanvas = paintOverCanvas;
-
-            item.dataUrl = renderCanvasToDataUrl(item, 1000);
+            executeRender();
+            item.dataUrl = mainEditorCanvas.toDataURL('image/jpeg', 0.95);
             document.getElementById(`grid-img-${activeEditIndex}`).src = item.dataUrl;
 
             closeModal();
         };
 
-        window.downloadSingleHD = function(index) {
+        // EXCEL & ARCHIVOS
+        document.getElementById('file-excel').addEventListener('change', (e) => {
+            if (!e.target.files.length) return;
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                excelData = XLSX.utils.sheet_to_json(sheet, {defval: ""});
+                excelHeaders = XLSX.utils.sheet_to_json(sheet, {header: 1})[0] || [];
+                
+                ['col-cod', 'col-texto-arriba', 'col-texto-sub', 'col-texto-abajo'].forEach(id => {
+                    const select = document.getElementById(id);
+                    select.innerHTML = id === 'col-cod' ? "" : "<option value=''>-- Vacío --</option>";
+                    excelHeaders.forEach(opt => {
+                        if (opt && String(opt).trim()) select.innerHTML += `<option value='${opt}'>${opt}</option>`;
+                    });
+                });
+                document.getElementById('mapping-section').classList.remove('hidden');
+            };
+            reader.readAsArrayBuffer(e.target.files[0]);
+        });
+
+        document.getElementById('btn-process').addEventListener('click', async () => {
+            const files = document.getElementById('file-images').files;
+            if (!files.length) { alert("Seleccioná las fotos primero."); return; }
+
+            const mode = document.querySelector('input[name="input-mode"]:checked').value;
+            let dictExcel = {};
+
+            if (mode === 'excel') {
+                const colCod = document.getElementById('col-cod').value;
+                const colTop = document.getElementById('col-texto-arriba').value;
+                const colSub = document.getElementById('col-texto-sub').value;
+                const colBot = document.getElementById('col-texto-abajo').value;
+
+                excelData.forEach(row => {
+                    let cod = String(row[colCod]||"").trim().toUpperCase();
+                    if (cod) {
+                        dictExcel[cod] = {
+                            top: colTop ? String(row[colTop]||"").trim() : "",
+                            sub: colSub ? String(row[colSub]||"").trim() : "",
+                            bot: colBot ? String(row[colBot]||"").trim() : ""
+                        };
+                    }
+                });
+            }
+
+            imagesData = [];
+            document.getElementById('preview-grid').innerHTML = '<p class="col-span-full text-center text-slate-400 font-bold animate-pulse">Generando borradores...</p>';
+            document.getElementById('results-section').classList.remove('hidden');
+
+            for (let i = 0; i < files.length; i++) {
+                let file = files[i];
+                let nameNoExt = file.name.substring(0, file.name.lastIndexOf('.') !== -1 ? file.name.lastIndexOf('.') : file.name.length).trim().toUpperCase();
+                
+                let top = "", sub = "", bot = "";
+                if (mode === 'excel' && dictExcel[nameNoExt]) {
+                    top = dictExcel[nameNoExt].top;
+                    sub = dictExcel[nameNoExt].sub;
+                    bot = dictExcel[nameNoExt].bot;
+                }
+
+                try {
+                    const imgObj = await loadImgObj(file);
+                    const item = {
+                        name: file.name,
+                        imgObj: imgObj,
+                        top: top, sub: sub, bot: bot,
+                        textColor: "#000000", textScale: 100,
+                        xImg: 0, yImg: 0, zImg: 1,
+                        zPaintUnder: 2,
+                        xTop: 0, yTop: 0, zTop: 3,
+                        xSub: 0, ySub: 0, zSub: 4,
+                        xBot: 0, yBot: 0, zBot: 5,
+                        zPaintOver: 6
+                    };
+
+                    const maxDim = Math.max(imgObj.width, imgObj.height);
+                    const margin = Math.max(maxDim * 0.22, 120);
+                    const size = maxDim + (margin * 2);
+                    const c = document.createElement('canvas');
+                    c.width = size; c.height = size;
+                    const ctx = c.getContext('2d');
+                    ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, size, size);
+                    ctx.drawImage(imgObj, (size - imgObj.width)/2, (size - imgObj.height)/2);
+                    item.dataUrl = c.toDataURL('image/jpeg', 0.85);
+
+                    imagesData.push(item);
+                } catch(e) {}
+            }
+
+            renderGrid();
+        });
+
+        function renderGrid() {
+            const grid = document.getElementById('preview-grid');
+            grid.innerHTML = '';
+            imagesData.forEach((item, index) => {
+                grid.innerHTML += `
+                    <div class="bg-slate-800 rounded-2xl border border-slate-700 overflow-hidden flex flex-col">
+                        <div class="aspect-square bg-slate-900 flex items-center justify-center p-2">
+                            <img id="grid-img-${index}" src="${item.dataUrl}" class="w-full h-full object-contain drop-shadow" />
+                        </div>
+                        <div class="p-2.5 bg-slate-800 flex flex-col gap-2 border-t border-slate-700">
+                            <p class="text-[11px] font-bold text-slate-200 truncate">${item.name}</p>
+                            <div class="flex gap-1.5">
+                                <button onclick="openEditor(${index})" class="flex-1 text-[11px] font-bold bg-pink-600 hover:bg-pink-500 py-1.5 rounded-lg text-white">✏️ Capas / Pintar</button>
+                                <button onclick="downloadSingle(${index})" class="flex-1 text-[11px] font-bold bg-emerald-600 hover:bg-emerald-500 py-1.5 rounded-lg text-white">⬇️ Bajar</button>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            });
+        }
+
+        window.downloadSingle = function(index) {
             const item = imagesData[index];
-            const hdDataUrl = renderCanvasToDataUrl(item, 2000);
             const a = document.createElement('a');
-            a.href = hdDataUrl;
-            a.download = item.name.replace(/\.[^/.]+$/, "") + "_HD.jpg";
-            document.body.appendChild(a);
+            a.href = item.dataUrl;
+            a.download = item.name;
             a.click();
-            document.body.removeChild(a);
         };
 
         document.getElementById('btn-dl-zip').addEventListener('click', async () => {
-            if (imagesData.length === 0) return;
-
-            const btn = document.getElementById('btn-dl-zip');
-            const originalText = btn.innerHTML;
-            btn.innerHTML = `<span>⏳ Generando ZIP en 2000px HD...</span>`;
-            btn.disabled = true;
-
-            try {
-                const zip = new JSZip();
-                const folder = zip.folder("Banners_XFish_HD_Capas");
-
-                for (let i = 0; i < imagesData.length; i++) {
-                    const item = imagesData[i];
-                    const hdDataUrl = renderCanvasToDataUrl(item, 2000);
-                    const base64Data = hdDataUrl.split(',')[1];
-                    const fileName = item.name.replace(/\.[^/.]+$/, "") + "_HD.jpg";
-                    folder.file(fileName, base64Data, { base64: true });
-                }
-
-                const content = await zip.generateAsync({ type: "blob" });
-                const a = document.createElement('a');
-                a.href = URL.createObjectURL(content);
-                a.download = "Banners_Fichas_XFish_Finales.zip";
-                document.body.appendChild(a);
-                a.click();
-                document.body.removeChild(a);
-                URL.revokeObjectURL(a.href);
-            } catch(err) {
-                alert("Error generando el archivo ZIP. Revisá la memoria disponible en el dispositivo.");
-            } finally {
-                btn.innerHTML = originalText;
-                btn.disabled = false;
-            }
+            if (!imagesData.length) return;
+            const zip = new JSZip();
+            const folder = zip.folder("Banners_XFish_Capas");
+            imagesData.forEach(img => {
+                const b64 = img.dataUrl.split(',')[1];
+                folder.file(img.name, b64, {base64: true});
+            });
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(content);
+            a.download = "Banners_XFish_HD.zip";
+            a.click();
+            URL.revokeObjectURL(a.href);
         });
     </script>
 </body>
