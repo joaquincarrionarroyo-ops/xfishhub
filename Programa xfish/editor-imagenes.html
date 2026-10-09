@@ -550,7 +550,7 @@
         </div>
     </div>
 
-    <script>
+<script>
         let excelData = [];
         let excelHeaders = [];
         let imagesData = [];
@@ -650,6 +650,7 @@
         function updatePSLayersPanel() {
             const layers = getLayersConfig().sort((a, b) => b.z - a.z);
             const listEl = document.getElementById('ps-layers-list');
+            if (!listEl) return;
             listEl.innerHTML = '';
 
             layers.forEach(l => {
@@ -684,6 +685,7 @@
 
         function changeLayerZ(inputId, delta) {
             const input = document.getElementById(inputId);
+            if (!input) return;
             let val = parseInt(input.value) || 1;
             val = Math.max(1, Math.min(10, val + delta));
             input.value = val;
@@ -693,8 +695,10 @@
 
         const updateVal = (id, suffix) => {
             const el = document.getElementById(id);
+            if (!el) return;
             const fn = (e) => {
-                document.getElementById(`val-${id}`).textContent = e.target.value + suffix;
+                const label = document.getElementById(`val-${id}`);
+                if (label) label.textContent = e.target.value + suffix;
                 updateGlobalPreview();
             };
             el.addEventListener('input', fn);
@@ -710,17 +714,17 @@
         function updateGlobalPreview() {
             if (!globalMockupImgObj) return;
 
-            const mode = document.getElementById('global-mode').value;
-            const color = document.getElementById('global-color').value;
-            const scale = parseInt(document.getElementById('global-scale').value);
-            const imgY = parseInt(document.getElementById('global-img-y').value);
-            const yTop = parseInt(document.getElementById('global-y-top').value);
-            const ySub = parseInt(document.getElementById('global-y-sub').value);
-            const yBot = parseInt(document.getElementById('global-y-bot').value);
+            const mode = document.getElementById('global-mode')?.value || 'margin';
+            const color = document.getElementById('global-color')?.value || '#000000';
+            const scale = parseInt(document.getElementById('global-scale')?.value || 100);
+            const imgY = parseInt(document.getElementById('global-img-y')?.value || 0);
+            const yTop = parseInt(document.getElementById('global-y-top')?.value || 0);
+            const ySub = parseInt(document.getElementById('global-y-sub')?.value || 0);
+            const yBot = parseInt(document.getElementById('global-y-bot')?.value || 0);
 
-            const showTop = document.getElementById('mock-show-top').checked;
-            const showSub = document.getElementById('mock-show-sub').checked;
-            const showBot = document.getElementById('mock-show-bot').checked;
+            const showTop = document.getElementById('mock-show-top')?.checked;
+            const showSub = document.getElementById('mock-show-sub')?.checked;
+            const showBot = document.getElementById('mock-show-bot')?.checked;
 
             const mockupConfig = {
                 imgObj: globalMockupImgObj,
@@ -737,11 +741,13 @@
             };
 
             const dataUrl = renderCanvasDataUrl(mockupConfig);
-            document.getElementById('global-mockup-img').src = dataUrl;
+            const mockImg = document.getElementById('global-mockup-img');
+            if (mockImg) mockImg.src = dataUrl;
         }
 
         ['global-mode', 'global-color', 'mock-show-top', 'mock-show-sub', 'mock-show-bot'].forEach(id => {
             const el = document.getElementById(id);
+            if (!el) return;
             el.addEventListener('input', updateGlobalPreview);
             if (el.type === 'checkbox') el.addEventListener('change', updateGlobalPreview);
         });
@@ -754,8 +760,9 @@
 
         function renderManualInputs() {
             const list = document.getElementById('manual-text-list');
+            if (!list) return;
             list.innerHTML = '';
-            if(fileImages.files.length === 0) {
+            if (!fileImages || fileImages.files.length === 0) {
                 list.innerHTML = '<p class="text-xs text-slate-500 italic">Seleccioná las imágenes primero.</p>';
                 return;
             }
@@ -775,28 +782,31 @@
 
         modeRadios.forEach(radio => {
             radio.addEventListener('change', (e) => {
-                if(e.target.value === 'excel') {
-                    excelInputContainer.classList.remove('hidden');
-                    if(excelHeaders.length > 0) mappingSection.classList.remove('hidden');
-                    manualInputSection.classList.add('hidden');
+                if (e.target.value === 'excel') {
+                    if (excelInputContainer) excelInputContainer.classList.remove('hidden');
+                    if (excelHeaders.length > 0 && mappingSection) mappingSection.classList.remove('hidden');
+                    if (manualInputSection) manualInputSection.classList.add('hidden');
                 } else {
-                    excelInputContainer.classList.add('hidden');
-                    mappingSection.classList.add('hidden');
-                    manualInputSection.classList.remove('hidden');
+                    if (excelInputContainer) excelInputContainer.classList.add('hidden');
+                    if (mappingSection) mappingSection.classList.add('hidden');
+                    if (manualInputSection) manualInputSection.classList.remove('hidden');
                     renderManualInputs();
                 }
             });
         });
 
-        fileImages.addEventListener('change', async () => {
-            if (document.querySelector('input[name="input-mode"]:checked').value === 'manual') {
+        fileImages?.addEventListener('change', async () => {
+            const currentMode = document.querySelector('input[name="input-mode"]:checked')?.value;
+            if (currentMode === 'manual') {
                 renderManualInputs();
             }
-            if(fileImages.files.length > 0) {
+            if (fileImages.files.length > 0) {
                 try {
                     globalMockupImgObj = await loadImgObj(fileImages.files[0]);
-                    document.getElementById('mockup-placeholder').classList.add('hidden');
-                    document.getElementById('global-mockup-img').classList.remove('hidden');
+                    const placeholder = document.getElementById('mockup-placeholder');
+                    const mockImg = document.getElementById('global-mockup-img');
+                    if (placeholder) placeholder.classList.add('hidden');
+                    if (mockImg) mockImg.classList.remove('hidden');
                     updateGlobalPreview();
                 } catch(e) { console.error("Error cargando mockup", e); }
             }
@@ -875,7 +885,6 @@
                 startYTop = Math.round(margin * 0.45) + (config.yTop || 0);
                 startYBot = size - Math.round(margin * 0.35) + (config.yBot || 0);
             } else {
-                // Modo Superpuesto: Dimensiones nativas de la foto
                 canvas.width = img.width;
                 canvas.height = img.height;
                 canvasW = img.width;
@@ -934,7 +943,6 @@
             if (activeEditIndex === -1) return;
             imagesData[activeEditIndex].mode = modo;
             
-            // Reajustar dimensiones de capas de pintura al cambiar modo
             const item = imagesData[activeEditIndex];
             const img = item.imgObj;
             let targetW, targetH;
@@ -962,10 +970,10 @@
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
             const img = item.imgObj;
-            const mode = document.getElementById('edit-mode').value || 'margin';
+            const mode = document.getElementById('edit-mode')?.value || 'margin';
 
-            const scaleFactor = (parseInt(document.getElementById('edit-scale').value) || 100) / 100;
-            const textColor = document.getElementById('edit-color').value || '#000000';
+            const scaleFactor = (parseInt(document.getElementById('edit-scale')?.value || 100)) / 100;
+            const textColor = document.getElementById('edit-color')?.value || '#000000';
 
             let canvasW, canvasH, fontTop, fontSub, fontBot, startYTop, startYBot;
 
@@ -978,16 +986,16 @@
                 fontTop = Math.round((margin * 0.35) * scaleFactor);
                 fontSub = Math.round(fontTop * 0.7);
                 fontBot = Math.round((margin * 0.45) * scaleFactor);
-                startYTop = Math.round(margin * 0.45) + parseInt(document.getElementById('y-top').value);
-                startYBot = size - Math.round(margin * 0.35) + parseInt(document.getElementById('y-bot').value);
+                startYTop = Math.round(margin * 0.45) + parseInt(document.getElementById('y-top')?.value || 0);
+                startYBot = size - Math.round(margin * 0.35) + parseInt(document.getElementById('y-bot')?.value || 0);
             } else {
                 canvasW = img.width;
                 canvasH = img.height;
                 fontTop = Math.round((img.height * 0.08) * scaleFactor);
                 fontSub = Math.round(fontTop * 0.7);
                 fontBot = Math.round((img.height * 0.08) * scaleFactor);
-                startYTop = Math.round(img.height * 0.12) + parseInt(document.getElementById('y-top').value);
-                startYBot = Math.round(img.height * 0.88) + parseInt(document.getElementById('y-bot').value);
+                startYTop = Math.round(img.height * 0.12) + parseInt(document.getElementById('y-top')?.value || 0);
+                startYBot = Math.round(img.height * 0.88) + parseInt(document.getElementById('y-bot')?.value || 0);
             }
 
             if (mainEditorCanvas.width !== canvasW || mainEditorCanvas.height !== canvasH) {
@@ -1005,23 +1013,23 @@
             const layers = [
                 {
                     name: 'image',
-                    z: parseInt(document.getElementById('z-img').value) || 1,
+                    z: parseInt(document.getElementById('z-img')?.value || 1),
                     render: () => {
                         if (!layerVisibility['image']) return;
                         if (mode === 'margin') {
-                            const x = ((canvasW - img.width) / 2) + parseInt(document.getElementById('x-img').value);
-                            const y = ((canvasH - img.height) / 2) + parseInt(document.getElementById('y-img').value);
+                            const x = ((canvasW - img.width) / 2) + parseInt(document.getElementById('x-img')?.value || 0);
+                            const y = ((canvasH - img.height) / 2) + parseInt(document.getElementById('y-img')?.value || 0);
                             mainEditorCtx.drawImage(img, x, y, img.width, img.height);
                         } else {
-                            const x = parseInt(document.getElementById('x-img').value);
-                            const y = parseInt(document.getElementById('y-img').value);
+                            const x = parseInt(document.getElementById('x-img')?.value || 0);
+                            const y = parseInt(document.getElementById('y-img')?.value || 0);
                             mainEditorCtx.drawImage(img, x, y, img.width, img.height);
                         }
                     }
                 },
                 {
                     name: 'paint-under',
-                    z: parseInt(document.getElementById('z-paint-under').value) || 2,
+                    z: parseInt(document.getElementById('z-paint-under')?.value || 2),
                     render: () => {
                         if (!layerVisibility['paint-under']) return;
                         mainEditorCtx.drawImage(paintUnderCanvas, 0, 0, canvasW, canvasH);
@@ -1029,10 +1037,10 @@
                 },
                 {
                     name: 'title',
-                    z: parseInt(document.getElementById('z-top').value) || 3,
+                    z: parseInt(document.getElementById('z-top')?.value || 3),
                     render: () => {
                         if (!layerVisibility['title']) return;
-                        const text = document.getElementById('txt-top').value;
+                        const text = document.getElementById('txt-top')?.value;
                         if (!text) return;
                         mainEditorCtx.fillStyle = textColor;
                         mainEditorCtx.textAlign = 'center';
@@ -1040,16 +1048,16 @@
                         mainEditorCtx.font = `normal ${fontTop}px ${fontFamily}`;
                         let lines = getLines(mainEditorCtx, text, canvasW * 0.88);
                         let lh = fontTop * 1.25;
-                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-top').value);
+                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-top')?.value || 0);
                         lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, startYTop + (idx * lh)));
                     }
                 },
                 {
                     name: 'sub',
-                    z: parseInt(document.getElementById('z-sub').value) || 4,
+                    z: parseInt(document.getElementById('z-sub')?.value || 4),
                     render: () => {
                         if (!layerVisibility['sub']) return;
-                        const text = document.getElementById('txt-sub').value;
+                        const text = document.getElementById('txt-sub')?.value;
                         if (!text) return;
                         mainEditorCtx.fillStyle = textColor;
                         mainEditorCtx.textAlign = 'center';
@@ -1057,17 +1065,17 @@
                         mainEditorCtx.font = `normal ${fontSub}px ${fontFamily}`;
                         let lines = getLines(mainEditorCtx, text, canvasW * 0.88);
                         let lh = fontSub * 1.25;
-                        let subBaseY = startYTop + (fontTop * 1.3) + parseInt(document.getElementById('y-sub').value);
-                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-sub').value);
+                        let subBaseY = startYTop + (fontTop * 1.3) + parseInt(document.getElementById('y-sub')?.value || 0);
+                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-sub')?.value || 0);
                         lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, subBaseY + (idx * lh)));
                     }
                 },
                 {
                     name: 'bot',
-                    z: parseInt(document.getElementById('z-bot').value) || 5,
+                    z: parseInt(document.getElementById('z-bot')?.value || 5),
                     render: () => {
                         if (!layerVisibility['bot']) return;
-                        const text = document.getElementById('txt-bot').value;
+                        const text = document.getElementById('txt-bot')?.value;
                         if (!text) return;
                         mainEditorCtx.fillStyle = textColor;
                         mainEditorCtx.textAlign = 'center';
@@ -1075,14 +1083,14 @@
                         mainEditorCtx.font = `normal ${fontBot}px ${fontFamily}`;
                         let lines = getLines(mainEditorCtx, text, canvasW * 0.88);
                         let lh = fontBot * 1.25;
-                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-bot').value);
+                        let posX = (canvasW / 2) + parseInt(document.getElementById('x-bot')?.value || 0);
                         let botBaseY = startYBot - ((lines.length - 1) * lh * 0.5);
                         lines.forEach((l, idx) => mainEditorCtx.fillText(l, posX, botBaseY + (idx * lh)));
                     }
                 },
                 {
                     name: 'paint-over',
-                    z: parseInt(document.getElementById('z-paint-over').value) || 6,
+                    z: parseInt(document.getElementById('z-paint-over')?.value || 6),
                     render: () => {
                         if (!layerVisibility['paint-over']) return;
                         mainEditorCtx.drawImage(paintOverCanvas, 0, 0, canvasW, canvasH);
@@ -1106,6 +1114,7 @@
         }
 
         function startPaint(e) {
+            if (e.touches && e.touches.length > 1) return;
             e.preventDefault();
             isPainting = true;
             const ctx = currentActivePaintLayer === 'over' ? paintOverCtx : paintUnderCtx;
@@ -1116,12 +1125,12 @@
         }
 
         function doPaint(e) {
-            if (!isPainting) return;
+            if (!isPainting || (e.touches && e.touches.length > 1)) return;
             e.preventDefault();
             const ctx = currentActivePaintLayer === 'over' ? paintOverCtx : paintUnderCtx;
             const pos = getCoords(e);
 
-            const bSize = parseInt(document.getElementById('brush-size-number').value) || 15;
+            const bSize = parseInt(document.getElementById('brush-size-number')?.value || 15);
             ctx.lineWidth = bSize;
             ctx.lineCap = 'round';
             ctx.lineJoin = 'round';
@@ -1130,7 +1139,7 @@
                 ctx.globalCompositeOperation = 'destination-out';
             } else {
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.strokeStyle = document.getElementById('brush-color').value;
+                ctx.strokeStyle = document.getElementById('brush-color')?.value || '#ff0055';
             }
 
             ctx.lineTo(pos.x, pos.y);
@@ -1138,7 +1147,7 @@
             scheduleRender();
         }
 
-function stopPaint(e) {
+        function stopPaint(e) {
             if (!isPainting) return;
             isPainting = false;
             const ctx = currentActivePaintLayer === 'over' ? paintOverCtx : paintUnderCtx;
@@ -1149,10 +1158,6 @@ function stopPaint(e) {
         mainEditorCanvas.addEventListener('mousedown', startPaint);
         mainEditorCanvas.addEventListener('mousemove', doPaint);
         window.addEventListener('mouseup', stopPaint);
-
-        mainEditorCanvas.addEventListener('touchstart', startPaint, { passive: false });
-        mainEditorCanvas.addEventListener('touchmove', doPaint, { passive: false });
-        window.addEventListener('touchend', stopPaint);
 
         // ==============================================================
         // GESTO DE PINZA / MULTI-TOUCH ZOOM (EDITOR PRINCIPAL - IPHONE / IPAD)
@@ -1171,11 +1176,12 @@ function stopPaint(e) {
         mainEditorCanvas.addEventListener('touchstart', (e) => {
             if (e.touches.length === 2) {
                 e.preventDefault();
-                isPainting = false; // Cancela el pincel para no manchar mientras hacés pinza
+                isPainting = false;
                 mainPinchInitialDist = calcularDistanciaPinch(e);
-                
                 const scaleInput = document.getElementById('edit-scale');
                 mainInitialScale = parseInt(scaleInput ? scaleInput.value : 100) || 100;
+            } else if (e.touches.length === 1) {
+                startPaint(e);
             }
         }, { passive: false });
 
@@ -1195,12 +1201,17 @@ function stopPaint(e) {
                 if (valLabel) valLabel.textContent = `${nuevaEscala}%`;
 
                 scheduleRender();
+            } else if (e.touches.length === 1 && isPainting) {
+                doPaint(e);
             }
         }, { passive: false });
 
         mainEditorCanvas.addEventListener('touchend', (e) => {
             if (e.touches.length < 2) {
                 mainPinchInitialDist = null;
+            }
+            if (e.touches.length === 0) {
+                stopPaint(e);
             }
         });
 
@@ -1212,18 +1223,24 @@ function stopPaint(e) {
             const el = document.getElementById(id);
             if (!el) return;
             el.addEventListener('input', () => {
-                if (id === 'edit-scale') document.getElementById('val-edit-scale').textContent = el.value + '%';
+                if (id === 'edit-scale') {
+                    const label = document.getElementById('val-edit-scale');
+                    if (label) label.textContent = el.value + '%';
+                }
                 scheduleRender();
                 if (id.startsWith('z-')) updatePSLayersPanel();
             });
             el.addEventListener('touchmove', () => scheduleRender(), { passive: true });
         });
+
         // Abrir Modal
         window.openEditor = function(index) {
             activeEditIndex = index;
             const item = imagesData[index];
 
-            document.getElementById('edit-mode').value = item.mode || 'margin';
+            const editMode = document.getElementById('edit-mode');
+            if (editMode) editMode.value = item.mode || 'margin';
+            
             document.getElementById('txt-top').value = item.top || "";
             document.getElementById('txt-sub').value = item.sub || "";
             document.getElementById('txt-bot').value = item.bot || "";
@@ -1298,7 +1315,7 @@ function stopPaint(e) {
             if (activeEditIndex === -1) return;
             const item = imagesData[activeEditIndex];
 
-            item.mode = document.getElementById('edit-mode').value;
+            item.mode = document.getElementById('edit-mode')?.value || 'margin';
             item.top = document.getElementById('txt-top').value;
             item.sub = document.getElementById('txt-sub').value;
             item.bot = document.getElementById('txt-bot').value;
@@ -1329,7 +1346,8 @@ function stopPaint(e) {
 
             executeRender();
             item.dataUrl = mainEditorCanvas.toDataURL('image/jpeg', 0.95);
-            document.getElementById(`grid-img-${activeEditIndex}`).src = item.dataUrl;
+            const gridImg = document.getElementById(`grid-img-${activeEditIndex}`);
+            if (gridImg) gridImg.src = item.dataUrl;
 
             closeModal();
         };
