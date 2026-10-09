@@ -1391,6 +1391,33 @@
         // ==============================================================
 // MOTOR MULTI-LIENZO (WORKBOARDS) & EXPORTACIÓN INDIVIDUAL + ZIP
 // ==============================================================
+window.downloadSingle = function(index) {
+            const item = imagesData[index];
+            const a = document.createElement('a');
+            a.href = item.dataUrl;
+            a.download = item.name;
+            a.click();
+        };
+
+        document.getElementById('btn-dl-zip').addEventListener('click', async () => {
+            if (!imagesData.length) return;
+            const zip = new JSZip();
+            const folder = zip.folder("Banners_XFish_Capas");
+            imagesData.forEach(img => {
+                const b64 = img.dataUrl.split(',')[1];
+                folder.file(img.name, b64, {base64: true});
+            });
+            const content = await zip.generateAsync({type:"blob"});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(content);
+            a.download = "Banners_XFish_HD.zip";
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+
+// ==============================================================
+// MOTOR MULTI-LIENZO (WORKBOARDS) & CAPAS INDEPENDIENTES + ZIP
+// ==============================================================
 let mesasTrabajo = [
     { id: 1, nombre: "Mesa 1", objetos: [], txtTop: "", txtBot: "" }
 ];
@@ -1399,10 +1426,12 @@ let objetoSeleccionadoIdx = -1;
 let isDraggingObjeto = false;
 let dragStartX = 0, dragStartY = 0;
 
-const artboardCanvas = document.getElementById('multi-artboard-canvas');
-const artboardCtx = artboardCanvas ? artboardCanvas.getContext('2d') : null;
+function getArtboardElements() {
+    const canvas = document.getElementById('multi-artboard-canvas');
+    const ctx = canvas ? canvas.getContext('2d') : null;
+    return { canvas, ctx };
+}
 
-// 1. Forzar función global con desplazamiento automático y apertura limpia
 window.toggleModoMultiLienzo = function() {
     const sec = document.getElementById('seccion-multi-lienzo');
     if (!sec) {
@@ -1415,6 +1444,7 @@ window.toggleModoMultiLienzo = function() {
         sec.classList.remove('hidden');
         sec.style.display = 'block';
         sec.scrollIntoView({ behavior: 'smooth' });
+        bindArtboardEvents();
         renderizarTabsMesas();
         redibujarMesaActual();
     } else {
@@ -1423,7 +1453,6 @@ window.toggleModoMultiLienzo = function() {
     }
 };
 
-// 2. Renderizado corregido sin la barra invertida que rompía el código
 function renderizarTabsMesas() {
     const tabsCont = document.getElementById('tab-lienzos-container');
     const selectEnviar = document.getElementById('select-enviar-mesa');
@@ -1441,6 +1470,7 @@ function renderizarTabsMesas() {
             mesaActivaId = m.id; 
             objetoSeleccionadoIdx = -1; 
             renderizarTabsMesas(); 
+            actualizarPanelObjeto();
             redibujarMesaActual(); 
         };
         tabsCont.appendChild(btn);
@@ -1458,6 +1488,7 @@ function renderizarTabsMesas() {
         if (botEl) botEl.value = mesa.txtBot || "";
     }
 }
+
 function getMesaActiva() {
     return mesasTrabajo.find(m => m.id === mesaActivaId);
 }
@@ -1474,6 +1505,7 @@ function crearNuevaMesa() {
     mesaActivaId = nuevoId;
     objetoSeleccionadoIdx = -1;
     renderizarTabsMesas();
+    actualizarPanelObjeto();
     redibujarMesaActual();
 }
 
@@ -1484,9 +1516,11 @@ function eliminarMesa(id, e) {
     mesaActivaId = mesasTrabajo[0].id;
     objetoSeleccionadoIdx = -1;
     renderizarTabsMesas();
+    actualizarPanelObjeto();
     redibujarMesaActual();
 }
 
+// Carga de PNGs con asignación de capas
 document.getElementById('input-multi-pngs')?.addEventListener('change', (e) => {
     const files = e.target.files;
     if (!files.length) return;
@@ -1495,14 +1529,17 @@ document.getElementById('input-multi-pngs')?.addEventListener('change', (e) => {
     Array.from(files).forEach(file => {
         const img = new Image();
         img.onload = () => {
+            const nextZ = mesa.objetos.length ? Math.max(...mesa.objetos.map(o => o.zIndex || 1)) + 1 : 1;
             mesa.objetos.push({
                 img: img,
-                x: 600,
+                name: file.name,
+                x: 600, // Centro exacto inicial
                 y: 600,
                 width: img.width,
                 height: img.height,
                 scale: 1,
-                rotation: 0
+                rotation: 0,
+                zIndex: nextZ
             });
             objetoSeleccionadoIdx = mesa.objetos.length - 1;
             actualizarPanelObjeto();
@@ -1512,11 +1549,16 @@ document.getElementById('input-multi-pngs')?.addEventListener('change', (e) => {
     });
 });
 
+// Renderizado con tipografía Berlin y capas Z
 function dibujarMesaEnContexto(ctx, mesa, width, height, resaltarSeleccionado = true) {
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, width, height);
 
-    mesa.objetos.forEach((obj, idx) => {
+    // 1. Dibujar PNGs ordenados por Z-Index
+    const objetosOrdenados = [...mesa.objetos].map((obj, originalIdx) => ({ obj, originalIdx }))
+                                              .sort((a, b) => (a.obj.zIndex || 0) - (b.obj.zIndex || 0));
+
+    objetosOrdenados.forEach(({ obj, originalIdx }) => {
         ctx.save();
         ctx.translate(obj.x, obj.y);
         ctx.rotate((obj.rotation * Math.PI) / 180);
@@ -1524,7 +1566,7 @@ function dibujarMesaEnContexto(ctx, mesa, width, height, resaltarSeleccionado = 
         const h = obj.height * obj.scale;
         ctx.drawImage(obj.img, -w / 2, -h / 2, w, h);
 
-        if (resaltarSeleccionado && idx === objetoSeleccionadoIdx && mesa.id === mesaActivaId) {
+        if (resaltarSeleccionado && originalIdx === objetoSeleccionadoIdx && mesa.id === mesaActivaId) {
             ctx.strokeStyle = '#ec4899';
             ctx.lineWidth = 4;
             ctx.strokeRect(-w / 2, -h / 2, w, h);
@@ -1532,23 +1574,27 @@ function dibujarMesaEnContexto(ctx, mesa, width, height, resaltarSeleccionado = 
         ctx.restore();
     });
 
+    // 2. Textos con Berlin Sans FB
     ctx.fillStyle = '#000000';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.font = 'normal 48px sans-serif';
+    ctx.font = `normal 52px ${fontFamily}`;
 
-    if (mesa.txtTop) ctx.fillText(mesa.txtTop, width / 2, 80);
-    if (mesa.txtBot) ctx.fillText(mesa.txtBot, width / 2, height - 80);
+    if (mesa.txtTop) ctx.fillText(mesa.txtTop, width / 2, 85);
+    if (mesa.txtBot) ctx.fillText(mesa.txtBot, width / 2, height - 75);
 }
 
 function redibujarMesaActual() {
     const mesa = getMesaActiva();
-    if (!mesa || !artboardCtx) return;
-    dibujarMesaEnContexto(artboardCtx, mesa, 1200, 1200, true);
+    const { ctx } = getArtboardElements();
+    if (!mesa || !ctx) return;
+    dibujarMesaEnContexto(ctx, mesa, 1200, 1200, true);
 }
 
 function getArtboardPos(e) {
-    const rect = artboardCanvas.getBoundingClientRect();
+    const { canvas } = getArtboardElements();
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
     const cx = e.touches ? e.touches[0].clientX : e.clientX;
     const cy = e.touches ? e.touches[0].clientY : e.clientY;
     return {
@@ -1557,8 +1603,13 @@ function getArtboardPos(e) {
     };
 }
 
-artboardCanvas?.addEventListener('mousedown', iniciarDragObjeto);
-artboardCanvas?.addEventListener('touchstart', iniciarDragObjeto, { passive: false });
+function bindArtboardEvents() {
+    const { canvas } = getArtboardElements();
+    if (!canvas || canvas.dataset.bound) return;
+    canvas.dataset.bound = "true";
+    canvas.addEventListener('mousedown', iniciarDragObjeto);
+    canvas.addEventListener('touchstart', iniciarDragObjeto, { passive: false });
+}
 
 function iniciarDragObjeto(e) {
     e.preventDefault();
@@ -1566,13 +1617,17 @@ function iniciarDragObjeto(e) {
     const mesa = getMesaActiva();
     if (!mesa) return;
 
+    // Buscar de arriba hacia abajo respetando la capa Z
+    const objetosOrdenados = [...mesa.objetos].map((obj, originalIdx) => ({ obj, originalIdx }))
+                                              .sort((a, b) => (b.obj.zIndex || 0) - (a.obj.zIndex || 0));
+
     let hallado = -1;
-    for (let i = mesa.objetos.length - 1; i >= 0; i--) {
-        const o = mesa.objetos[i];
+    for (let item of objetosOrdenados) {
+        const o = item.obj;
         const w = (o.width * o.scale) / 2;
         const h = (o.height * o.scale) / 2;
         if (pos.x >= o.x - w && pos.x <= o.x + w && pos.y >= o.y - h && pos.y <= o.y + h) {
-            hallado = i;
+            hallado = item.originalIdx;
             break;
         }
     }
@@ -1603,6 +1658,7 @@ function moverObjetoDrag(e) {
 window.addEventListener('mouseup', () => { isDraggingObjeto = false; });
 window.addEventListener('touchend', () => { isDraggingObjeto = false; });
 
+// Panel de control del objeto con Centrado y Capas Z
 function actualizarPanelObjeto() {
     const mesa = getMesaActiva();
     const info = document.getElementById('info-objeto-sel');
@@ -1610,22 +1666,62 @@ function actualizarPanelObjeto() {
 
     if (objetoSeleccionadoIdx !== -1 && mesa && mesa.objetos[objetoSeleccionadoIdx]) {
         const obj = mesa.objetos[objetoSeleccionadoIdx];
-        info.textContent = `Objeto #${objetoSeleccionadoIdx + 1} (${Math.round(obj.width * obj.scale)}x${Math.round(obj.height * obj.scale)}px)`;
-        btnAcc.style.display = 'flex';
-        document.getElementById('obj-scale').value = Math.round(obj.scale * 100);
-        document.getElementById('obj-rot').value = obj.rotation;
+        info.innerHTML = `
+            <div class="flex flex-col">
+                <span class="font-bold text-slate-800">${obj.name || `Objeto #\${objetoSeleccionadoIdx + 1}`}</span>
+                <span class="text-[10px] text-pink-600 font-bold">Capa Z: ${obj.zIndex || 1} | ${Math.round(obj.width * obj.scale)}x${Math.round(obj.height * obj.scale)}px</span>
+            </div>
+        `;
+        if (btnAcc) {
+            btnAcc.style.display = 'flex';
+            btnAcc.innerHTML = `
+                <div class="flex items-center gap-1">
+                    <button onclick="centrarObjetoSel('total')" title="Centrar en medio del lienzo" class="text-[10px] font-bold bg-pink-50 hover:bg-pink-100 text-pink-700 px-2 py-1 rounded">🎯 Centrar</button>
+                    <button onclick="cambiarCapaObjetoSel(1)" title="Subir Capa Z" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-1 rounded">▲</button>
+                    <button onclick="cambiarCapaObjetoSel(-1)" title="Bajar Capa Z" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-1.5 py-1 rounded">▼</button>
+                    <button onclick="duplicarObjetoSel()" class="text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 px-2 py-1 rounded">📋 Copiar</button>
+                    <button onclick="eliminarObjetoSel()" class="text-[10px] font-bold bg-rose-100 hover:bg-rose-200 text-rose-700 px-2 py-1 rounded">🗑️</button>
+                </div>
+            `;
+        }
+        const scaleEl = document.getElementById('obj-scale');
+        const rotEl = document.getElementById('obj-rot');
+        if (scaleEl) scaleEl.value = Math.round(obj.scale * 100);
+        if (rotEl) rotEl.value = obj.rotation;
     } else {
-        info.textContent = "Ningún objeto seleccionado";
-        btnAcc.style.display = 'none';
+        if (info) info.textContent = "Ningún objeto seleccionado";
+        if (btnAcc) btnAcc.style.display = 'none';
     }
 }
+
+// Función de centrado
+window.centrarObjetoSel = function(eje = 'total') {
+    const mesa = getMesaActiva();
+    if (objetoSeleccionadoIdx === -1 || !mesa) return;
+    const obj = mesa.objetos[objetoSeleccionadoIdx];
+    if (eje === 'total' || eje === 'x') obj.x = 600;
+    if (eje === 'total' || eje === 'y') obj.y = 600;
+    redibujarMesaActual();
+};
+
+// Función para subir o bajar capas del objeto
+window.cambiarCapaObjetoSel = function(delta) {
+    const mesa = getMesaActiva();
+    if (objetoSeleccionadoIdx === -1 || !mesa) return;
+    const obj = mesa.objetos[objetoSeleccionadoIdx];
+    obj.zIndex = Math.max(1, (obj.zIndex || 1) + delta);
+    actualizarPanelObjeto();
+    redibujarMesaActual();
+};
 
 function actualizarTransformObjeto() {
     const mesa = getMesaActiva();
     if (objetoSeleccionadoIdx === -1 || !mesa) return;
     const obj = mesa.objetos[objetoSeleccionadoIdx];
-    obj.scale = (parseInt(document.getElementById('obj-scale').value) || 100) / 100;
-    obj.rotation = parseInt(document.getElementById('obj-rot').value) || 0;
+    const scaleEl = document.getElementById('obj-scale');
+    const rotEl = document.getElementById('obj-rot');
+    if (scaleEl) obj.scale = (parseInt(scaleEl.value) || 100) / 100;
+    if (rotEl) obj.rotation = parseInt(rotEl.value) || 0;
     redibujarMesaActual();
 }
 
@@ -1633,7 +1729,12 @@ function duplicarObjetoSel() {
     const mesa = getMesaActiva();
     if (objetoSeleccionadoIdx === -1 || !mesa) return;
     const orig = mesa.objetos[objetoSeleccionadoIdx];
-    mesa.objetos.push({ ...orig, x: orig.x + 30, y: orig.y + 30 });
+    mesa.objetos.push({ 
+        ...orig, 
+        x: orig.x + 35, 
+        y: orig.y + 35,
+        zIndex: (orig.zIndex || 1) + 1 
+    });
     objetoSeleccionadoIdx = mesa.objetos.length - 1;
     actualizarPanelObjeto();
     redibujarMesaActual();
@@ -1655,6 +1756,7 @@ function enviarObjetoAMesa(targetId) {
     if (!mesaOrigen || !mesaDestino) return;
 
     const [obj] = mesaOrigen.objetos.splice(objetoSeleccionadoIdx, 1);
+    obj.zIndex = mesaDestino.objetos.length + 1;
     mesaDestino.objetos.push(obj);
     objetoSeleccionadoIdx = -1;
     actualizarPanelObjeto();
@@ -1711,6 +1813,10 @@ async function descargarTodasMesasZip() {
     a.click();
     URL.revokeObjectURL(a.href);
 }
+
+document.addEventListener('DOMContentLoaded', () => {
+    bindArtboardEvents();
+});
     </script>
 </body>
 </html>
