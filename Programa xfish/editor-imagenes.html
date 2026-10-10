@@ -665,8 +665,7 @@
                         <button onclick="toggleLayerVis('${l.id}')" class="text-xs hover:scale-110 transition-transform ${isVis ? 'text-slate-700' : 'text-slate-300'}">
                             ${isVis ? '👁️' : '🕶️'}
                         </button>
-                        <span class="truncate cursor-pointer" onclick="${l.type === 'paint' ? `switchPaintLayer('\${l.paintTarget}')` : ''}">${l.name}</span>
-                    </div>
+                    <span class="truncate cursor-pointer" onclick="\${l.type === 'paint' ? `switchPaintLayer('${l.paintTarget}')` : ''}">\${l.name}</span>                    </div>
                     <div class="flex items-center gap-1 shrink-0">
                         <span class="text-[9px] text-slate-400 bg-white px-1 rounded border border-slate-200">Z:${l.z}</span>
                         <button onclick="changeLayerZ('${l.inputZ}', 1)" class="w-4 h-4 flex items-center justify-center bg-white border border-slate-200 hover:bg-pink-50 rounded text-[9px] font-black">▲</button>
@@ -733,7 +732,7 @@
                 textScale: scale,
                 top: showTop ? "TÍTULO DE PRODUCTO\nSEGUNDO RENGLÓN" : "",
                 sub: showSub ? "Subtítulo descriptivo" : "",
-                bot: showBot ? "COD: PRUEBA-001\nPRECIO: \$99.999" : "",
+                bot: showBot ? "COD: PRUEBA-001\nPRECIO: $99.999" : "",
                 imgX: 0, imgY: imgY,
                 xTop: 0, yTop: yTop,
                 xSub: 0, ySub: ySub,
@@ -2128,86 +2127,114 @@ async function descargarTodasMesasZip() {
 document.addEventListener('DOMContentLoaded', () => {
     bindArtboardEvents();
 });
-        // ==============================================================
-// DRAG & DROP DIRECTO DE FOTOS SOBRE EL LIENZO (SIN ABRIR PESTAÑA)
 // ==============================================================
-function habilitarDropDirectoEnLienzo() {
-    const contenedorLienzo = document.getElementById('multi-artboard-canvas')?.parentElement;
-    const canvas = document.getElementById('multi-artboard-canvas');
-
-    const zonas = [contenedorLienzo, canvas].filter(Boolean);
-
-    // Evitar que el navegador abra el archivo si se suelta en cualquier parte de la ventana
+// DRAG & DROP UNIVERSAL (PASO 1 + MULTI-LIENZO SIN ABRIR PESTAÑAS)
+// ==============================================================
+function habilitarDropUniversal() {
+    // 1. Cancelar en toda la ventana la apertura de archivos en nuevas pestañas
     window.addEventListener('dragover', (e) => e.preventDefault(), false);
     window.addEventListener('drop', (e) => e.preventDefault(), false);
 
-    zonas.forEach(zona => {
-        zona.addEventListener('dragenter', (e) => {
-            e.preventDefault();
-            e.stopPropagation();
-            zona.classList.add('ring-4', 'ring-pink-500', 'ring-opacity-50');
-        });
+    // 2. Dropzone del Paso 1 ("Carpeta de Imágenes")
+    const inputImages = document.getElementById('file-images');
+    const dropzonePaso1 = inputImages ? inputImages.closest('.relative.group') : null;
 
-        zona.addEventListener('dragover', (e) => {
+    if (dropzonePaso1) {
+        dropzonePaso1.addEventListener('dragover', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            e.dataTransfer.dropEffect = 'copy';
+            dropzonePaso1.classList.add('ring-4', 'ring-indigo-400');
         });
-
-        zona.addEventListener('dragleave', (e) => {
+        dropzonePaso1.addEventListener('dragleave', (e) => {
             e.preventDefault();
             e.stopPropagation();
-            zona.classList.remove('ring-4', 'ring-pink-500', 'ring-opacity-50');
+            dropzonePaso1.classList.remove('ring-4', 'ring-indigo-400');
         });
-
-        zona.addEventListener('drop', (e) => {
+        dropzonePaso1.addEventListener('drop', async (e) => {
             e.preventDefault();
             e.stopPropagation();
-            zona.classList.remove('ring-4', 'ring-pink-500', 'ring-opacity-50');
+            dropzonePaso1.classList.remove('ring-4', 'ring-indigo-400');
 
             const files = e.dataTransfer.files;
             if (!files || !files.length) return;
 
-            const mesa = getMesaActiva();
-            if (!mesa) return;
+            // Asignar los archivos soltados al input original del Paso 1
+            const dataTransfer = new DataTransfer();
+            Array.from(files).forEach(f => {
+                if (f.type.startsWith('image/')) dataTransfer.items.add(f);
+            });
 
-            // Calcular posición exacta donde soltaste el archivo en el lienzo
-            const rect = canvas.getBoundingClientRect();
-            const dropX = (e.clientX - rect.left) * (1200 / rect.width);
-            const dropY = (e.clientY - rect.top) * (1200 / rect.height);
+            if (dataTransfer.files.length > 0) {
+                inputImages.files = dataTransfer.files;
+                inputImages.dispatchEvent(new Event('change'));
+            }
+        });
+    }
 
-            Array.from(files).forEach((file) => {
-                if (!file.type.startsWith('image/')) return;
+    // 3. Dropzone de la Mesa de Trabajo (Multi-Lienzo)
+    const canvasArt = document.getElementById('multi-artboard-canvas');
+    const contenedorMulti = canvasArt ? canvasArt.parentElement : null;
 
-                const img = new Image();
-                img.onload = () => {
-                    mesa.elementos.push({
-                        type: 'image',
-                        name: file.name,
-                        img: img,
-                        x: Math.max(100, Math.min(1100, dropX || 600)),
-                        y: Math.max(100, Math.min(1100, dropY || 600)),
-                        width: img.width,
-                        height: img.height,
-                        scale: 1,
-                        rotation: 0,
-                        visible: true
-                    });
-                    elementoSeleccionadoIdx = mesa.elementos.length - 1;
-                    actualizarListaCapasDND();
-                    actualizarPanelPropiedades();
-                    redibujarMesaActual();
-                };
-                img.src = URL.createObjectURL(file);
+    if (contenedorMulti && canvasArt) {
+        [contenedorMulti, canvasArt].forEach(zona => {
+            zona.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                contenedorMulti.classList.add('ring-4', 'ring-pink-500');
+            });
+            zona.addEventListener('dragleave', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                contenedorMulti.classList.remove('ring-4', 'ring-pink-500');
+            });
+            zona.addEventListener('drop', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                contenedorMulti.classList.remove('ring-4', 'ring-pink-500');
+
+                const files = e.dataTransfer.files;
+                if (!files || !files.length) return;
+
+                const mesa = getMesaActiva();
+                if (!mesa) return;
+
+                const rect = canvasArt.getBoundingClientRect();
+                const dropX = (e.clientX - rect.left) * (1200 / rect.width);
+                const dropY = (e.clientY - rect.top) * (1200 / rect.height);
+
+                Array.from(files).forEach((file) => {
+                    if (!file.type.startsWith('image/')) return;
+
+                    const img = new Image();
+                    img.onload = () => {
+                        mesa.elementos.push({
+                            type: 'image',
+                            name: file.name,
+                            img: img,
+                            x: Math.max(100, Math.min(1100, dropX || 600)),
+                            y: Math.max(100, Math.min(1100, dropY || 600)),
+                            width: img.width,
+                            height: img.height,
+                            scale: 1,
+                            rotation: 0,
+                            visible: true
+                        });
+                        elementoSeleccionadoIdx = mesa.elementos.length - 1;
+                        if (typeof actualizarListaCapasDND === 'function') actualizarListaCapasDND();
+                        if (typeof actualizarPanelPropiedades === 'function') actualizarPanelPropiedades();
+                        redibujarMesaActual();
+                    };
+                    img.src = URL.createObjectURL(file);
+                });
             });
         });
-    });
+    }
 }
 
-// Inicializar drop junto con los demás eventos
+// Inicialización garantizada
 document.addEventListener('DOMContentLoaded', () => {
     bindArtboardEvents();
-    habilitarDropDirectoEnLienzo();
+    habilitarDropUniversal();
 });
         // ==============================================================
 // 1. ESCALA GLOBAL DE TODAS LAS CAPAS JUNTAS
