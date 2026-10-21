@@ -1,0 +1,1107 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conciliador de Ventas, Pagos y Comisiones | X-Fish</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif; background-color: #f0f4f8; }
+        .glass-panel { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(20px); -webkit-backdrop-filter: blur(20px); border: 1px solid rgba(255, 255, 255, 0.8); box-shadow: 0 8px 32px 0 rgba(14, 56, 114, 0.05); }
+        .blob { position: fixed; filter: blur(90px); z-index: -1; border-radius: 50%; animation: float 10s ease-in-out infinite; }
+        @keyframes float { 0%, 100% { transform: translateY(0px) scale(1); } 50% { transform: translateY(-20px) scale(1.05); } }
+        ::-webkit-scrollbar { width: 6px; height: 6px; }
+        ::-webkit-scrollbar-track { background: rgba(0,0,0,0.02); }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
+    </style>
+</head>
+<body class="relative min-h-screen text-slate-800 flex flex-col pb-12 selection:bg-indigo-500 selection:text-white">
+
+    <div class="blob bg-blue-300 w-[500px] h-[500px] top-[-100px] left-[-100px] opacity-40"></div>
+    <div class="blob bg-emerald-200 w-[400px] h-[400px] bottom-[50px] right-[-50px] opacity-50" style="animation-delay: -2s;"></div>
+    <div class="blob bg-amber-100 w-[300px] h-[300px] top-[25%] left-[60%] opacity-40" style="animation-delay: -4s;"></div>
+
+    <header class="glass-panel sticky top-0 z-30 border-b border-white/60 px-6 py-4 mb-6">
+        <div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-blue-700 flex items-center justify-center shadow-md shrink-0">
+                    <i class="fa-solid fa-file-invoice-dollar text-lg text-white"></i>
+                </div>
+                <div>
+                    <h1 class="text-lg sm:text-xl font-extrabold text-slate-800 tracking-tight flex flex-wrap items-center gap-2">
+                        <span>Conciliador de Ventas, Pagos y Comisiones</span>
+                        <span class="text-xs bg-indigo-100 text-indigo-700 border border-indigo-200 px-2.5 py-0.5 rounded-full font-bold">Vendedores + Equipos + 8%</span>
+                    </h1>
+                    <p class="text-xs text-slate-500">Hereda Vendedor y Equipo desde la Venta ("Orden de venta"), cruza pagos y liquida comisiones</p>
+                </div>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <button type="button" onclick="loadDemoPaymentsData()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Cargar Ejemplo</span>
+                </button>
+                <button type="button" onclick="exportAllInOneExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-download"></i> <span>Exportar Todo (.xlsx)</span>
+                </button>
+                <button type="button" onclick="resetAllApp()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 text-xs font-bold px-3 py-2 rounded-xl transition flex items-center gap-1.5">
+                    <i class="fa-solid fa-rotate-left"></i> <span>Reiniciar</span>
+                </button>
+                <a href="index.html" class="text-xs font-bold text-indigo-600 hover:text-indigo-800 ml-2">← Volver al Hub</a>
+            </div>
+        </div>
+    </header>
+
+    <datalist id="sellersDatalist"></datalist>
+    <datalist id="teamsDatalist"></datalist>
+    <div id="toastContainer" class="fixed bottom-5 right-5 z-50 flex flex-col gap-2 max-w-sm w-full pointer-events-none"></div>
+
+    <main class="flex-grow max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 space-y-8">
+
+        <!-- Stepper Visual -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div id="stepCard1" class="glass-panel rounded-2xl p-4 border-2 border-indigo-600 flex items-center gap-4 transition">
+                <div class="w-10 h-10 rounded-full bg-indigo-600 text-white font-bold flex items-center justify-center shrink-0">1</div>
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-indigo-600">Paso 1 (Fuente Principal)</div>
+                    <div class="font-bold text-slate-800 text-sm">Ventas: Vendedor y Equipo</div>
+                    <div class="text-xs text-slate-500">Define Vendedor y Equipo por Cliente en "Orden de venta"</div>
+                </div>
+            </div>
+            <div id="stepCard2" class="glass-panel rounded-2xl p-4 border border-slate-200 flex items-center gap-4 opacity-75 transition">
+                <div id="stepBadge2" class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-bold flex items-center justify-center shrink-0">2</div>
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Paso 2</div>
+                    <div class="font-bold text-slate-800 text-sm">Pagos Heredados de la Venta</div>
+                    <div class="text-xs text-slate-500">Asigna Vendedor/Equipo según la Venta</div>
+                </div>
+            </div>
+            <div id="stepCard3" class="glass-panel rounded-2xl p-4 border border-slate-200 flex items-center gap-4 opacity-75 transition">
+                <div id="stepBadge3" class="w-10 h-10 rounded-full bg-slate-200 text-slate-600 font-bold flex items-center justify-center shrink-0">3</div>
+                <div>
+                    <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Paso 3</div>
+                    <div class="font-bold text-slate-800 text-sm">Comisiones (8% sobre Cobros)</div>
+                    <div class="text-xs text-slate-500">Cobra el Equipo o el Vendedor exclusivo</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- PASO 1: VENTAS -->
+        <section id="salesSection" class="glass-panel rounded-3xl overflow-hidden">
+            <div class="bg-white/60 border-b border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow">1</span>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Base de Ventas ("Orden de venta")</h2>
+                        <p class="text-xs text-slate-500">Padrón de datos para cruzar los pagos. Incluye buscador para consultar o editar clientes puntuales.</p>
+                    </div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                    <button type="button" onclick="toggleSalesConfigPanel()" id="btnToggleSalesConfig" class="hidden text-xs bg-white hover:bg-slate-100 text-slate-600 font-semibold px-3 py-2 rounded-xl border border-slate-300 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-sliders text-indigo-600"></i> Columnas Excel
+                    </button>
+                    <button type="button" onclick="openAddManualClientModal()" class="text-xs bg-white hover:bg-slate-100 text-slate-700 font-semibold px-3 py-2 rounded-xl border border-slate-300 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-user-plus text-indigo-600"></i> + Nuevo Cliente Manual
+                    </button>
+                    <button type="button" onclick="loadDemoSalesData()" class="text-xs bg-indigo-50 hover:bg-indigo-100 text-indigo-700 font-bold px-3 py-2 rounded-xl border border-indigo-200 transition flex items-center gap-1.5">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Datos de prueba
+                    </button>
+                </div>
+            </div>
+
+            <div class="p-6 space-y-4">
+                <div id="salesDropzone" class="border-2 border-dashed border-slate-300 hover:border-indigo-500 rounded-2xl p-5 text-center transition cursor-pointer bg-white/50 hover:bg-indigo-50/30" onclick="document.getElementById('salesFileInput').click()">
+                    <input type="file" id="salesFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handleSalesFileSelect(event)">
+                    <div class="flex flex-col sm:flex-row items-center justify-center gap-3">
+                        <div class="w-10 h-10 rounded-full bg-indigo-100 text-indigo-600 flex items-center justify-center shrink-0">
+                            <i class="fa-solid fa-cloud-arrow-up text-lg"></i>
+                        </div>
+                        <div class="text-left">
+                            <p class="text-sm font-bold text-slate-700">Hacé clic o arrastrá tu Excel de Ventas aquí</p>
+                            <p class="text-xs text-slate-500">Extrae automáticamente Vendedor y Equipo de Ventas de los pedidos en "Orden de venta"</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="salesConfigPanel" class="hidden bg-slate-50/90 rounded-2xl p-4 border border-slate-200 space-y-4">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-indigo-600"></i>
+                            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Mapeo de Columnas de Ventas</h3>
+                        </div>
+                        <label class="inline-flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
+                            <input type="checkbox" id="flexibleNormToggle" checked onchange="processSalesData()" class="rounded text-indigo-600">
+                            <span>Normalizar nombres (ignorar S.A., S.R.L., tildes)</span>
+                        </label>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Columna Cliente</label><select id="salesColClient" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Columna Vendedor</label><select id="salesColSeller" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Equipo de Ventas</label><select id="salesColTeam" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Columna Estado</label><select id="salesColStatus" onchange="onSalesStatusColumnChange()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Total Venta</label><select id="salesColAmount" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold text-slate-700 mb-1.5">Estados incluidos:</label>
+                        <div id="statusChipsContainer" class="flex flex-wrap gap-2"></div>
+                    </div>
+                </div>
+
+                <div id="salesResultsPanel" class="hidden space-y-3">
+                    <div class="bg-emerald-50/90 border border-emerald-200 rounded-xl px-4 py-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div class="flex items-center gap-2.5 text-xs text-emerald-950">
+                            <i class="fa-solid fa-circle-check text-emerald-600 text-base"></i>
+                            <div>
+                                <span id="salesFileNameText" class="font-bold">archivo.xlsx</span>
+                                <span class="mx-1.5 text-emerald-400">|</span>
+                                <span><strong id="kpiSalesOrdersCount">0</strong> órdenes de venta válidas</span>
+                                <span class="mx-1.5 text-emerald-400">•</span>
+                                <span><strong id="kpiUniqueClientsCount">0</strong> clientes listos en memoria</span>
+                            </div>
+                        </div>
+                        <button type="button" onclick="exportClientsBySellerExcel()" class="text-xs bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Descargar Padrón (.xlsx)
+                        </button>
+                    </div>
+
+                    <div class="bg-white/70 rounded-xl p-4 border border-slate-200 space-y-3">
+                        <div class="relative">
+                            <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-3.5 top-2.5 text-sm"></i>
+                            <input type="text" id="salesSearchInput" oninput="renderSalesSearchLookup()" placeholder="Buscar cliente, nro de pedido, vendedor o equipo para consultar o editar..." class="w-full pl-9 pr-24 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:border-indigo-500 outline-none">
+                            <button type="button" id="btnClearSalesSearch" onclick="clearSalesSearch()" class="hidden absolute right-2 top-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-md font-medium">Limpiar</button>
+                        </div>
+
+                        <div id="salesSearchLookupContainer" class="hidden space-y-3 pt-1">
+                            <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
+                                <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-600">
+                                    <span id="salesSearchCountText">Resultados encontrados</span>
+                                    <span class="text-[11px] font-normal text-slate-500">Editable</span>
+                                </div>
+                                <div class="max-h-80 overflow-y-auto">
+                                    <table class="w-full text-left border-collapse">
+                                        <thead class="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider border-b border-slate-200 sticky top-0">
+                                            <tr>
+                                                <th class="py-2.5 px-4 font-semibold">Cliente</th>
+                                                <th class="py-2.5 px-4 font-semibold">Vendedor</th>
+                                                <th class="py-2.5 px-4 font-semibold">Equipo de Ventas</th>
+                                                <th class="py-2.5 px-4 font-semibold">Pedidos / Detalle</th>
+                                                <th class="py-2.5 px-4 font-semibold text-right">Total Venta</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="salesTableBody" class="divide-y divide-slate-200 text-sm bg-white"></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PASO 2: PAGOS -->
+        <section id="paymentsSection" class="glass-panel rounded-3xl overflow-hidden">
+            <div class="bg-white/60 border-b border-slate-200/80 px-6 py-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div class="flex items-center gap-3">
+                    <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow">2</span>
+                    <div>
+                        <h2 class="text-lg font-bold text-slate-800">Cargar Excel de Pagos Recibidos</h2>
+                        <p class="text-xs text-slate-500">Asigna automáticamente Vendedor y Equipo usando los datos de la Venta (Paso 1).</p>
+                    </div>
+                </div>
+                <button type="button" onclick="loadDemoPaymentsData()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200 transition flex items-center gap-2 shrink-0">
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> Cargar datos de prueba (Pagos)
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div id="paymentsWarningNoSales" class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-xs flex items-center gap-3">
+                    <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg"></i>
+                    <div><strong>Atención:</strong> Primero cargá el Excel de Ventas en el <strong>Paso 1</strong>.</div>
+                </div>
+
+                <div id="paymentsDropzone" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-8 text-center transition cursor-pointer bg-white/50 hover:bg-emerald-50/30" onclick="document.getElementById('paymentsFileInput').click()">
+                    <input type="file" id="paymentsFileInput" accept=".xlsx,.xls,.csv" class="hidden" onchange="handlePaymentsFileSelect(event)">
+                    <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
+                        <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
+                    </div>
+                    <p class="text-sm font-bold text-slate-700">Hacé clic o arrastrá aquí tu Excel de Pagos Recibidos</p>
+                    <p class="text-xs text-slate-500 mt-1">Soporta archivos .xlsx, .xls, .csv</p>
+                    <div id="paymentsFileLoadedBadge" class="hidden mt-4 inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-medium">
+                        <i class="fa-solid fa-circle-check"></i> <span id="paymentsFileNameText">pagos_recibidos.xlsx</span>
+                    </div>
+                </div>
+
+                <div id="paymentsConfigPanel" class="hidden bg-slate-50/90 rounded-2xl p-5 border border-slate-200 space-y-4">
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-sliders text-emerald-600"></i>
+                            <h3 class="font-bold text-sm text-slate-800">Mapeo de Columnas de Pagos</h3>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <label class="inline-flex items-center gap-2 text-xs text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 font-semibold cursor-pointer">
+                                <input type="checkbox" id="prioritizeSalesDataToggle" checked onchange="processPaymentsData()" class="rounded text-indigo-600">
+                                <span>Priorizar siempre Vendedor y Equipo de la Venta</span>
+                            </label>
+                            <label class="inline-flex items-center gap-2 text-xs text-slate-700 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                                <input type="checkbox" id="partialMatchToggle" checked onchange="processPaymentsData()" class="rounded text-emerald-600">
+                                <span>Coincidencia parcial inteligente</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Cliente / Pagador *</label><select id="payColClient" onchange="processPaymentsData()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Monto / Importe *</label><select id="payColAmount" onchange="processPaymentsData()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Fecha / Comprobante</label><select id="payColRef" onchange="processPaymentsData()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Vendedor en Pago</label><select id="payColSeller" onchange="processPaymentsData()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Equipo en Pago</label><select id="payColTeam" onchange="processPaymentsData()" class="w-full rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm outline-none"></select></div>
+                    </div>
+                </div>
+
+                <div id="paymentsResultsPanel" class="hidden space-y-6 pt-2">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-white/80 rounded-xl p-4 border border-slate-200">
+                            <div class="flex items-center justify-between"><span class="text-xs font-semibold text-slate-500 uppercase">Total Procesado</span><span id="kpiPayTotalCount" class="text-xs bg-slate-200 text-slate-700 px-2 py-0.5 rounded-full font-semibold">0 cobros</span></div>
+                            <div id="kpiPayTotalAmount" class="text-2xl font-bold text-slate-800 mt-1">$ 0,00</div>
+                        </div>
+                        <div class="bg-emerald-50/70 rounded-xl p-4 border border-emerald-200">
+                            <div class="flex items-center justify-between"><span class="text-xs font-semibold text-emerald-800 uppercase">Pagos Asociados</span><span id="kpiPayMatchedCount" class="text-xs bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full font-semibold">0 cobros</span></div>
+                            <div id="kpiPayMatchedAmount" class="text-2xl font-bold text-emerald-700 mt-1">$ 0,00</div>
+                            <div id="kpiPayMatchedPercent" class="text-xs text-emerald-700 mt-0.5">Asignados con éxito</div>
+                        </div>
+                        <div class="bg-amber-50/80 rounded-xl p-4 border border-amber-200">
+                            <div class="flex items-center justify-between"><span class="text-xs font-semibold text-amber-900 uppercase">Pagos NO Reconocidos</span><span id="kpiPayUnmatchedCount" class="text-xs bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-semibold">0 cobros</span></div>
+                            <div id="kpiPayUnmatchedAmount" class="text-2xl font-bold text-amber-700 mt-1">$ 0,00</div>
+                        </div>
+                    </div>
+
+                    <div class="bg-slate-900 text-white rounded-2xl p-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-md">
+                        <div>
+                            <h3 class="font-bold text-base flex items-center gap-2"><i class="fa-solid fa-file-arrow-down text-emerald-400"></i> Descargar Excels de Pagos Conciliados y No Reconocidos</h3>
+                            <p class="text-xs text-slate-300 mt-0.5">Incluye hojas por Vendedor, por Equipo y Detalle Completo.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3">
+                            <button type="button" onclick="exportMatchedPaymentsExcel()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-file-circle-check"></i> <span>Pagos Asociados (.xlsx)</span>
+                            </button>
+                            <button type="button" onclick="exportUnmatchedPaymentsExcel()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow transition flex items-center gap-2 text-xs sm:text-sm">
+                                <i class="fa-solid fa-file-circle-question"></i> <span>No Reconocidos (.xlsx)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2"><i class="fa-solid fa-chart-pie text-indigo-600"></i> Resumen de Cobranzas Recibidas</h3>
+                            <div class="inline-flex rounded-lg bg-slate-200/80 p-1 text-xs font-semibold">
+                                <button type="button" id="btnPaySumSeller" onclick="setPaymentSummaryMode('SELLER')" class="px-3 py-1.5 rounded-md bg-white text-slate-800 shadow-sm transition">Por Vendedor</button>
+                                <button type="button" id="btnPaySumTeam" onclick="setPaymentSummaryMode('TEAM')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Por Equipo</button>
+                                <button type="button" id="btnPaySumBoth" onclick="setPaymentSummaryMode('BOTH')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Equipo + Vendedor</button>
+                            </div>
+                        </div>
+                        <div class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                            <table class="w-full text-left border-collapse">
+                                <thead id="paymentSummaryTableHead" class="bg-slate-100 text-slate-600 text-xs uppercase tracking-wider border-b border-slate-200"></thead>
+                                <tbody id="sellerSummaryTableBody" class="divide-y divide-slate-200 text-sm bg-white"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <div class="space-y-3 pt-2">
+                        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-3 border-b border-slate-200 pb-3">
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="tabBtnMatched" onclick="switchPaymentTab('MATCHED')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 text-white shadow-sm transition flex items-center gap-2">
+                                    <i class="fa-solid fa-check-double"></i> <span>Pagos Asociados</span> <span id="badgeTabMatched" class="bg-white/20 text-white px-2 py-0.5 rounded-full text-xs">0</span>
+                                </button>
+                                <button type="button" id="tabBtnUnmatched" onclick="switchPaymentTab('UNMATCHED')" class="px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition flex items-center gap-2">
+                                    <i class="fa-solid fa-triangle-exclamation text-amber-500"></i> <span>No Reconocidos</span> <span id="badgeTabUnmatched" class="bg-amber-100 text-amber-800 px-2 py-0.5 rounded-full text-xs">0</span>
+                                </button>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2">
+                                <select id="paymentsSellerFilter" onchange="renderPaymentsTables()" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 outline-none"><option value="ALL">Todos los Vendedores</option></select>
+                                <select id="paymentsTeamFilter" onchange="renderPaymentsTables()" class="rounded-lg border border-slate-300 bg-white px-3 py-1.5 text-xs font-medium text-slate-700 outline-none"><option value="ALL">Todos los Equipos</option></select>
+                                <div class="relative w-full sm:w-56">
+                                    <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-3 top-2.5 text-xs"></i>
+                                    <input type="text" id="paymentsSearchInput" oninput="renderPaymentsTables()" placeholder="Filtrar pagos..." class="w-full pl-8 pr-3 py-1.5 rounded-lg border border-slate-300 text-xs bg-white outline-none">
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="tabContentMatched" class="border border-slate-200 rounded-xl overflow-hidden bg-white">
+                            <div class="max-h-96 overflow-y-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-emerald-50 text-emerald-900 text-xs uppercase tracking-wider sticky top-0 z-10 border-b border-emerald-200">
+                                        <tr>
+                                            <th class="py-3 px-4 font-semibold">Cliente (Archivo Pagos)</th>
+                                            <th class="py-3 px-4 font-semibold">Vendedor</th>
+                                            <th class="py-3 px-4 font-semibold">Equipo de Ventas</th>
+                                            <th class="py-3 px-4 font-semibold">Origen</th>
+                                            <th class="py-3 px-4 font-semibold">Ref. / Fecha</th>
+                                            <th class="py-3 px-4 font-semibold text-right">Monto Pagado</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="matchedPaymentsTableBody" class="divide-y divide-slate-200 text-sm bg-white"></tbody>
+                                </table>
+                            </div>
+                        </div>
+
+                        <div id="tabContentUnmatched" class="hidden border border-amber-200 rounded-xl overflow-hidden bg-white">
+                            <div class="max-h-96 overflow-y-auto">
+                                <table class="w-full text-left border-collapse">
+                                    <thead class="bg-amber-50 text-amber-900 text-xs uppercase tracking-wider sticky top-0 z-10 border-b border-amber-200">
+                                        <tr>
+                                            <th class="py-3 px-4 font-semibold">Cliente en Archivo de Pagos</th>
+                                            <th class="py-3 px-4 font-semibold">Motivo</th>
+                                            <th class="py-3 px-4 font-semibold">Ref. / Fecha</th>
+                                            <th class="py-3 px-4 font-semibold text-right">Monto a Revisar</th>
+                                            <th class="py-3 px-4 font-semibold">Asignar Vendedor y Equipo Manualmente</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="unmatchedPaymentsTableBody" class="divide-y divide-slate-200 text-sm bg-white"></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- PASO 3: COMISIONES -->
+        <section id="commissionsSection" class="glass-panel rounded-3xl overflow-hidden">
+            <div class="bg-slate-900 text-white px-6 py-5 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                <div class="flex items-start sm:items-center gap-3.5">
+                    <span class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-base shrink-0 shadow">3</span>
+                    <div>
+                        <div class="flex flex-wrap items-center gap-2">
+                            <h2 class="text-lg font-bold text-white">Liquidación de Comisiones sobre Pagos Recibidos</h2>
+                            <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full font-semibold">Base 8% Editable</span>
+                        </div>
+                        <p class="text-xs text-slate-300 mt-0.5">Si tiene Equipo cobra el Equipo; si no tiene equipo cobra el Vendedor exclusivo. Equipo XFISH ÷ 6.</p>
+                    </div>
+                </div>
+                <button type="button" onclick="exportCommissionsExcel()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 text-xs sm:text-sm shrink-0">
+                    <i class="fa-solid fa-file-invoice-dollar"></i> <span>Descargar Excel de Comisiones (.xlsx)</span>
+                </button>
+            </div>
+
+            <div class="p-6 space-y-6">
+                <div id="commissionsEmptyWarning" class="bg-white/70 border border-slate-200 text-slate-600 rounded-2xl p-6 text-center space-y-3">
+                    <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
+                        <i class="fa-solid fa-percent text-xl"></i>
+                    </div>
+                    <div class="text-sm font-bold text-slate-800">Cargá las Ventas (Paso 1) y los Pagos Recibidos (Paso 2) para calcular las comisiones</div>
+                    <button type="button" onclick="loadDemoPaymentsData()" class="mt-2 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Probar ahora con Datos de Ejemplo
+                    </button>
+                </div>
+
+                <div id="commissionsContentPanel" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div class="bg-white/80 border border-slate-200 rounded-xl p-4">
+                            <div class="text-xs font-semibold text-slate-500 uppercase">Base Cobrada</div>
+                            <div id="kpiCommTotalCollected" class="text-2xl font-bold text-slate-900 mt-1">$ 0,00</div>
+                        </div>
+                        <div class="bg-purple-50/80 border border-purple-200 rounded-xl p-4">
+                            <div class="text-xs font-semibold text-purple-800 uppercase">Comisiones Equipos</div>
+                            <div id="kpiCommTeamsTotal" class="text-2xl font-bold text-purple-700 mt-1">$ 0,00</div>
+                            <div id="kpiCommTeamsSub" class="text-xs text-purple-700/80 mt-0.5">0 equipos</div>
+                        </div>
+                        <div class="bg-amber-50/80 border border-amber-200 rounded-xl p-4">
+                            <div class="text-xs font-semibold text-amber-900 uppercase">Vendedores sin Equipo</div>
+                            <div id="kpiCommSoloSellersTotal" class="text-2xl font-bold text-amber-700 mt-1">$ 0,00</div>
+                            <div id="kpiCommSoloSellersSub" class="text-xs text-amber-800/80 mt-0.5">0 exclusivos</div>
+                        </div>
+                        <div class="bg-emerald-50/90 border-2 border-emerald-500/40 rounded-xl p-4">
+                            <div class="text-xs font-bold text-emerald-900 uppercase">Total Comisiones</div>
+                            <div id="kpiCommGrandTotal" class="text-2xl font-black text-emerald-700 mt-1">$ 0,00</div>
+                            <div id="kpiCommAvgRate" class="text-xs text-emerald-800 mt-0.5">Promedio: 8.00%</div>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-slate-50/90 p-4 rounded-xl border border-slate-200">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div class="inline-flex rounded-lg bg-slate-200/90 p-1 text-xs font-semibold">
+                                <button type="button" id="commFilterBtnAll" onclick="setCommissionTypeFilter('ALL')" class="px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm transition">Todos</button>
+                                <button type="button" id="commFilterBtnTeams" onclick="setCommissionTypeFilter('TEAM')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Solo Equipos</button>
+                                <button type="button" id="commFilterBtnSolo" onclick="setCommissionTypeFilter('SOLO_SELLER')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Vendedores sin Equipo</button>
+                            </div>
+                            <div class="flex items-center gap-1.5 text-xs">
+                                <button type="button" onclick="expandOrCollapseAllCommissions(true)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg font-medium transition">Desplegar todos</button>
+                                <button type="button" onclick="expandOrCollapseAllCommissions(false)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg font-medium transition">Contraer todo</button>
+                            </div>
+                        </div>
+
+                        <div class="flex flex-wrap items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-sm">
+                            <span class="text-xs font-semibold text-slate-700">% por defecto:</span>
+                            <div class="flex items-center">
+                                <input type="number" id="globalDefaultRateInput" value="8" min="0" max="100" step="0.5" class="w-16 text-center font-bold text-sm text-indigo-700 border border-slate-300 rounded-l-lg py-1 outline-none">
+                                <span class="bg-slate-100 border border-l-0 border-slate-300 px-2 py-1 text-xs font-bold text-slate-600 rounded-r-lg">%</span>
+                            </div>
+                            <button type="button" onclick="applyGlobalDefaultRateToAll()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Aplicar a todos</button>
+                        </div>
+                    </div>
+
+                    <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm bg-white">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider">
+                                    <tr>
+                                        <th class="py-3.5 px-4 font-semibold w-10"></th>
+                                        <th class="py-3.5 px-4 font-semibold">Beneficiario</th>
+                                        <th class="py-3.5 px-4 font-semibold">Atribución</th>
+                                        <th class="py-3.5 px-4 font-semibold text-center">Clientes / Cobros</th>
+                                        <th class="py-3.5 px-4 font-semibold text-right">Total Cobrado</th>
+                                        <th class="py-3.5 px-4 font-semibold text-center">% Comisión</th>
+                                        <th class="py-3.5 px-4 font-semibold text-right">Comisión Total</th>
+                                        <th class="py-3.5 px-4 font-semibold text-center">Dividir entre</th>
+                                        <th class="py-3.5 px-4 font-semibold text-right">Comisión c/u</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="commissionsAccordionBody" class="divide-y divide-slate-200 text-sm bg-white"></tbody>
+                            </table>
+                        </div>
+                        <div class="bg-slate-50 px-4 py-3 border-t border-slate-200 flex justify-between text-xs text-slate-600">
+                            <span>Hacé clic en una fila para ver el detalle de clientes.</span>
+                            <span id="commissionsFooterSummary" class="font-bold text-slate-800"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- Modal Manual -->
+    <div id="manualModal" class="hidden fixed inset-0 z-50 bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+        <div class="bg-white rounded-2xl shadow-xl border border-slate-200 max-w-md w-full overflow-hidden">
+            <div class="bg-slate-900 text-white px-5 py-4 flex items-center justify-between">
+                <h3 id="manualModalTitle" class="font-bold text-sm">Asignar Cliente, Vendedor y Equipo</h3>
+                <button type="button" onclick="closeManualModal()" class="text-slate-400 hover:text-white"><i class="fa-solid fa-xmark"></i></button>
+            </div>
+            <div class="p-5 space-y-4">
+                <div><label class="block text-xs font-semibold text-slate-700 mb-1">Nombre del Cliente</label><input type="text" id="modalInputClient" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"></div>
+                <div><label class="block text-xs font-semibold text-slate-700 mb-1">Vendedor Asignado</label><input type="text" id="modalInputSeller" list="sellersDatalist" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"></div>
+                <div><label class="block text-xs font-semibold text-slate-700 mb-1">Equipo de Ventas (Vacío = Sin Equipo)</label><input type="text" id="modalInputTeam" list="teamsDatalist" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"></div>
+                <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
+                    <button type="button" onclick="closeManualModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancelar</button>
+                    <button type="button" onclick="saveManualModal()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Guardar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const NO_TEAM_LABEL = 'Sin Equipo';
+        let salesRawRows = [], salesHeaders = [], activeStatusFilters = new Set(), allStatusesInSales = new Map();
+        let clientMasterMap = new Map(), manualClientEditsMap = new Map(), nonActiveSalesClientsMap = new Map();
+        let uniqueSellersList = [], uniqueTeamsList = [], paymentSummaryMode = 'SELLER';
+        let paymentsRawRows = [], paymentsHeaders = [], matchedPaymentsList = [], unmatchedPaymentsList = [], manualPaymentOverrides = new Map();
+        let defaultCommissionRate = 8, clientCommissionRateMap = new Map(), groupDivisorMap = new Map(), expandedCommissionGroups = new Set(), commissionTypeFilter = 'ALL';
+        let modalContext = { mode: 'ADD_CLIENT', targetKey: null, targetRowIndex: null };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            setupDragAndDrop('salesDropzone', (file) => readExcelFile(file, loadSalesRowsIntoApp));
+            setupDragAndDrop('paymentsDropzone', (file) => readExcelFile(file, loadPaymentsRowsIntoApp));
+        });
+
+        function setupDragAndDrop(dropzoneId, callback) {
+            const dropzone = document.getElementById(dropzoneId);
+            if (!dropzone) return;
+            ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50/50'); }));
+            ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50/50'); }));
+            dropzone.addEventListener('drop', (e) => { const files = e.dataTransfer?.files; if (files && files.length > 0) callback(files[0]); });
+        }
+
+        function isXfishTeamName(teamName) { return normalizeTextBasic(teamName).replace(/[\s\-_]/g, '').includes('xfish'); }
+        function getGroupCommissionDivisor(groupId, beneficiaryName, beneficiaryType) {
+            if (groupDivisorMap.has(groupId)) return groupDivisorMap.get(groupId);
+            return (beneficiaryType === 'TEAM' && isXfishTeamName(beneficiaryName)) ? 6 : 1;
+        }
+        function handleGroupDivisorChange(groupId, rawVal) {
+            let num = parseInt(rawVal, 10); if (isNaN(num) || num < 1) num = 1;
+            groupDivisorMap.set(groupId, num); renderCommissionsSection(); showToast(`Divisor actualizado: ÷ ${num}`, 'info');
+        }
+        function normalizeTextBasic(str) {
+            if (str === null || str === undefined) return '';
+            return String(str).trim().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/\s+/g, ' ');
+        }
+        function isNoTeamValue(rawTeam) {
+            const norm = normalizeTextBasic(rawTeam); if (!norm) return true;
+            return ['sin equipo', 'sin equipo de ventas', 'general / sin equipo', 'ninguno', 'individual', 'exclusivo', 'no aplica', 'n/a', 'na', '-', '--', 'null', 'none', 'false', '0'].includes(norm);
+        }
+        function sanitizeTeamValue(rawTeam) { return isNoTeamValue(rawTeam) ? NO_TEAM_LABEL : String(rawTeam).trim(); }
+        function formatTeamDisplay(teamVal) { return isNoTeamValue(teamVal) ? '⚡ Sin Equipo (Exclusivo Vendedor)' : teamVal; }
+        function normalizeClientName(str) {
+            if (!str) return ''; let clean = normalizeTextBasic(str);
+            if (document.getElementById('flexibleNormToggle')?.checked ?? true) {
+                clean = clean.replace(/[.,\-_/()]/g, ' ').replace(/\b(s\s*a\s*s|s\s*r\s*l|s\s*a|s\s*h|hnos|hermanos|cia|ltda)\b/g, ' ').replace(/\s+/g, ' ').trim();
+            }
+            return clean;
+        }
+        function parseExcelNumber(val) {
+            if (typeof val === 'number') return isNaN(val) ? 0 : val;
+            if (val === null || val === undefined) return 0;
+            let s = String(val).trim(); if (!s) return 0;
+            let isNeg = false; if (s.startsWith('(') && s.endsWith(')')) { isNeg = true; s = s.slice(1, -1); }
+            s = s.replace(/[^0-9,.\-]/g, ''); if (!s) return 0;
+            const lastComma = s.lastIndexOf(','), lastDot = s.lastIndexOf('.');
+            if (lastComma > -1 && lastDot > -1) {
+                s = (lastComma > lastDot) ? s.replace(/\./g, '').replace(',', '.') : s.replace(/,/g, '');
+            } else if (lastComma > -1) {
+                s = (/^-?\d{1,3}(,\d{3})+$/.test(s)) ? s.replace(/,/g, '') : s.replace(',', '.');
+            } else if (lastDot > -1) {
+                if (/^-?\d{1,3}(\.\d{3})+$/.test(s)) s = s.replace(/\./g, '');
+            }
+            const num = parseFloat(s); if (isNaN(num)) return 0;
+            return isNeg ? -Math.abs(num) : num;
+        }
+        function formatCurrency(num) { return '$ ' + Number(num || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
+        function escapeHtml(str) { return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
+        function escapeJsString(str) { return String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
+        function showToast(message, type = 'info') {
+            const container = document.getElementById('toastContainer'); if (!container) return;
+            const colors = { success: 'bg-emerald-600 text-white', warning: 'bg-amber-500 text-slate-950', error: 'bg-rose-600 text-white', info: 'bg-slate-900 text-white' };
+            const el = document.createElement('div');
+            el.className = `${colors[type] || colors.info} px-4 py-3 rounded-xl shadow-lg text-xs font-semibold flex items-center justify-between gap-3 pointer-events-auto transition-all`;
+            el.innerHTML = `<span>${escapeHtml(message)}</span>`;
+            container.appendChild(el); setTimeout(() => el.remove(), 3500);
+        }
+        function refreshGlobalDatalists() {
+            const sDl = document.getElementById('sellersDatalist'), tDl = document.getElementById('teamsDatalist');
+            if (sDl) sDl.innerHTML = uniqueSellersList.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
+            if (tDl) tDl.innerHTML = [NO_TEAM_LABEL, ...uniqueTeamsList.filter(t => t !== NO_TEAM_LABEL)].map(t => `<option value="${escapeHtml(t)}"></option>`).join('');
+        }
+        function populateSelectWithGuess(selectId, headers, keywords, allowEmpty = false, emptyLabel = '-- No usar --') {
+            const select = document.getElementById(selectId); if (!select) return; select.innerHTML = '';
+            if (allowEmpty) { const o = document.createElement('option'); o.value = ''; o.textContent = emptyLabel; select.appendChild(o); }
+            let best = '';
+            headers.forEach(h => {
+                const o = document.createElement('option'); o.value = h; o.textContent = h; select.appendChild(o);
+                if (!best) { const nh = normalizeTextBasic(h); for (const kw of keywords) { if (nh === kw || nh.includes(kw)) { best = h; break; } } }
+            });
+            if (best) select.value = best; else if (!allowEmpty && headers.length > 0) select.value = headers[0];
+        }
+        function readExcelFile(file, callback) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
+                    const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
+                    if (!rows || rows.length === 0) return showToast('El archivo está vacío.', 'warning');
+                    callback(rows, file.name);
+                } catch (err) { showToast('Error al leer Excel: ' + err.message, 'error'); }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+        function handleSalesFileSelect(e) { if (e.target.files[0]) readExcelFile(e.target.files[0], loadSalesRowsIntoApp); }
+        function handlePaymentsFileSelect(e) { if (e.target.files[0]) readExcelFile(e.target.files[0], loadPaymentsRowsIntoApp); }
+
+        function loadSalesRowsIntoApp(rows, fileName) {
+            salesRawRows = rows; salesHeaders = Object.keys(rows[0] || {});
+            document.getElementById('salesFileNameText').textContent = `${fileName} (${rows.length} filas)`;
+            document.getElementById('btnToggleSalesConfig').classList.remove('hidden');
+            document.getElementById('paymentsWarningNoSales').classList.add('hidden');
+            populateSelectWithGuess('salesColClient', salesHeaders, ['cliente', 'empresa', 'razon social', 'nombre', 'partner', 'customer'], false);
+            populateSelectWithGuess('salesColSeller', salesHeaders, ['vendedor', 'comercial', 'asesor', 'salesperson', 'usuario'], false);
+            populateSelectWithGuess('salesColTeam', salesHeaders, ['equipo de ventas', 'equipo', 'canal', 'sales team'], true, '-- Sin columna de Equipo --');
+            populateSelectWithGuess('salesColStatus', salesHeaders, ['estado', 'status', 'etapa', 'state'], false);
+            populateSelectWithGuess('salesColAmount', salesHeaders, ['total', 'monto', 'importe', 'venta', 'subtotal', 'amount'], true, '-- Sin columna de monto --');
+            onSalesStatusColumnChange();
+            showToast(`Base de ventas "${fileName}" cargada.`, 'success');
+        }
+        function toggleSalesConfigPanel() { document.getElementById('salesConfigPanel')?.classList.toggle('hidden'); }
+        function onSalesStatusColumnChange() {
+            const statusCol = document.getElementById('salesColStatus').value;
+            allStatusesInSales.clear(); activeStatusFilters.clear();
+            salesRawRows.forEach(row => {
+                const raw = String(row[statusCol] ?? '').trim() || '(Sin Estado)';
+                const norm = normalizeTextBasic(raw);
+                if (!allStatusesInSales.has(norm)) allStatusesInSales.set(norm, { label: raw, count: 0 });
+                allStatusesInSales.get(norm).count += 1;
+                if (norm.includes('orden de venta') || norm === 'orden venta' || norm === 'sale order' || norm === 'confirmado') activeStatusFilters.add(norm);
+            });
+            if (activeStatusFilters.size === 0 && allStatusesInSales.size > 0) activeStatusFilters.add(allStatusesInSales.keys().next().value);
+            renderStatusChips(); processSalesData();
+        }
+        function renderStatusChips() {
+            const container = document.getElementById('statusChipsContainer'); if (!container) return; container.innerHTML = '';
+            allStatusesInSales.forEach((info, normKey) => {
+                const active = activeStatusFilters.has(normKey);
+                const btn = document.createElement('button'); btn.type = 'button';
+                btn.className = active ? 'px-3 py-1.5 rounded-lg text-xs font-bold bg-indigo-600 text-white shadow-sm flex items-center gap-1.5' : 'px-3 py-1.5 rounded-lg text-xs font-medium bg-white text-slate-600 border border-slate-300 flex items-center gap-1.5';
+                btn.innerHTML = `<i class="fa-solid ${active ? 'fa-square-check' : 'fa-square'}"></i><span>${escapeHtml(info.label)}</span><span class="text-[10px] ${active ? 'bg-indigo-800 text-indigo-100' : 'bg-slate-200 text-slate-600'} px-1.5 rounded-full">${info.count}</span>`;
+                btn.onclick = () => { active ? activeStatusFilters.delete(normKey) : activeStatusFilters.add(normKey); renderStatusChips(); processSalesData(); };
+                container.appendChild(btn);
+            });
+        }
+
+        function processSalesData() {
+            const cCol = document.getElementById('salesColClient').value, sCol = document.getElementById('salesColSeller').value, tCol = document.getElementById('salesColTeam').value, stCol = document.getElementById('salesColStatus').value, aCol = document.getElementById('salesColAmount').value;
+            clientMasterMap.clear(); nonActiveSalesClientsMap.clear();
+            const sellersSet = new Set(), teamsSet = new Set([NO_TEAM_LABEL]);
+            let validOrders = 0;
+
+            salesRawRows.forEach(row => {
+                const rawClient = String(row[cCol] ?? '').trim(); if (!rawClient) return;
+                const normClient = normalizeClientName(rawClient); if (!normClient) return;
+                const rawSeller = String(row[sCol] ?? '').trim() || 'Sin Vendedor';
+                const rawTeam = tCol ? sanitizeTeamValue(row[tCol]) : NO_TEAM_LABEL;
+                const rawStatus = String(row[stCol] ?? '').trim() || '(Sin Estado)';
+                const amount = aCol ? parseExcelNumber(row[aCol]) : 0;
+
+                if (activeStatusFilters.has(normalizeTextBasic(rawStatus))) {
+                    validOrders++;
+                    const orderRef = String(row['Nro Pedido'] || row['Pedido'] || row['Orden'] || row['Numero'] || row['Referencia'] || row['Fecha'] || '').trim();
+                    const item = { ref: orderRef, amount, status: rawStatus };
+                    if (!clientMasterMap.has(normClient)) {
+                        clientMasterMap.set(normClient, { normKey: normClient, clientName: rawClient, seller: rawSeller, team: rawTeam, orderCount: 1, totalAmount: amount, orders: [item] });
+                    } else {
+                        const ex = clientMasterMap.get(normClient); ex.orderCount++; ex.totalAmount += amount; ex.orders.push(item);
+                        if (ex.seller === 'Sin Vendedor' && rawSeller !== 'Sin Vendedor') ex.seller = rawSeller;
+                        if (isNoTeamValue(ex.team) && !isNoTeamValue(rawTeam)) ex.team = rawTeam;
+                    }
+                } else if (!nonActiveSalesClientsMap.has(normClient)) {
+                    nonActiveSalesClientsMap.set(normClient, { status: rawStatus, seller: rawSeller, team: rawTeam, clientName: rawClient });
+                }
+            });
+
+            manualClientEditsMap.forEach((ed, key) => {
+                if (clientMasterMap.has(key)) {
+                    const en = clientMasterMap.get(key); if (ed.seller) en.seller = ed.seller; if (ed.team) en.team = sanitizeTeamValue(ed.team);
+                } else if (ed.isManualAdded) {
+                    clientMasterMap.set(key, { normKey: key, clientName: ed.clientName, seller: ed.seller, team: sanitizeTeamValue(ed.team), orderCount: 1, totalAmount: 0, orders: [] });
+                }
+            });
+
+            clientMasterMap.forEach(i => { sellersSet.add(i.seller); teamsSet.add(i.team); });
+            manualPaymentOverrides.forEach(ov => { if (ov.seller) sellersSet.add(ov.seller); if (ov.team) teamsSet.add(sanitizeTeamValue(ov.team)); });
+
+            uniqueSellersList = Array.from(sellersSet).sort((a, b) => a.localeCompare(b));
+            uniqueTeamsList = Array.from(teamsSet).sort((a, b) => a === NO_TEAM_LABEL ? -1 : (b === NO_TEAM_LABEL ? 1 : a.localeCompare(b)));
+            refreshGlobalDatalists();
+
+            document.getElementById('salesResultsPanel').classList.remove('hidden');
+            document.getElementById('kpiSalesOrdersCount').textContent = validOrders.toLocaleString('es-AR');
+            document.getElementById('kpiUniqueClientsCount').textContent = clientMasterMap.size.toLocaleString('es-AR');
+            document.getElementById('stepCard2').classList.remove('opacity-75');
+            document.getElementById('stepCard2').classList.add('border-emerald-500');
+            document.getElementById('stepBadge2').className = 'w-10 h-10 rounded-full bg-emerald-600 text-white font-bold flex items-center justify-center shrink-0';
+
+            renderSalesSearchLookup();
+            paymentsRawRows.length > 0 ? processPaymentsData() : renderCommissionsSection();
+        }
+
+        function populateFilterDropdown(selectId, list, allLabel) {
+            const s = document.getElementById(selectId); if (!s) return; const prev = s.value;
+            s.innerHTML = `<option value="ALL">${allLabel} (${list.length})</option>`;
+            list.forEach(item => { const o = document.createElement('option'); o.value = item; o.textContent = item === NO_TEAM_LABEL ? '⚡ Sin Equipo (Exclusivo)' : item; s.appendChild(o); });
+            if (list.includes(prev)) s.value = prev;
+        }
+        function clearSalesSearch() { const inp = document.getElementById('salesSearchInput'); if (inp) inp.value = ''; renderSalesSearchLookup(); }
+        function renderSalesTable() { renderSalesSearchLookup(); }
+
+        function renderSalesSearchLookup() {
+            const container = document.getElementById('salesSearchLookupContainer'), tbody = document.getElementById('salesTableBody'), clearBtn = document.getElementById('btnClearSalesSearch'), countText = document.getElementById('salesSearchCountText');
+            if (!container || !tbody) return;
+            const rawQ = document.getElementById('salesSearchInput')?.value || '', search = normalizeTextBasic(rawQ);
+            if (!search) { container.classList.add('hidden'); clearBtn?.classList.add('hidden'); tbody.innerHTML = ''; return; }
+            clearBtn?.classList.remove('hidden'); container.classList.remove('hidden'); tbody.innerHTML = '';
+
+            const items = Array.from(clientMasterMap.values()).filter(item => normalizeTextBasic(`${item.clientName} ${item.seller} ${item.team} ${(item.orders || []).map(o => o.ref).join(' ')}`).includes(search)).sort((a, b) => a.clientName.localeCompare(b.clientName));
+            if (countText) countText.textContent = `${items.length} resultado(s) para "${rawQ.trim()}"`;
+            if (items.length === 0) { tbody.innerHTML = `<tr><td colspan="5" class="py-6 text-center text-slate-400 text-xs">Sin coincidencias.</td></tr>`; return; }
+
+            const tList = uniqueTeamsList.includes(NO_TEAM_LABEL) ? uniqueTeamsList : [NO_TEAM_LABEL, ...uniqueTeamsList];
+            items.forEach(item => {
+                const sOpts = uniqueSellersList.map(s => `<option value="${escapeHtml(s)}" ${s === item.seller ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('') + `<option value="__NEW__">+ Nuevo...</option>`;
+                const tOpts = tList.map(t => `<option value="${escapeHtml(t)}" ${t === item.team ? 'selected' : ''}>${escapeHtml(isNoTeamValue(t) ? '⚡ Sin Equipo' : t)}</option>`).join('') + `<option value="__NEW__">+ Nuevo...</option>`;
+                const tStyle = isNoTeamValue(item.team) ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-purple-50 text-purple-900 border-purple-200';
+                const badges = (item.orders || []).map(o => o.ref ? `${o.ref} (${formatCurrency(o.amount)})` : formatCurrency(o.amount)).join(' • ') || `${item.orderCount} orden(es)`;
+                const tr = document.createElement('tr'); tr.className = 'hover:bg-slate-50';
+                tr.innerHTML = `
+                    <td class="py-2.5 px-4 font-semibold text-slate-800">${escapeHtml(item.clientName)}</td>
+                    <td class="py-2.5 px-4"><select onchange="handleClientSellerChange('${escapeJsString(item.normKey)}', this)" class="bg-indigo-50 text-indigo-900 font-semibold text-xs rounded-lg px-2 py-1 border border-indigo-200 outline-none">${sOpts}</select></td>
+                    <td class="py-2.5 px-4"><select onchange="handleClientTeamChange('${escapeJsString(item.normKey)}', this)" class="${tStyle} font-semibold text-xs rounded-lg px-2 py-1 border outline-none">${tOpts}</select></td>
+                    <td class="py-2.5 px-4 text-xs text-slate-600"><strong>${item.orderCount} ped.:</strong> ${escapeHtml(badges)}</td>
+                    <td class="py-2.5 px-4 text-right font-mono text-xs font-bold text-slate-800">${formatCurrency(item.totalAmount)}</td>`;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function saveManualClientEditState(normKey, entry, isManualAdded = false) {
+            const prev = manualClientEditsMap.get(normKey);
+            manualClientEditsMap.set(normKey, { clientName: entry.clientName, seller: entry.seller, team: sanitizeTeamValue(entry.team), isManualAdded: isManualAdded || (prev ? prev.isManualAdded : false) });
+        }
+        function handleClientSellerChange(normKey, sel) {
+            const entry = clientMasterMap.get(normKey); if (!entry) return;
+            if (sel.value === '__NEW__') return openEditClientModal(normKey);
+            entry.seller = sel.value; saveManualClientEditState(normKey, entry, false); recalculateAfterStep1Edit(); showToast(`Vendedor actualizado.`, 'info');
+        }
+        function handleClientTeamChange(normKey, sel) {
+            const entry = clientMasterMap.get(normKey); if (!entry) return;
+            if (sel.value === '__NEW__') return openEditClientModal(normKey);
+            entry.team = sanitizeTeamValue(sel.value); saveManualClientEditState(normKey, entry, false); recalculateAfterStep1Edit(); showToast(`Equipo actualizado.`, 'info');
+        }
+        function recalculateAfterStep1Edit() {
+            const sSet = new Set(uniqueSellersList), tSet = new Set([NO_TEAM_LABEL, ...uniqueTeamsList]);
+            clientMasterMap.forEach(i => { sSet.add(i.seller); tSet.add(i.team); });
+            uniqueSellersList = Array.from(sSet).sort((a, b) => a.localeCompare(b));
+            uniqueTeamsList = Array.from(tSet).sort((a, b) => a === NO_TEAM_LABEL ? -1 : (b === NO_TEAM_LABEL ? 1 : a.localeCompare(b)));
+            refreshGlobalDatalists();
+            document.getElementById('kpiUniqueClientsCount').textContent = clientMasterMap.size.toLocaleString('es-AR');
+            renderSalesSearchLookup();
+            paymentsRawRows.length > 0 ? processPaymentsData() : renderCommissionsSection();
+        }
+
+        function openAddManualClientModal() {
+            modalContext = { mode: 'ADD_CLIENT', targetKey: null, targetRowIndex: null };
+            document.getElementById('manualModalTitle').textContent = 'Agregar Cliente Manualmente';
+            const c = document.getElementById('modalInputClient'); c.value = ''; c.disabled = false;
+            document.getElementById('modalInputSeller').value = ''; document.getElementById('modalInputTeam').value = '';
+            document.getElementById('manualModal').classList.remove('hidden');
+        }
+        function openEditClientModal(normKey) {
+            const entry = clientMasterMap.get(normKey); if (!entry) return;
+            modalContext = { mode: 'EDIT_CLIENT', targetKey: normKey, targetRowIndex: null };
+            document.getElementById('manualModalTitle').textContent = 'Modificar Vendedor y Equipo';
+            const c = document.getElementById('modalInputClient'); c.value = entry.clientName; c.disabled = true;
+            document.getElementById('modalInputSeller').value = entry.seller; document.getElementById('modalInputTeam').value = entry.team === NO_TEAM_LABEL ? '' : entry.team;
+            document.getElementById('manualModal').classList.remove('hidden');
+        }
+        function openEditPaymentAssignmentModal(rowIndex, clientName, currentSeller, currentTeam) {
+            modalContext = { mode: 'EDIT_PAYMENT', targetKey: null, targetRowIndex: rowIndex };
+            document.getElementById('manualModalTitle').textContent = 'Asignar Vendedor y Equipo al Pago';
+            const c = document.getElementById('modalInputClient'); c.value = clientName; c.disabled = true;
+            document.getElementById('modalInputSeller').value = currentSeller || ''; document.getElementById('modalInputTeam').value = isNoTeamValue(currentTeam) ? '' : currentTeam;
+            document.getElementById('manualModal').classList.remove('hidden');
+        }
+        function closeManualModal() { document.getElementById('manualModal').classList.add('hidden'); renderSalesTable(); renderPaymentsTables(); }
+        function saveManualModal() {
+            const cVal = document.getElementById('modalInputClient').value.trim(), sVal = document.getElementById('modalInputSeller').value.trim(), tVal = sanitizeTeamValue(document.getElementById('modalInputTeam').value.trim());
+            if (!sVal) return showToast('Ingresá un Vendedor.', 'warning');
+            if (modalContext.mode === 'ADD_CLIENT') {
+                if (!cVal) return showToast('Ingresá el cliente.', 'warning');
+                const nk = normalizeClientName(cVal), ne = { normKey: nk, clientName: cVal, seller: sVal, team: tVal, orderCount: 1, totalAmount: 0, orders: [] };
+                clientMasterMap.set(nk, ne); saveManualClientEditState(nk, ne, true);
+                document.getElementById('salesResultsPanel').classList.remove('hidden'); document.getElementById('paymentsWarningNoSales').classList.add('hidden');
+                recalculateAfterStep1Edit(); showToast(`Cliente "${cVal}" guardado.`, 'success');
+            } else if (modalContext.mode === 'EDIT_CLIENT') {
+                const en = clientMasterMap.get(modalContext.targetKey);
+                if (en) { en.seller = sVal; en.team = tVal; saveManualClientEditState(modalContext.targetKey, en, false); recalculateAfterStep1Edit(); showToast('Actualizado.', 'success'); }
+            } else if (modalContext.mode === 'EDIT_PAYMENT') {
+                manualPaymentOverrides.set(modalContext.targetRowIndex, { seller: sVal, team: tVal });
+                if (!uniqueSellersList.includes(sVal)) uniqueSellersList.push(sVal);
+                if (!uniqueTeamsList.includes(tVal)) uniqueTeamsList.push(tVal);
+                refreshGlobalDatalists(); processPaymentsData(); showToast('Pago reasignado.', 'success');
+            }
+            document.getElementById('manualModal').classList.add('hidden');
+        }
+
+        function loadPaymentsRowsIntoApp(rows, fileName) {
+            paymentsRawRows = rows; paymentsHeaders = Object.keys(rows[0] || {}); manualPaymentOverrides.clear();
+            document.getElementById('paymentsFileLoadedBadge').classList.remove('hidden');
+            document.getElementById('paymentsFileNameText').textContent = `${fileName} (${rows.length} pagos)`;
+            document.getElementById('paymentsConfigPanel').classList.remove('hidden');
+            populateSelectWithGuess('payColClient', paymentsHeaders, ['cliente', 'pagador', 'empresa', 'razon social', 'nombre', 'partner'], false);
+            populateSelectWithGuess('payColAmount', paymentsHeaders, ['monto', 'importe', 'pago', 'cobro', 'total', 'valor', 'haber', 'amount'], false);
+            populateSelectWithGuess('payColRef', paymentsHeaders, ['fecha', 'comprobante', 'recibo', 'referencia', 'nro'], true, '-- Sin referencia --');
+            populateSelectWithGuess('payColSeller', paymentsHeaders, ['vendedor', 'comercial', 'asesor'], true, '-- Tomar de la Venta --');
+            populateSelectWithGuess('payColTeam', paymentsHeaders, ['equipo de ventas', 'equipo', 'canal'], true, '-- Tomar de la Venta --');
+            processPaymentsData(); showToast(`Pagos "${fileName}" procesados.`, 'success');
+        }
+
+        function findBestClientMatch(rawPaymentClient) {
+            const normPay = normalizeClientName(rawPaymentClient);
+            if (!normPay) return { matched: false, reason: 'Nombre vacío' };
+            if (clientMasterMap.has(normPay)) {
+                const r = clientMasterMap.get(normPay);
+                return { matched: true, normClientKey: r.normKey, seller: r.seller, team: r.team, matchedClientName: r.clientName, matchType: 'Exacto' };
+            }
+            if ((document.getElementById('partialMatchToggle')?.checked ?? true) && normPay.length >= 4) {
+                for (const [mNorm, r] of clientMasterMap.entries()) {
+                    if (mNorm.length >= 4 && (mNorm.includes(normPay) || normPay.includes(mNorm))) {
+                        return { matched: true, normClientKey: r.normKey, seller: r.seller, team: r.team, matchedClientName: r.clientName, matchType: 'Similar' };
+                    }
+                }
+            }
+            if (nonActiveSalesClientsMap.has(normPay)) {
+                const na = nonActiveSalesClientsMap.get(normPay);
+                return { matched: false, reason: `En Ventas con estado "${na.status}" (${na.seller} / ${na.team})`, suggestedSeller: na.seller, suggestedTeam: na.team };
+            }
+            return { matched: false, reason: 'No encontrado en Órdenes de Venta' };
+        }
+
+        function processPaymentsData() {
+            if (paymentsRawRows.length === 0) return renderCommissionsSection();
+            const cCol = document.getElementById('payColClient').value, aCol = document.getElementById('payColAmount').value, rCol = document.getElementById('payColRef').value;
+            const pSCol = document.getElementById('payColSeller')?.value || '', pTCol = document.getElementById('payColTeam')?.value || '';
+            const prioSales = document.getElementById('prioritizeSalesDataToggle')?.checked ?? true;
+
+            matchedPaymentsList = []; unmatchedPaymentsList = [];
+            let totalA = 0, matchedA = 0, unmatchedA = 0;
+
+            paymentsRawRows.forEach((row, idx) => {
+                const rawC = String(row[cCol] ?? '').trim(), amt = parseExcelNumber(row[aCol]), ref = rCol ? String(row[rCol] ?? '').trim() : '-';
+                const rawPS = pSCol ? String(row[pSCol] ?? '').trim() : '', rawPT = pTCol ? String(row[pTCol] ?? '').trim() : '';
+                totalA += amt;
+
+                if (manualPaymentOverrides.has(idx)) {
+                    const ov = manualPaymentOverrides.get(idx); matchedA += amt;
+                    matchedPaymentsList.push({ rowIndex: idx, normClientKey: normalizeClientName(rawC) || `man_${idx}`, paymentClient: rawC || '(Sin nombre)', matchedMasterClient: rawC || '(Manual)', seller: ov.seller, team: sanitizeTeamValue(ov.team), amount: amt, ref, matchType: 'Manual', assignmentOrigin: 'MANUAL_OVERRIDE', originalRow: row });
+                    return;
+                }
+                const m = findBestClientMatch(rawC);
+                if (m.matched) {
+                    matchedA += amt;
+                    matchedPaymentsList.push({ rowIndex: idx, normClientKey: m.normClientKey, paymentClient: rawC, matchedMasterClient: m.matchedClientName, seller: (prioSales || !rawPS) ? m.seller : rawPS, team: sanitizeTeamValue((prioSales || !rawPT) ? m.team : rawPT), amount: amt, ref, matchType: m.matchType, assignmentOrigin: 'FROM_SALE', originalRow: row });
+                } else {
+                    unmatchedA += amt;
+                    unmatchedPaymentsList.push({ rowIndex: idx, paymentClient: rawC || '(Vacío)', amount: amt, ref, reason: m.reason, suggestedSeller: m.suggestedSeller || rawPS || '', suggestedTeam: m.suggestedTeam || (rawPT ? sanitizeTeamValue(rawPT) : ''), originalRow: row });
+                }
+            });
+
+            document.getElementById('paymentsResultsPanel').classList.remove('hidden');
+            document.getElementById('stepCard3').classList.remove('opacity-75');
+            document.getElementById('stepCard3').classList.add('border-amber-500');
+            document.getElementById('stepBadge3').className = 'w-10 h-10 rounded-full bg-amber-500 text-slate-950 font-bold flex items-center justify-center shrink-0';
+
+            const tot = paymentsRawRows.length, pct = tot > 0 ? Math.round((matchedPaymentsList.length / tot) * 100) : 0;
+            document.getElementById('kpiPayTotalCount').textContent = `${tot} cobros`;
+            document.getElementById('kpiPayTotalAmount').textContent = formatCurrency(totalA);
+            document.getElementById('kpiPayMatchedCount').textContent = `${matchedPaymentsList.length} cobros (${pct}%)`;
+            document.getElementById('kpiPayMatchedAmount').textContent = formatCurrency(matchedA);
+            document.getElementById('kpiPayMatchedPercent').textContent = `${pct}% conciliados`;
+            document.getElementById('kpiPayUnmatchedCount').textContent = `${unmatchedPaymentsList.length} para revisar`;
+            document.getElementById('kpiPayUnmatchedAmount').textContent = formatCurrency(unmatchedA);
+            document.getElementById('badgeTabMatched').textContent = matchedPaymentsList.length;
+            document.getElementById('badgeTabUnmatched').textContent = unmatchedPaymentsList.length;
+
+            populateFilterDropdown('paymentsSellerFilter', uniqueSellersList, 'Todos los Vendedores');
+            populateFilterDropdown('paymentsTeamFilter', uniqueTeamsList, 'Todos los Equipos');
+            renderPaymentSummaryTable(matchedA); renderPaymentsTables(); renderCommissionsSection();
+        }
+
+        function setPaymentSummaryMode(mode) {
+            paymentSummaryMode = mode;
+            const act = 'px-3 py-1.5 rounded-md bg-white text-slate-800 shadow-sm transition', inact = 'px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition';
+            document.getElementById('btnPaySumSeller').className = mode === 'SELLER' ? act : inact;
+            document.getElementById('btnPaySumTeam').className = mode === 'TEAM' ? act : inact;
+            document.getElementById('btnPaySumBoth').className = mode === 'BOTH' ? act : inact;
+            renderPaymentSummaryTable(matchedPaymentsList.reduce((a, p) => a + p.amount, 0));
+        }
+
+        function renderPaymentSummaryTable(totalMatchedAmount) {
+            const thead = document.getElementById('paymentSummaryTableHead'), tbody = document.getElementById('sellerSummaryTableBody');
+            if (!thead || !tbody) return;
+            const title = paymentSummaryMode === 'TEAM' ? 'Equipo de Ventas' : (paymentSummaryMode === 'BOTH' ? 'Equipo / Vendedor' : 'Vendedor');
+            thead.innerHTML = `<tr><th class="py-3 px-4 font-semibold">${title}</th><th class="py-3 px-4 font-semibold text-center">Cobros</th><th class="py-3 px-4 font-semibold text-center">Clientes</th><th class="py-3 px-4 font-semibold text-right">Total Cobrado</th><th class="py-3 px-4 font-semibold text-right">%</th></tr>`;
+            const map = new Map();
+            matchedPaymentsList.forEach(p => {
+                let k = p.seller, l = p.seller;
+                if (paymentSummaryMode === 'TEAM') { k = p.team; l = formatTeamDisplay(p.team); }
+                else if (paymentSummaryMode === 'BOTH') { k = `${p.team}___${p.seller}`; l = `${formatTeamDisplay(p.team)} — ${p.seller}`; }
+                if (!map.has(k)) map.set(k, { label: l, count: 0, clients: new Set(), total: 0 });
+                const e = map.get(k); e.count++; e.clients.add(p.matchedMasterClient || p.paymentClient); e.total += p.amount;
+            });
+            const rows = Array.from(map.values()).sort((a, b) => b.total - a.total);
+            tbody.innerHTML = rows.length === 0 ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">Sin pagos asociados.</td></tr>` : rows.map(r => {
+                const pct = totalMatchedAmount > 0 ? ((r.total / totalMatchedAmount) * 100).toFixed(1) : '0.0';
+                return `<tr class="hover:bg-slate-50"><td class="py-3 px-4 font-bold text-slate-800">${escapeHtml(r.label)}</td><td class="py-3 px-4 text-center font-semibold">${r.count}</td><td class="py-3 px-4 text-center">${r.clients.size}</td><td class="py-3 px-4 text-right font-mono font-bold text-emerald-700">${formatCurrency(r.total)}</td><td class="py-3 px-4 text-right text-xs font-semibold text-slate-500">${pct}%</td></tr>`;
+            }).join('');
+        }
+
+        function switchPaymentTab(tab) {
+            currentPaymentTab = tab;
+            document.getElementById('tabContentMatched').classList.toggle('hidden', tab !== 'MATCHED');
+            document.getElementById('tabContentUnmatched').classList.toggle('hidden', tab === 'MATCHED');
+            document.getElementById('tabBtnMatched').className = tab === 'MATCHED' ? 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-emerald-600 text-white shadow-sm flex items-center gap-2' : 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-slate-100 text-slate-600 flex items-center gap-2';
+            document.getElementById('tabBtnUnmatched').className = tab !== 'MATCHED' ? 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-amber-500 text-slate-950 shadow-sm flex items-center gap-2' : 'px-4 py-2 rounded-lg text-xs sm:text-sm font-bold bg-slate-100 text-slate-600 flex items-center gap-2';
+        }
+
+        function renderPaymentsTables() {
+            const mBody = document.getElementById('matchedPaymentsTableBody'), uBody = document.getElementById('unmatchedPaymentsTableBody');
+            if (!mBody || !uBody) return;
+            const search = normalizeTextBasic(document.getElementById('paymentsSearchInput')?.value || ''), sF = document.getElementById('paymentsSellerFilter')?.value || 'ALL', tF = document.getElementById('paymentsTeamFilter')?.value || 'ALL';
+            const fMatched = matchedPaymentsList.filter(i => (sF === 'ALL' || i.seller === sF) && (tF === 'ALL' || i.team === tF) && (!search || normalizeTextBasic(`${i.paymentClient} ${i.seller} ${i.team} ${i.ref}`).includes(search)));
+            const tList = uniqueTeamsList.includes(NO_TEAM_LABEL) ? uniqueTeamsList : [NO_TEAM_LABEL, ...uniqueTeamsList];
+
+            mBody.innerHTML = fMatched.length === 0 ? `<tr><td colspan="6" class="py-8 text-center text-slate-400">Sin resultados.</td></tr>` : fMatched.map(item => {
+                const sOpts = uniqueSellersList.map(s => `<option value="${escapeHtml(s)}" ${s === item.seller ? 'selected' : ''}>${escapeHtml(s)}</option>`).join('') + `<option value="__NEW__">+ Nuevo...</option>`;
+                const tOpts = tList.map(t => `<option value="${escapeHtml(t)}" ${t === item.team ? 'selected' : ''}>${escapeHtml(isNoTeamValue(t) ? '⚡ Sin Equipo' : t)}</option>`).join('') + `<option value="__NEW__">+ Nuevo...</option>`;
+                const tStyle = isNoTeamValue(item.team) ? 'bg-amber-50 text-amber-900 border-amber-300' : 'bg-purple-50 text-purple-900 border-purple-200';
+                const orig = item.assignmentOrigin === 'MANUAL_OVERRIDE' ? `<span class="text-[11px] font-semibold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900">✏️ Manual</span> <button type="button" onclick="resetPaymentOverrideToSale(${item.rowIndex})" class="text-[11px] text-indigo-600 underline">↺ Venta</button>` : `<span class="text-[11px] font-semibold px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800">🔗 Venta</span>`;
+                return `<tr class="hover:bg-slate-50"><td class="py-2.5 px-4 font-medium">${escapeHtml(item.paymentClient)}</td><td class="py-2.5 px-4"><select onchange="handleMatchedPaymentSellerChange(${item.rowIndex}, this.value, '${escapeJsString(item.paymentClient)}', '${escapeJsString(item.seller)}', '${escapeJsString(item.team)}')" class="bg-indigo-50 text-indigo-900 font-semibold text-xs rounded-lg px-2 py-1 border border-indigo-200">${sOpts}</select></td><td class="py-2.5 px-4"><select onchange="handleMatchedPaymentTeamChange(${item.rowIndex}, this.value, '${escapeJsString(item.paymentClient)}', '${escapeJsString(item.seller)}', '${escapeJsString(item.team)}')" class="${tStyle} font-semibold text-xs rounded-lg px-2 py-1 border">${tOpts}</select></td><td class="py-2.5 px-4">${orig}</td><td class="py-2.5 px-4 text-xs text-slate-500">${escapeHtml(item.ref)}</td><td class="py-2.5 px-4 text-right font-mono font-semibold text-emerald-700">${formatCurrency(item.amount)}</td></tr>`;
+            }).join('');
+
+            const fUnmatched = unmatchedPaymentsList.filter(i => !search || normalizeTextBasic(`${i.paymentClient} ${i.reason} ${i.ref}`).includes(search));
+            uBody.innerHTML = fUnmatched.length === 0 ? `<tr><td colspan="5" class="py-8 text-center text-slate-400">Sin pagos pendientes.</td></tr>` : fUnmatched.map(item => `
+                <tr class="hover:bg-amber-50/40"><td class="py-2.5 px-4 font-semibold">${escapeHtml(item.paymentClient)}</td><td class="py-2.5 px-4 text-xs text-amber-800">${escapeHtml(item.reason)}</td><td class="py-2.5 px-4 text-xs text-slate-500">${escapeHtml(item.ref)}</td><td class="py-2.5 px-4 text-right font-mono font-bold text-amber-700">${formatCurrency(item.amount)}</td><td class="py-2.5 px-4"><div class="flex items-center gap-1.5"><input type="text" id="manualSellerInput_${item.rowIndex}" list="sellersDatalist" value="${escapeHtml(item.suggestedSeller || '')}" placeholder="Vendedor..." class="bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs w-32"><input type="text" id="manualTeamInput_${item.rowIndex}" list="teamsDatalist" value="${escapeHtml(item.suggestedTeam || '')}" placeholder="Equipo..." class="bg-white border border-amber-300 rounded-lg px-2 py-1 text-xs w-36"><button type="button" onclick="assignUnmatchedManually(${item.rowIndex}, '${escapeJsString(item.paymentClient)}')" class="bg-indigo-600 text-white text-xs font-semibold px-2.5 py-1 rounded-lg">Asociar</button></div></td></tr>`).join('');
+        }
+
+        function resetPaymentOverrideToSale(idx) { manualPaymentOverrides.delete(idx); processPaymentsData(); }
+        function handleMatchedPaymentSellerChange(idx, ns, cn, cs, ct) { if (ns === '__NEW__') return openEditPaymentAssignmentModal(idx, cn, cs, ct); manualPaymentOverrides.set(idx, { seller: ns, team: sanitizeTeamValue(ct) }); processPaymentsData(); }
+        function handleMatchedPaymentTeamChange(idx, nt, cn, cs, ct) { if (nt === '__NEW__') return openEditPaymentAssignmentModal(idx, cn, cs, ct); manualPaymentOverrides.set(idx, { seller: cs, team: sanitizeTeamValue(nt) }); processPaymentsData(); }
+        function assignUnmatchedManually(idx, cn) {
+            const sVal = document.getElementById(`manualSellerInput_${idx}`)?.value.trim() || '', tVal = sanitizeTeamValue(document.getElementById(`manualTeamInput_${idx}`)?.value.trim() || '');
+            if (!sVal) return showToast('Indicá un Vendedor.', 'warning');
+            manualPaymentOverrides.set(idx, { seller: sVal, team: tVal });
+            if (!uniqueSellersList.includes(sVal)) uniqueSellersList.push(sVal);
+            if (!uniqueTeamsList.includes(tVal)) uniqueTeamsList.push(tVal);
+            refreshGlobalDatalists();
+            const nk = normalizeClientName(cn);
+            if (nk && !clientMasterMap.has(nk)) { const ne = { normKey: nk, clientName: cn, seller: sVal, team: tVal, orderCount: 1, totalAmount: 0, orders: [] }; clientMasterMap.set(nk, ne); saveManualClientEditState(nk, ne, true); }
+            processPaymentsData(); showToast(`Asociado a ${sVal}.`, 'success');
+        }
+
+        function getClientCommissionRate(k) { return clientCommissionRateMap.has(k) ? clientCommissionRateMap.get(k) : defaultCommissionRate; }
+        function buildCommissionGroupsData() {
+            const gMap = new Map();
+            matchedPaymentsList.forEach(p => {
+                const hasTeam = !isNoTeamValue(p.team), gId = hasTeam ? `TEAM:::${p.team}` : `SOLO_SELLER:::${p.seller}`;
+                if (!gMap.has(gId)) gMap.set(gId, { groupId: gId, beneficiaryName: hasTeam ? p.team : p.seller, beneficiaryType: hasTeam ? 'TEAM' : 'SOLO_SELLER', sellersInvolved: new Set(), paymentsCount: 0, totalCollected: 0, totalCommission: 0, clientsMap: new Map() });
+                const g = gMap.get(gId); g.sellersInvolved.add(p.seller); g.paymentsCount++; g.totalCollected += p.amount;
+                const cDisp = p.matchedMasterClient || p.paymentClient, nC = p.normClientKey || normalizeClientName(cDisp) || cDisp, cKey = `${gId}__${nC}`;
+                if (!g.clientsMap.has(cKey)) g.clientsMap.set(cKey, { clientRateKey: cKey, normClient: nC, clientName: cDisp, sellers: new Set(), paymentsCount: 0, totalCollected: 0, rate: getClientCommissionRate(cKey), commissionAmount: 0, payments: [] });
+                const ce = g.clientsMap.get(cKey); ce.sellers.add(p.seller); ce.paymentsCount++; ce.totalCollected += p.amount; ce.payments.push(p);
+            });
+            gMap.forEach(g => {
+                let gc = 0;
+                g.clientsMap.forEach(ce => { ce.rate = getClientCommissionRate(ce.clientRateKey); ce.commissionAmount = ce.totalCollected * (ce.rate / 100); gc += ce.commissionAmount; });
+                g.totalCommission = gc; g.divisor = getGroupCommissionDivisor(g.groupId, g.beneficiaryName, g.beneficiaryType); g.perMemberCommission = g.totalCommission / g.divisor;
+            });
+            return Array.from(gMap.values()).sort((a, b) => a.beneficiaryType !== b.beneficiaryType ? (a.beneficiaryType === 'TEAM' ? -1 : 1) : b.totalCommission - a.totalCommission);
+        }
+
+        function renderCommissionsSection() {
+            const emptyW = document.getElementById('commissionsEmptyWarning'), cPanel = document.getElementById('commissionsContentPanel');
+            if (!emptyW || !cPanel) return;
+            if (matchedPaymentsList.length === 0) { emptyW.classList.remove('hidden'); cPanel.classList.add('hidden'); return; }
+            emptyW.classList.add('hidden'); cPanel.classList.remove('hidden');
+
+            const allG = buildCommissionGroupsData();
+            if (expandedCommissionGroups.size === 0 && allG.length > 0) expandedCommissionGroups.add(allG[0].groupId);
+
+            let totCol = 0, tComm = 0, tCnt = 0, sComm = 0, sCnt = 0;
+            allG.forEach(g => { totCol += g.totalCollected; if (g.beneficiaryType === 'TEAM') { tComm += g.totalCommission; tCnt++; } else { sComm += g.totalCommission; sCnt++; } });
+            const grandC = tComm + sComm, avgR = totCol > 0 ? ((grandC / totCol) * 100).toFixed(2) : '0.00';
+
+            document.getElementById('kpiCommTotalCollected').textContent = formatCurrency(totCol);
+            document.getElementById('kpiCommTeamsTotal').textContent = formatCurrency(tComm);
+            document.getElementById('kpiCommTeamsSub').textContent = `${tCnt} equipo(s)`;
+            document.getElementById('kpiCommSoloSellersTotal').textContent = formatCurrency(sComm);
+            document.getElementById('kpiCommSoloSellersSub').textContent = `${sCnt} vendedor(es) sin equipo`;
+            document.getElementById('kpiCommGrandTotal').textContent = formatCurrency(grandC);
+            document.getElementById('kpiCommAvgRate').textContent = `Tasa efectiva: ${avgR}%`;
+
+            const fGroups = allG.filter(g => commissionTypeFilter === 'ALL' || g.beneficiaryType === commissionTypeFilter);
+            const tbody = document.getElementById('commissionsAccordionBody'); tbody.innerHTML = '';
+
+            fGroups.forEach(group => {
+                const isExp = expandedCommissionGroups.has(group.groupId), isTeam = group.beneficiaryType === 'TEAM';
+                const cArr = Array.from(group.clientsMap.values()).sort((a, b) => b.totalCollected - a.totalCollected);
+                const effR = group.totalCollected > 0 ? ((group.totalCommission / group.totalCollected) * 100).toFixed(2) : defaultCommissionRate.toFixed(2);
+                const badge = isTeam ? `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-purple-100 text-purple-900">COBRA EQUIPO</span>` : `<span class="text-xs font-bold px-2.5 py-1 rounded-full bg-amber-100 text-amber-900">VENDEDOR EXCLUSIVO</span>`;
+                const divHtml = group.divisor > 1 ? `<div class="font-mono font-black text-sm text-cyan-700">${formatCurrency(group.perMemberCommission)} c/u</div>` : `<span class="text-xs text-slate-400">100%</span>`;
+
+                const trP = document.createElement('tr');
+                trP.className = `cursor-pointer ${isExp ? 'bg-slate-100/90' : 'hover:bg-slate-50'}`;
+                trP.onclick = (e) => { if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') toggleCommissionGroupExpand(group.groupId); };
+                trP.innerHTML = `
+                    <td class="py-3.5 px-4 text-center"><i class="fa-solid ${isExp ? 'fa-chevron-down text-indigo-600' : 'fa-chevron-right'} text-xs"></i></td>
+                    <td class="py-3.5 px-4"><div class="font-bold text-slate-900">${escapeHtml(group.beneficiaryName)}</div><div class="text-xs text-slate-500">${escapeHtml(Array.from(group.sellersInvolved).join(', '))}</div></td>
+                    <td class="py-3.5 px-4">${badge}</td>
+                    <td class="py-3.5 px-4 text-center"><span class="bg-slate-200 text-xs font-bold px-2.5 py-1 rounded-full">${cArr.length} cli. / ${group.paymentsCount} cobros</span></td>
+                    <td class="py-3.5 px-4 text-right font-mono font-bold">${formatCurrency(group.totalCollected)}</td>
+                    <td class="py-3.5 px-4 text-center"><input type="number" step="0.1" value="${Number(effR)}" onclick="event.stopPropagation()" onchange="setGroupAllClientsCommissionRate('${escapeJsString(group.groupId)}', this.value)" class="w-14 text-center font-bold text-xs text-indigo-700 border border-slate-300 rounded py-1"> %</td>
+                    <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-700">${formatCurrency(group.totalCommission)}</td>
+                    <td class="py-3.5 px-4 text-center" onclick="event.stopPropagation()">÷ <input type="number" min="1" value="${group.divisor}" onchange="handleGroupDivisorChange('${escapeJsString(group.groupId)}', this.value)" class="w-12 text-center font-bold text-xs border border-slate-300 rounded py-1"></td>
+                    <td class="py-3.5 px-4 text-right">${divHtml}</td>`;
+                tbody.appendChild(trP);
+
+                if (isExp) {
+                    const trC = document.createElement('tr');
+                    const rowsHtml = cArr.map(c => `<tr class="border-b border-slate-100"><td class="py-2 px-4 pl-10 font-semibold">${escapeHtml(c.clientName)}</td><td class="py-2 px-4 text-xs">${escapeHtml(Array.from(c.sellers).join(', '))}</td><td class="py-2 px-4 text-xs">${c.paymentsCount} cobro(s)</td><td class="py-2 px-4 text-right font-mono text-xs font-semibold">${formatCurrency(c.totalCollected)}</td><td class="py-2 px-4 text-center"><input type="number" step="0.1" value="${c.rate}" onchange="handleSingleClientRateInput('${escapeJsString(c.clientRateKey)}', this.value)" class="w-14 text-center font-bold text-xs border border-amber-400 bg-amber-50 rounded py-0.5"> %</td><td class="py-2 px-4 text-right font-mono font-bold text-emerald-700">${formatCurrency(c.commissionAmount)}</td><td class="py-2 px-4 text-right font-mono text-xs text-cyan-700">${group.divisor > 1 ? formatCurrency(c.commissionAmount / group.divisor) : '-'}</td></tr>`).join('');
+                    trC.innerHTML = `<td colspan="9" class="p-4 bg-indigo-950/5"><table class="w-full text-left bg-white rounded-xl overflow-hidden border border-slate-200"><thead class="bg-slate-100 text-[11px] uppercase"><tr><th class="py-2 px-4 pl-10">Cliente</th><th class="py-2 px-4">Vendedor</th><th class="py-2 px-4">Pagos</th><th class="py-2 px-4 text-right">Cobrado</th><th class="py-2 px-4 text-center">%</th><th class="py-2 px-4 text-right">Comisión</th><th class="py-2 px-4 text-right">C/U</th></tr></thead><tbody>${rowsHtml}</tbody></table></td>`;
+                    tbody.appendChild(trC);
+                }
+            });
+            document.getElementById('commissionsFooterSummary').textContent = `Total Liquidación: ${formatCurrency(grandC)}`;
+        }
+
+        function toggleCommissionGroupExpand(id) { expandedCommissionGroups.has(id) ? expandedCommissionGroups.delete(id) : expandedCommissionGroups.add(id); renderCommissionsSection(); }
+        function expandOrCollapseAllCommissions(exp) { exp ? buildCommissionGroupsData().forEach(g => expandedCommissionGroups.add(g.groupId)) : expandedCommissionGroups.clear(); renderCommissionsSection(); }
+        function setCommissionTypeFilter(f) { commissionTypeFilter = f; renderCommissionsSection(); }
+        function handleSingleClientRateInput(k, v) { clientCommissionRateMap.set(k, Math.max(0, parseFloat(v) || 0)); renderCommissionsSection(); }
+        function setGroupAllClientsCommissionRate(gId, v) {
+            const num = Math.max(0, parseFloat(v) || 0), t = buildCommissionGroupsData().find(g => g.groupId === gId);
+            if (t) t.clientsMap.forEach(c => clientCommissionRateMap.set(c.clientRateKey, num));
+            renderCommissionsSection();
+        }
+        function applyGlobalDefaultRateToAll() { defaultCommissionRate = Math.max(0, parseFloat(document.getElementById('globalDefaultRateInput').value) || 0); clientCommissionRateMap.clear(); renderCommissionsSection(); showToast('Porcentaje aplicado.', 'success'); }
+
+        function exportClientsBySellerExcel() {
+            if (clientMasterMap.size === 0) return showToast('Cargá las Ventas primero.', 'warning');
+            const wb = XLSX.utils.book_new();
+            const rows = Array.from(clientMasterMap.values()).map(c => ({ "Cliente": c.clientName, "Vendedor": c.seller, "Equipo": c.team, "Órdenes": c.orderCount, "Total Venta ($)": Number(c.totalAmount.toFixed(2)) }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Padron_Clientes");
+            XLSX.writeFile(wb, "Padron_Clientes_Ventas.xlsx");
+        }
+        function exportMatchedPaymentsExcel() {
+            if (matchedPaymentsList.length === 0) return showToast('Sin pagos asociados.', 'warning');
+            const wb = XLSX.utils.book_new();
+            const rows = matchedPaymentsList.map(p => ({ "Vendedor": p.seller, "Equipo": p.team, "Cliente Pago": p.paymentClient, "Cliente Venta": p.matchedMasterClient, "Referencia": p.ref, "Monto ($)": Number(p.amount.toFixed(2)) }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "Pagos_Asociados");
+            XLSX.writeFile(wb, "Pagos_Asociados_Conciliados.xlsx");
+        }
+        function exportUnmatchedPaymentsExcel() {
+            if (unmatchedPaymentsList.length === 0) return showToast('Sin pagos no reconocidos.', 'info');
+            const wb = XLSX.utils.book_new();
+            const rows = unmatchedPaymentsList.map(p => ({ "Cliente Pago": p.paymentClient, "Monto ($)": Number(p.amount.toFixed(2)), "Referencia": p.ref, "Motivo": p.reason }));
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(rows), "No_Reconocidos");
+            XLSX.writeFile(wb, "Pagos_No_Reconocidos.xlsx");
+        }
+        function buildDetailedPaymentBreakdownRows(allGroups) {
+            const rows = [];
+            allGroups.forEach(g => g.clientsMap.forEach(c => c.payments.forEach(p => {
+                const comm = p.amount * (c.rate / 100);
+                rows.push({ "Beneficiario": g.beneficiaryName, "Tipo": g.beneficiaryType === 'TEAM' ? "Equipo" : "Vendedor Exclusivo", "Vendedor": p.seller, "Cliente": c.clientName, "Referencia": p.ref, "Monto Pago ($)": Number(p.amount.toFixed(2)), "% Comisión": Number(c.rate), "Comisión Total ($)": Number(comm.toFixed(2)), "Divisor": g.divisor, "Comisión C/U ($)": Number((comm / g.divisor).toFixed(2)) });
+            })));
+            return rows;
+        }
+        function exportCommissionsExcel() {
+            if (matchedPaymentsList.length === 0) return showToast('Sin datos para liquidar.', 'warning');
+            const wb = XLSX.utils.book_new(), allG = buildCommissionGroupsData();
+            XLSX.utils.book_append_sheet(wb, XLSX.utils.json_to_sheet(buildDetailedPaymentBreakdownRows(allG)), "Desglose_Comisiones");
+            XLSX.writeFile(wb, "Liquidacion_Comisiones.xlsx");
+        }
+        function exportAllInOneExcel() { exportCommissionsExcel(); }
+
+        function loadDemoSalesData() {
+            loadSalesRowsIntoApp([
+                { "Nro Pedido": "SO-1001", "Cliente": "Distribuidora Austral S.R.L.", "Vendedor": "Martín Gómez", "Equipo de Ventas": "XFISH", "Estado": "Orden de venta", "Total Venta": 1450000 },
+                { "Nro Pedido": "SO-1002", "Cliente": "Supermercados Del Valle S.A.", "Vendedor": "Lucía Fernández", "Equipo de Ventas": "Grandes Cuentas CABA", "Estado": "Orden de venta", "Total Venta": 2890000 },
+                { "Nro Pedido": "SO-1007", "Cliente": "Frigorífico Pampa Húmeda S.A.", "Vendedor": "Carlos Ruiz", "Equipo de Ventas": "", "Estado": "Orden de venta", "Total Venta": 4100000 },
+                { "Nro Pedido": "SO-1010", "Cliente": "Mayorista El Sol SRL", "Vendedor": "Ana Pereyra", "Equipo de Ventas": "XFISH", "Estado": "Orden de venta", "Total Venta": 2120000 }
+            ], "Demo_Ventas.xlsx");
+        }
+        function loadDemoPaymentsData() {
+            if (clientMasterMap.size === 0) loadDemoSalesData();
+            loadPaymentsRowsIntoApp([
+                { "Fecha Cobro": "2026-10-12", "Cliente Pagador": "Distribuidora Austral SRL", "Importe Recibido": 1450000 },
+                { "Fecha Cobro": "2026-10-13", "Cliente Pagador": "SUPERMERCADOS DEL VALLE SA", "Importe Recibido": 1500000 },
+                { "Fecha Cobro": "2026-10-16", "Cliente Pagador": "Frigorifico Pampa Humeda", "Importe Recibido": 2050000 },
+                { "Fecha Cobro": "2026-10-18", "Cliente Pagador": "Mayorista El Sol S.R.L.", "Importe Recibido": 2120000 }
+            ], "Demo_Pagos.xlsx");
+        }
+        function resetAllApp() {
+            salesRawRows = []; paymentsRawRows = []; clientMasterMap.clear(); manualClientEditsMap.clear(); nonActiveSalesClientsMap.clear();
+            matchedPaymentsList = []; unmatchedPaymentsList = []; manualPaymentOverrides.clear(); clientCommissionRateMap.clear(); groupDivisorMap.clear(); expandedCommissionGroups.clear();
+            document.getElementById('salesFileInput').value = ''; document.getElementById('paymentsFileInput').value = '';
+            ['btnToggleSalesConfig', 'paymentsFileLoadedBadge', 'salesConfigPanel', 'salesResultsPanel', 'paymentsConfigPanel', 'paymentsResultsPanel'].forEach(id => document.getElementById(id)?.classList.add('hidden'));
+            document.getElementById('paymentsWarningNoSales')?.classList.remove('hidden');
+            renderSalesSearchLookup(); renderCommissionsSection(); showToast('Reiniciado.', 'info');
+        }
+    </script>
+</body>
+</html>
