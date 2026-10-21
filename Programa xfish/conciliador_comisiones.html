@@ -39,7 +39,7 @@
             </div>
             <div class="flex flex-wrap items-center gap-2">
                 <button type="button" onclick="loadDemoPaymentsData()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
-                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Cargar Ejemplo</span>
+                    <i class="fa-solid fa-wand-magic-sparkles"></i> <span>Cargar Ejemplo Completo</span>
                 </button>
                 <button type="button" onclick="exportAllInOneExcel()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
                     <i class="fa-solid fa-download"></i> <span>Exportar Todo (.xlsx)</span>
@@ -65,7 +65,7 @@
                 <div>
                     <div class="text-xs font-bold uppercase tracking-wider text-indigo-600">Paso 1 (Fuente Principal)</div>
                     <div class="font-bold text-slate-800 text-sm">Ventas: Vendedor y Equipo</div>
-                    <div class="text-xs text-slate-500">Define Vendedor y Equipo por Cliente en "Orden de venta"</div>
+                    <div class="text-xs text-slate-500">Define el Vendedor y Equipo por cada Cliente en "Orden de venta"</div>
                 </div>
             </div>
             <div id="stepCard2" class="glass-panel rounded-2xl p-4 border border-slate-200 flex items-center gap-4 opacity-75 transition">
@@ -73,7 +73,7 @@
                 <div>
                     <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Paso 2</div>
                     <div class="font-bold text-slate-800 text-sm">Pagos Heredados de la Venta</div>
-                    <div class="text-xs text-slate-500">Asigna Vendedor/Equipo según la Venta</div>
+                    <div class="text-xs text-slate-500">Si el pago no trae Vendedor/Equipo, lo asigna según la Venta</div>
                 </div>
             </div>
             <div id="stepCard3" class="glass-panel rounded-2xl p-4 border border-slate-200 flex items-center gap-4 opacity-75 transition">
@@ -81,7 +81,7 @@
                 <div>
                     <div class="text-xs font-bold uppercase tracking-wider text-slate-500">Paso 3</div>
                     <div class="font-bold text-slate-800 text-sm">Comisiones (8% sobre Cobros)</div>
-                    <div class="text-xs text-slate-500">Cobra el Equipo o el Vendedor exclusivo</div>
+                    <div class="text-xs text-slate-500">Cobra el Equipo (si tiene) o el Vendedor exclusivo (si no tiene equipo)</div>
                 </div>
             </div>
         </div>
@@ -93,7 +93,7 @@
                     <span class="w-8 h-8 rounded-lg bg-indigo-600 text-white font-bold flex items-center justify-center text-sm shadow">1</span>
                     <div>
                         <h2 class="text-lg font-bold text-slate-800">Base de Ventas ("Orden de venta")</h2>
-                        <p class="text-xs text-slate-500">Padrón de datos para cruzar los pagos. Incluye buscador para consultar o editar clientes puntuales.</p>
+                        <p class="text-xs text-slate-500">Se usa como fuente de datos para cruzar los pagos. Incluye buscador rápido por si querés consultar o editar algún cliente puntual.</p>
                     </div>
                 </div>
                 <div class="flex flex-wrap items-center gap-2">
@@ -127,10 +127,10 @@
                     <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-slate-200 pb-2.5">
                         <div class="flex items-center gap-2">
                             <i class="fa-solid fa-sliders text-indigo-600"></i>
-                            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Mapeo de Columnas de Ventas</h3>
+                            <h3 class="font-bold text-xs uppercase tracking-wider text-slate-700">Mapeo de Columnas del Excel de Ventas</h3>
                         </div>
                         <label class="inline-flex items-center gap-2 text-xs text-slate-600 cursor-pointer select-none">
-                            <input type="checkbox" id="flexibleNormToggle" checked onchange="processSalesData()" class="rounded text-indigo-600">
+                            <input type="checkbox" id="flexibleNormToggle" checked onchange="processSalesData()" class="rounded text-indigo-600 focus:ring-indigo-500">
                             <span>Normalizar nombres (ignorar S.A., S.R.L., tildes)</span>
                         </label>
                     </div>
@@ -139,7 +139,7 @@
                         <div><label class="block text-xs font-semibold text-slate-700 mb-1">Columna Vendedor</label><select id="salesColSeller" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
                         <div><label class="block text-xs font-semibold text-slate-700 mb-1">Equipo de Ventas</label><select id="salesColTeam" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
                         <div><label class="block text-xs font-semibold text-slate-700 mb-1">Columna Estado</label><select id="salesColStatus" onchange="onSalesStatusColumnChange()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
-                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Total Venta</label><select id="salesColAmount" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
+                        <div><label class="block text-xs font-semibold text-slate-700 mb-1">Total Venta (Opcional)</label><select id="salesColAmount" onchange="processSalesData()" class="w-full rounded-lg border border-slate-300 bg-white px-2.5 py-1.5 text-xs outline-none"></select></div>
                     </div>
                     <div>
                         <label class="block text-xs font-semibold text-slate-700 mb-1.5">Estados incluidos:</label>
@@ -156,18 +156,27 @@
                                 <span class="mx-1.5 text-emerald-400">|</span>
                                 <span><strong id="kpiSalesOrdersCount">0</strong> órdenes de venta válidas</span>
                                 <span class="mx-1.5 text-emerald-400">•</span>
-                                <span><strong id="kpiUniqueClientsCount">0</strong> clientes listos en memoria</span>
+                                <span><strong id="kpiUniqueClientsCount">0</strong> clientes listos en memoria para cruzar pagos</span>
                             </div>
                         </div>
-                        <button type="button" onclick="exportClientsBySellerExcel()" class="text-xs bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
-                            <i class="fa-solid fa-file-excel text-emerald-600"></i> Descargar Padrón (.xlsx)
-                        </button>
+                        <div class="flex items-center gap-2 shrink-0">
+                            <button type="button" onclick="exportClientsBySellerExcel()" class="text-xs bg-white hover:bg-emerald-100 text-emerald-800 border border-emerald-300 font-semibold px-3 py-1.5 rounded-lg transition flex items-center gap-1.5">
+                                <i class="fa-solid fa-file-excel text-emerald-600"></i> Descargar Padrón (.xlsx)
+                            </button>
+                        </div>
                     </div>
 
                     <div class="bg-white/70 rounded-xl p-4 border border-slate-200 space-y-3">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                            <label for="salesSearchInput" class="text-xs font-bold text-slate-700 flex items-center gap-2">
+                                <i class="fa-solid fa-magnifying-glass text-indigo-600"></i>
+                                <span>Consultar una Venta o Cliente puntual (Opcional)</span>
+                            </label>
+                            <span class="text-[11px] text-slate-400">Escribí solo si querés consultar o editar una venta específica</span>
+                        </div>
                         <div class="relative">
                             <i class="fa-solid fa-magnifying-glass text-slate-400 absolute left-3.5 top-2.5 text-sm"></i>
-                            <input type="text" id="salesSearchInput" oninput="renderSalesSearchLookup()" placeholder="Buscar cliente, nro de pedido, vendedor o equipo para consultar o editar..." class="w-full pl-9 pr-24 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:border-indigo-500 outline-none">
+                            <input type="text" id="salesSearchInput" oninput="renderSalesSearchLookup()" placeholder="Escribí el nombre del cliente, nro de pedido, vendedor o equipo..." class="w-full pl-9 pr-24 py-2 rounded-lg border border-slate-300 bg-white text-sm focus:border-indigo-500 outline-none">
                             <button type="button" id="btnClearSalesSearch" onclick="clearSalesSearch()" class="hidden absolute right-2 top-1.5 text-xs bg-slate-100 hover:bg-slate-200 text-slate-600 px-2.5 py-1 rounded-md font-medium">Limpiar</button>
                         </div>
 
@@ -175,17 +184,17 @@
                             <div class="border border-slate-200 rounded-xl overflow-hidden bg-white shadow-xs">
                                 <div class="bg-slate-100 px-4 py-2 border-b border-slate-200 flex items-center justify-between text-xs font-semibold text-slate-600">
                                     <span id="salesSearchCountText">Resultados encontrados</span>
-                                    <span class="text-[11px] font-normal text-slate-500">Editable</span>
+                                    <span class="text-[11px] font-normal text-slate-500">Podés editar el Vendedor o Equipo si lo necesitás</span>
                                 </div>
                                 <div class="max-h-80 overflow-y-auto">
                                     <table class="w-full text-left border-collapse">
                                         <thead class="bg-slate-50 text-slate-500 text-[11px] uppercase tracking-wider border-b border-slate-200 sticky top-0">
                                             <tr>
                                                 <th class="py-2.5 px-4 font-semibold">Cliente</th>
-                                                <th class="py-2.5 px-4 font-semibold">Vendedor</th>
-                                                <th class="py-2.5 px-4 font-semibold">Equipo de Ventas</th>
-                                                <th class="py-2.5 px-4 font-semibold">Pedidos / Detalle</th>
-                                                <th class="py-2.5 px-4 font-semibold text-right">Total Venta</th>
+                                                <th class="py-2.5 px-4 font-semibold">Vendedor (Editable)</th>
+                                                <th class="py-2.5 px-4 font-semibold">Equipo de Ventas (Editable)</th>
+                                                <th class="py-2.5 px-4 font-semibold">Pedidos / Detalle de Venta</th>
+                                                <th class="py-2.5 px-4 font-semibold text-right">Total Orden de Venta</th>
                                             </tr>
                                         </thead>
                                         <tbody id="salesTableBody" class="divide-y divide-slate-200 text-sm bg-white"></tbody>
@@ -204,11 +213,11 @@
                 <div class="flex items-center gap-3">
                     <span class="w-8 h-8 rounded-lg bg-emerald-600 text-white font-bold flex items-center justify-center text-sm shadow">2</span>
                     <div>
-                        <h2 class="text-lg font-bold text-slate-800">Cargar Excel de Pagos Recibidos</h2>
-                        <p class="text-xs text-slate-500">Asigna automáticamente Vendedor y Equipo usando los datos de la Venta (Paso 1).</p>
+                        <h2 class="text-lg font-bold text-slate-800">Cargar Excel de Pagos Recibidos (Hereda Vendedor y Equipo desde la Venta)</h2>
+                        <p class="text-xs text-slate-500">Aunque en el Excel de Pagos estén vacíos los campos de <strong>Vendedor</strong> y <strong>Equipo de Ventas</strong>, el sistema los asigna automáticamente usando los datos de la <strong>Venta (Paso 1)</strong>.</p>
                     </div>
                 </div>
-                <button type="button" onclick="loadDemoPaymentsData()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200 transition flex items-center gap-2 shrink-0">
+                <button type="button" onclick="loadDemoPaymentsData()" class="text-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-700 font-bold px-3.5 py-2 rounded-xl border border-emerald-200 transition flex items-center gap-2 self-start sm:self-auto shrink-0">
                     <i class="fa-solid fa-wand-magic-sparkles"></i> Cargar datos de prueba (Pagos)
                 </button>
             </div>
@@ -216,7 +225,7 @@
             <div class="p-6 space-y-6">
                 <div id="paymentsWarningNoSales" class="bg-amber-50 border border-amber-200 text-amber-800 rounded-xl p-4 text-xs flex items-center gap-3">
                     <i class="fa-solid fa-triangle-exclamation text-amber-500 text-lg"></i>
-                    <div><strong>Atención:</strong> Primero cargá el Excel de Ventas en el <strong>Paso 1</strong>.</div>
+                    <div><strong>Atención:</strong> Primero cargá el Excel de Ventas en el <strong>Paso 1</strong> (o usá el botón de datos de prueba).</div>
                 </div>
 
                 <div id="paymentsDropzone" class="border-2 border-dashed border-slate-300 hover:border-emerald-500 rounded-2xl p-8 text-center transition cursor-pointer bg-white/50 hover:bg-emerald-50/30" onclick="document.getElementById('paymentsFileInput').click()">
@@ -224,8 +233,8 @@
                     <div class="w-14 h-14 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-3">
                         <i class="fa-solid fa-hand-holding-dollar text-2xl"></i>
                     </div>
-                    <p class="text-sm font-bold text-slate-700">Hacé clic o arrastrá aquí tu Excel de Pagos Recibidos</p>
-                    <p class="text-xs text-slate-500 mt-1">Soporta archivos .xlsx, .xls, .csv</p>
+                    <p class="text-sm font-bold text-slate-700">Hacé clic para seleccionar o arrastrá aquí tu Excel de Pagos Recibidos</p>
+                    <p class="text-xs text-slate-500 mt-1">Soporta archivos <span class="font-mono text-slate-600">.xlsx, .xls, .csv</span> (con o sin columnas de Vendedor/Equipo)</p>
                     <div id="paymentsFileLoadedBadge" class="hidden mt-4 inline-flex items-center gap-2 bg-emerald-50 text-emerald-700 border border-emerald-200 px-3 py-1.5 rounded-lg text-xs font-medium">
                         <i class="fa-solid fa-circle-check"></i> <span id="paymentsFileNameText">pagos_recibidos.xlsx</span>
                     </div>
@@ -238,13 +247,13 @@
                             <h3 class="font-bold text-sm text-slate-800">Mapeo de Columnas de Pagos</h3>
                         </div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <label class="inline-flex items-center gap-2 text-xs text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 font-semibold cursor-pointer">
-                                <input type="checkbox" id="prioritizeSalesDataToggle" checked onchange="processPaymentsData()" class="rounded text-indigo-600">
-                                <span>Priorizar siempre Vendedor y Equipo de la Venta</span>
+                            <label class="inline-flex items-center gap-2 text-xs text-indigo-900 bg-indigo-50 px-3 py-1.5 rounded-lg border border-indigo-200 font-semibold cursor-pointer select-none">
+                                <input type="checkbox" id="prioritizeSalesDataToggle" checked onchange="processPaymentsData()" class="rounded text-indigo-600 focus:ring-indigo-500">
+                                <span>Priorizar siempre Vendedor y Equipo de la Venta ("Orden de venta")</span>
                             </label>
-                            <label class="inline-flex items-center gap-2 text-xs text-slate-700 cursor-pointer bg-white px-3 py-1.5 rounded-lg border border-slate-200">
-                                <input type="checkbox" id="partialMatchToggle" checked onchange="processPaymentsData()" class="rounded text-emerald-600">
-                                <span>Coincidencia parcial inteligente</span>
+                            <label class="inline-flex items-center gap-2 text-xs text-slate-700 cursor-pointer select-none bg-white px-3 py-1.5 rounded-lg border border-slate-200">
+                                <input type="checkbox" id="partialMatchToggle" checked onchange="processPaymentsData()" class="rounded text-emerald-600 focus:ring-emerald-500">
+                                <span>Coincidencia parcial inteligente de nombre</span>
                             </label>
                         </div>
                     </div>
@@ -267,7 +276,6 @@
                         <div class="bg-emerald-50/70 rounded-xl p-4 border border-emerald-200">
                             <div class="flex items-center justify-between"><span class="text-xs font-semibold text-emerald-800 uppercase">Pagos Asociados</span><span id="kpiPayMatchedCount" class="text-xs bg-emerald-200/80 text-emerald-900 px-2 py-0.5 rounded-full font-semibold">0 cobros</span></div>
                             <div id="kpiPayMatchedAmount" class="text-2xl font-bold text-emerald-700 mt-1">$ 0,00</div>
-                            <div id="kpiPayMatchedPercent" class="text-xs text-emerald-700 mt-0.5">Asignados con éxito</div>
                         </div>
                         <div class="bg-amber-50/80 rounded-xl p-4 border border-amber-200">
                             <div class="flex items-center justify-between"><span class="text-xs font-semibold text-amber-900 uppercase">Pagos NO Reconocidos</span><span id="kpiPayUnmatchedCount" class="text-xs bg-amber-200 text-amber-900 px-2 py-0.5 rounded-full font-semibold">0 cobros</span></div>
@@ -355,7 +363,7 @@
                                             <th class="py-3 px-4 font-semibold">Motivo</th>
                                             <th class="py-3 px-4 font-semibold">Ref. / Fecha</th>
                                             <th class="py-3 px-4 font-semibold text-right">Monto a Revisar</th>
-                                            <th class="py-3 px-4 font-semibold">Asignar Vendedor y Equipo Manualmente</th>
+                                            <th class="py-3 px-4 font-semibold">Asignar Manualmente</th>
                                         </tr>
                                     </thead>
                                     <tbody id="unmatchedPaymentsTableBody" class="divide-y divide-slate-200 text-sm bg-white"></tbody>
@@ -374,29 +382,42 @@
                     <span class="w-9 h-9 rounded-xl bg-amber-500 text-slate-950 font-black flex items-center justify-center text-base shrink-0 shadow">3</span>
                     <div>
                         <div class="flex flex-wrap items-center gap-2">
-                            <h2 class="text-lg font-bold text-white">Liquidación de Comisiones sobre Pagos Recibidos</h2>
+                            <h2 class="text-lg font-bold text-white">Liquidación de Comisiones</h2>
                             <span class="text-xs bg-amber-500/20 text-amber-300 border border-amber-400/30 px-2.5 py-0.5 rounded-full font-semibold">Base 8% Editable</span>
                         </div>
                         <p class="text-xs text-slate-300 mt-0.5">Si tiene Equipo cobra el Equipo; si no tiene equipo cobra el Vendedor exclusivo. Equipo XFISH ÷ 6.</p>
                     </div>
                 </div>
                 <button type="button" onclick="exportCommissionsExcel()" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-4 py-2.5 rounded-xl shadow-md transition flex items-center gap-2 text-xs sm:text-sm shrink-0">
-                    <i class="fa-solid fa-file-invoice-dollar"></i> <span>Descargar Excel de Comisiones (.xlsx)</span>
+                    <i class="fa-solid fa-file-invoice-dollar"></i> <span>Descargar Excel (.xlsx)</span>
                 </button>
             </div>
 
             <div class="p-6 space-y-6">
                 <div id="commissionsEmptyWarning" class="bg-white/70 border border-slate-200 text-slate-600 rounded-2xl p-6 text-center space-y-3">
-                    <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto">
-                        <i class="fa-solid fa-percent text-xl"></i>
-                    </div>
-                    <div class="text-sm font-bold text-slate-800">Cargá las Ventas (Paso 1) y los Pagos Recibidos (Paso 2) para calcular las comisiones</div>
+                    <div class="w-12 h-12 rounded-full bg-amber-100 text-amber-700 flex items-center justify-center mx-auto"><i class="fa-solid fa-percent text-xl"></i></div>
+                    <div class="text-sm font-bold text-slate-800">Cargá las Ventas y Pagos para calcular las comisiones</div>
                     <button type="button" onclick="loadDemoPaymentsData()" class="mt-2 inline-flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-4 py-2 rounded-lg shadow-sm transition">
-                        <i class="fa-solid fa-wand-magic-sparkles"></i> Probar ahora con Datos de Ejemplo
+                        <i class="fa-solid fa-wand-magic-sparkles"></i> Probar con Datos de Ejemplo
                     </button>
                 </div>
 
                 <div id="commissionsContentPanel" class="hidden space-y-6">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div class="bg-purple-50/70 border border-purple-200 rounded-xl p-4 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-purple-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-people-group"></i></div>
+                            <div class="text-xs"><div class="font-bold text-purple-950 text-sm">1. Con Equipo → Cobra el Equipo</div><p class="text-purple-900/80">La comisión se agrupa y la cobra el Equipo de Ventas.</p></div>
+                        </div>
+                        <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-4 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-amber-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-user-tie"></i></div>
+                            <div class="text-xs"><div class="font-bold text-amber-950 text-sm">2. Sin Equipo → Cobra Vendedor</div><p class="text-amber-900/80">Si no tiene equipo en la venta, cobra el vendedor en forma exclusiva.</p></div>
+                        </div>
+                        <div class="bg-cyan-50/80 border border-cyan-200 rounded-xl p-4 flex items-start gap-3">
+                            <div class="w-8 h-8 rounded-lg bg-cyan-600 text-white flex items-center justify-center shrink-0"><i class="fa-solid fa-divide"></i></div>
+                            <div class="text-xs"><div class="font-bold text-cyan-950 text-sm">3. Equipo XFISH → Dividido en 6</div><p class="text-cyan-900/80">XFISH divide entre 6 automáticamente (editable).</p></div>
+                        </div>
+                    </div>
+
                     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                         <div class="bg-white/80 border border-slate-200 rounded-xl p-4">
                             <div class="text-xs font-semibold text-slate-500 uppercase">Base Cobrada</div>
@@ -423,12 +444,12 @@
                         <div class="flex flex-wrap items-center gap-3">
                             <div class="inline-flex rounded-lg bg-slate-200/90 p-1 text-xs font-semibold">
                                 <button type="button" id="commFilterBtnAll" onclick="setCommissionTypeFilter('ALL')" class="px-3 py-1.5 rounded-md bg-white text-slate-900 shadow-sm transition">Todos</button>
-                                <button type="button" id="commFilterBtnTeams" onclick="setCommissionTypeFilter('TEAM')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Solo Equipos</button>
-                                <button type="button" id="commFilterBtnSolo" onclick="setCommissionTypeFilter('SOLO_SELLER')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Vendedores sin Equipo</button>
+                                <button type="button" id="commFilterBtnTeams" onclick="setCommissionTypeFilter('TEAM')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Equipos</button>
+                                <button type="button" id="commFilterBtnSolo" onclick="setCommissionTypeFilter('SOLO_SELLER')" class="px-3 py-1.5 rounded-md text-slate-600 hover:text-slate-900 transition">Sin Equipo</button>
                             </div>
                             <div class="flex items-center gap-1.5 text-xs">
-                                <button type="button" onclick="expandOrCollapseAllCommissions(true)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg font-medium transition">Desplegar todos</button>
-                                <button type="button" onclick="expandOrCollapseAllCommissions(false)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg font-medium transition">Contraer todo</button>
+                                <button type="button" onclick="expandOrCollapseAllCommissions(true)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg font-medium transition">Desplegar</button>
+                                <button type="button" onclick="expandOrCollapseAllCommissions(false)" class="bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 px-2.5 py-1.5 rounded-lg font-medium transition">Contraer</button>
                             </div>
                         </div>
 
@@ -438,7 +459,7 @@
                                 <input type="number" id="globalDefaultRateInput" value="8" min="0" max="100" step="0.5" class="w-16 text-center font-bold text-sm text-indigo-700 border border-slate-300 rounded-l-lg py-1 outline-none">
                                 <span class="bg-slate-100 border border-l-0 border-slate-300 px-2 py-1 text-xs font-bold text-slate-600 rounded-r-lg">%</span>
                             </div>
-                            <button type="button" onclick="applyGlobalDefaultRateToAll()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Aplicar a todos</button>
+                            <button type="button" onclick="applyGlobalDefaultRateToAll()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs font-semibold px-3 py-1.5 rounded-lg transition">Aplicar</button>
                         </div>
                     </div>
 
@@ -448,13 +469,13 @@
                                 <thead class="bg-slate-900 text-white text-xs uppercase tracking-wider">
                                     <tr>
                                         <th class="py-3.5 px-4 font-semibold w-10"></th>
-                                        <th class="py-3.5 px-4 font-semibold">Beneficiario</th>
-                                        <th class="py-3.5 px-4 font-semibold">Atribución</th>
-                                        <th class="py-3.5 px-4 font-semibold text-center">Clientes / Cobros</th>
+                                        <th class="py-3.5 px-4 font-semibold">Beneficiario (Equipo o Vendedor)</th>
+                                        <th class="py-3.5 px-4 font-semibold">Tipo</th>
+                                        <th class="py-3.5 px-4 font-semibold text-center">Clientes</th>
                                         <th class="py-3.5 px-4 font-semibold text-right">Total Cobrado</th>
                                         <th class="py-3.5 px-4 font-semibold text-center">% Comisión</th>
                                         <th class="py-3.5 px-4 font-semibold text-right">Comisión Total</th>
-                                        <th class="py-3.5 px-4 font-semibold text-center">Dividir entre</th>
+                                        <th class="py-3.5 px-4 font-semibold text-center">Dividir</th>
                                         <th class="py-3.5 px-4 font-semibold text-right">Comisión c/u</th>
                                     </tr>
                                 </thead>
@@ -485,11 +506,18 @@
                 <div><label class="block text-xs font-semibold text-slate-700 mb-1">Equipo de Ventas (Vacío = Sin Equipo)</label><input type="text" id="modalInputTeam" list="teamsDatalist" class="w-full rounded-lg border border-slate-300 px-3 py-2 text-sm outline-none"></div>
                 <div class="flex items-center justify-end gap-2 pt-2 border-t border-slate-200">
                     <button type="button" onclick="closeManualModal()" class="px-4 py-2 rounded-lg text-xs font-semibold text-slate-600 hover:bg-slate-100">Cancelar</button>
-                    <button type="button" onclick="saveManualModal()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Guardar</button>
+                    <button type="button" onclick="saveManualModal()" class="px-4 py-2 rounded-lg text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white">Guardar Asignación</button>
                 </div>
             </div>
         </div>
     </div>
+
+    <footer class="mt-12 text-center text-xs text-slate-400">
+        <div class="max-w-7xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
+            <span>Sistema Operativo X-Fish • Procesamiento 100% local en navegador.</span>
+            <span>Hereda Vendedor y Equipo desde "Orden de venta" + Cálculo de Comisiones (8% editable).</span>
+        </div>
+    </footer>
 
     <script>
         const NO_TEAM_LABEL = 'Sin Equipo';
@@ -510,7 +538,7 @@
             if (!dropzone) return;
             ['dragenter', 'dragover'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropzone.classList.add('ring-2', 'ring-indigo-500', 'bg-indigo-50/50'); }));
             ['dragleave', 'drop'].forEach(evt => dropzone.addEventListener(evt, (e) => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50/50'); }));
-            dropzone.addEventListener('drop', (e) => { const files = e.dataTransfer?.files; if (files && files.length > 0) callback(files[0]); });
+            dropzone.addEventListener('drop', (e) => { e.preventDefault(); e.stopPropagation(); dropzone.classList.remove('ring-2', 'ring-indigo-500', 'bg-indigo-50/50'); const files = e.dataTransfer?.files; if (files && files.length > 0) callback(files[0]); });
         }
 
         function isXfishTeamName(teamName) { return normalizeTextBasic(teamName).replace(/[\s\-_]/g, '').includes('xfish'); }
@@ -520,7 +548,7 @@
         }
         function handleGroupDivisorChange(groupId, rawVal) {
             let num = parseInt(rawVal, 10); if (isNaN(num) || num < 1) num = 1;
-            groupDivisorMap.set(groupId, num); renderCommissionsSection(); showToast(`Divisor actualizado: ÷ ${num}`, 'info');
+            groupDivisorMap.set(groupId, num); renderCommissionsSection(); showToast(`Divisor actualizado: la comisión se divide entre ${num}.`, 'info');
         }
         function normalizeTextBasic(str) {
             if (str === null || str === undefined) return '';
@@ -532,6 +560,7 @@
         }
         function sanitizeTeamValue(rawTeam) { return isNoTeamValue(rawTeam) ? NO_TEAM_LABEL : String(rawTeam).trim(); }
         function formatTeamDisplay(teamVal) { return isNoTeamValue(teamVal) ? '⚡ Sin Equipo (Exclusivo Vendedor)' : teamVal; }
+        
         function normalizeClientName(str) {
             if (!str) return ''; let clean = normalizeTextBasic(str);
             if (document.getElementById('flexibleNormToggle')?.checked ?? true) {
@@ -539,6 +568,7 @@
             }
             return clean;
         }
+
         function parseExcelNumber(val) {
             if (typeof val === 'number') return isNaN(val) ? 0 : val;
             if (val === null || val === undefined) return 0;
@@ -556,6 +586,7 @@
             const num = parseFloat(s); if (isNaN(num)) return 0;
             return isNeg ? -Math.abs(num) : num;
         }
+
         function formatCurrency(num) { return '$ ' + Number(num || 0).toLocaleString('es-AR', { minimumFractionDigits: 2, maximumFractionDigits: 2 }); }
         function escapeHtml(str) { return String(str ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;'); }
         function escapeJsString(str) { return String(str ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"'); }
@@ -567,11 +598,13 @@
             el.innerHTML = `<span>${escapeHtml(message)}</span>`;
             container.appendChild(el); setTimeout(() => el.remove(), 3500);
         }
+
         function refreshGlobalDatalists() {
             const sDl = document.getElementById('sellersDatalist'), tDl = document.getElementById('teamsDatalist');
             if (sDl) sDl.innerHTML = uniqueSellersList.map(s => `<option value="${escapeHtml(s)}"></option>`).join('');
             if (tDl) tDl.innerHTML = [NO_TEAM_LABEL, ...uniqueTeamsList.filter(t => t !== NO_TEAM_LABEL)].map(t => `<option value="${escapeHtml(t)}"></option>`).join('');
         }
+
         function populateSelectWithGuess(selectId, headers, keywords, allowEmpty = false, emptyLabel = '-- No usar --') {
             const select = document.getElementById(selectId); if (!select) return; select.innerHTML = '';
             if (allowEmpty) { const o = document.createElement('option'); o.value = ''; o.textContent = emptyLabel; select.appendChild(o); }
@@ -582,18 +615,20 @@
             });
             if (best) select.value = best; else if (!allowEmpty && headers.length > 0) select.value = headers[0];
         }
+
         function readExcelFile(file, callback) {
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
                     const wb = XLSX.read(new Uint8Array(e.target.result), { type: 'array' });
                     const rows = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]], { defval: '' });
-                    if (!rows || rows.length === 0) return showToast('El archivo está vacío.', 'warning');
+                    if (!rows || rows.length === 0) return showToast('El archivo parece estar vacío.', 'warning');
                     callback(rows, file.name);
                 } catch (err) { showToast('Error al leer Excel: ' + err.message, 'error'); }
             };
             reader.readAsArrayBuffer(file);
         }
+
         function handleSalesFileSelect(e) { if (e.target.files[0]) readExcelFile(e.target.files[0], loadSalesRowsIntoApp); }
         function handlePaymentsFileSelect(e) { if (e.target.files[0]) readExcelFile(e.target.files[0], loadPaymentsRowsIntoApp); }
 
@@ -604,13 +639,15 @@
             document.getElementById('paymentsWarningNoSales').classList.add('hidden');
             populateSelectWithGuess('salesColClient', salesHeaders, ['cliente', 'empresa', 'razon social', 'nombre', 'partner', 'customer'], false);
             populateSelectWithGuess('salesColSeller', salesHeaders, ['vendedor', 'comercial', 'asesor', 'salesperson', 'usuario'], false);
-            populateSelectWithGuess('salesColTeam', salesHeaders, ['equipo de ventas', 'equipo', 'canal', 'sales team'], true, '-- Sin columna de Equipo --');
+            populateSelectWithGuess('salesColTeam', salesHeaders, ['equipo de ventas', 'equipo', 'canal', 'sales team'], true, '-- Sin columna de Equipo (Todos Sin Equipo) --');
             populateSelectWithGuess('salesColStatus', salesHeaders, ['estado', 'status', 'etapa', 'state'], false);
             populateSelectWithGuess('salesColAmount', salesHeaders, ['total', 'monto', 'importe', 'venta', 'subtotal', 'amount'], true, '-- Sin columna de monto --');
             onSalesStatusColumnChange();
-            showToast(`Base de ventas "${fileName}" cargada.`, 'success');
+            showToast(`Base de ventas "${fileName}" cargada en memoria.`, 'success');
         }
+
         function toggleSalesConfigPanel() { document.getElementById('salesConfigPanel')?.classList.toggle('hidden'); }
+
         function onSalesStatusColumnChange() {
             const statusCol = document.getElementById('salesColStatus').value;
             allStatusesInSales.clear(); activeStatusFilters.clear();
@@ -624,6 +661,7 @@
             if (activeStatusFilters.size === 0 && allStatusesInSales.size > 0) activeStatusFilters.add(allStatusesInSales.keys().next().value);
             renderStatusChips(); processSalesData();
         }
+
         function renderStatusChips() {
             const container = document.getElementById('statusChipsContainer'); if (!container) return; container.innerHTML = '';
             allStatusesInSales.forEach((info, normKey) => {
@@ -692,12 +730,6 @@
             paymentsRawRows.length > 0 ? processPaymentsData() : renderCommissionsSection();
         }
 
-        function populateFilterDropdown(selectId, list, allLabel) {
-            const s = document.getElementById(selectId); if (!s) return; const prev = s.value;
-            s.innerHTML = `<option value="ALL">${allLabel} (${list.length})</option>`;
-            list.forEach(item => { const o = document.createElement('option'); o.value = item; o.textContent = item === NO_TEAM_LABEL ? '⚡ Sin Equipo (Exclusivo)' : item; s.appendChild(o); });
-            if (list.includes(prev)) s.value = prev;
-        }
         function clearSalesSearch() { const inp = document.getElementById('salesSearchInput'); if (inp) inp.value = ''; renderSalesSearchLookup(); }
         function renderSalesTable() { renderSalesSearchLookup(); }
 
@@ -721,8 +753,8 @@
                 const tr = document.createElement('tr'); tr.className = 'hover:bg-slate-50';
                 tr.innerHTML = `
                     <td class="py-2.5 px-4 font-semibold text-slate-800">${escapeHtml(item.clientName)}</td>
-                    <td class="py-2.5 px-4"><select onchange="handleClientSellerChange('${escapeJsString(item.normKey)}', this)" class="bg-indigo-50 text-indigo-900 font-semibold text-xs rounded-lg px-2 py-1 border border-indigo-200 outline-none">${sOpts}</select></td>
-                    <td class="py-2.5 px-4"><select onchange="handleClientTeamChange('${escapeJsString(item.normKey)}', this)" class="${tStyle} font-semibold text-xs rounded-lg px-2 py-1 border outline-none">${tOpts}</select></td>
+                    <td class="py-2.5 px-4"><select onchange="handleClientSellerChange('${escapeJsString(item.normKey)}', this)" class="bg-indigo-50 text-indigo-900 font-semibold text-xs rounded-lg px-2 py-1 border border-indigo-200 outline-none w-full">${sOpts}</select></td>
+                    <td class="py-2.5 px-4"><select onchange="handleClientTeamChange('${escapeJsString(item.normKey)}', this)" class="${tStyle} font-semibold text-xs rounded-lg px-2 py-1 border outline-none w-full">${tOpts}</select></td>
                     <td class="py-2.5 px-4 text-xs text-slate-600"><strong>${item.orderCount} ped.:</strong> ${escapeHtml(badges)}</td>
                     <td class="py-2.5 px-4 text-right font-mono text-xs font-bold text-slate-800">${formatCurrency(item.totalAmount)}</td>`;
                 tbody.appendChild(tr);
@@ -808,7 +840,7 @@
             populateSelectWithGuess('payColRef', paymentsHeaders, ['fecha', 'comprobante', 'recibo', 'referencia', 'nro'], true, '-- Sin referencia --');
             populateSelectWithGuess('payColSeller', paymentsHeaders, ['vendedor', 'comercial', 'asesor'], true, '-- Tomar de la Venta --');
             populateSelectWithGuess('payColTeam', paymentsHeaders, ['equipo de ventas', 'equipo', 'canal'], true, '-- Tomar de la Venta --');
-            processPaymentsData(); showToast(`Pagos "${fileName}" procesados.`, 'success');
+            processPaymentsData(); showToast(`Pagos procesados.`, 'success');
         }
 
         function findBestClientMatch(rawPaymentClient) {
@@ -905,7 +937,7 @@
                 const e = map.get(k); e.count++; e.clients.add(p.matchedMasterClient || p.paymentClient); e.total += p.amount;
             });
             const rows = Array.from(map.values()).sort((a, b) => b.total - a.total);
-            tbody.innerHTML = rows.length === 0 ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">Sin pagos asociados.</td></tr>` : rows.map(r => {
+            tbody.innerHTML = rows.length === 0 ? `<tr><td colspan="5" class="py-6 text-center text-slate-400">Sin pagos.</td></tr>` : rows.map(r => {
                 const pct = totalMatchedAmount > 0 ? ((r.total / totalMatchedAmount) * 100).toFixed(1) : '0.0';
                 return `<tr class="hover:bg-slate-50"><td class="py-3 px-4 font-bold text-slate-800">${escapeHtml(r.label)}</td><td class="py-3 px-4 text-center font-semibold">${r.count}</td><td class="py-3 px-4 text-center">${r.clients.size}</td><td class="py-3 px-4 text-right font-mono font-bold text-emerald-700">${formatCurrency(r.total)}</td><td class="py-3 px-4 text-right text-xs font-semibold text-slate-500">${pct}%</td></tr>`;
             }).join('');
@@ -954,17 +986,50 @@
             processPaymentsData(); showToast(`Asociado a ${sVal}.`, 'success');
         }
 
+        // ==========================================
+        // LÓGICA CORE DE COMISIONES Y AGRUPACIÓN
+        // ==========================================
         function getClientCommissionRate(k) { return clientCommissionRateMap.has(k) ? clientCommissionRateMap.get(k) : defaultCommissionRate; }
+
         function buildCommissionGroupsData() {
             const gMap = new Map();
             matchedPaymentsList.forEach(p => {
-                const hasTeam = !isNoTeamValue(p.team), gId = hasTeam ? `TEAM:::${p.team}` : `SOLO_SELLER:::${p.seller}`;
-                if (!gMap.has(gId)) gMap.set(gId, { groupId: gId, beneficiaryName: hasTeam ? p.team : p.seller, beneficiaryType: hasTeam ? 'TEAM' : 'SOLO_SELLER', sellersInvolved: new Set(), paymentsCount: 0, totalCollected: 0, totalCommission: 0, clientsMap: new Map() });
-                const g = gMap.get(gId); g.sellersInvolved.add(p.seller); g.paymentsCount++; g.totalCollected += p.amount;
-                const cDisp = p.matchedMasterClient || p.paymentClient, nC = p.normClientKey || normalizeClientName(cDisp) || cDisp, cKey = `${gId}__${nC}`;
-                if (!g.clientsMap.has(cKey)) g.clientsMap.set(cKey, { clientRateKey: cKey, normClient: nC, clientName: cDisp, sellers: new Set(), paymentsCount: 0, totalCollected: 0, rate: getClientCommissionRate(cKey), commissionAmount: 0, payments: [] });
-                const ce = g.clientsMap.get(cKey); ce.sellers.add(p.seller); ce.paymentsCount++; ce.totalCollected += p.amount; ce.payments.push(p);
+                let hasSalesTeam = !isNoTeamValue(p.team);
+                let beneficiaryName = hasSalesTeam ? String(p.team) : String(p.seller);
+                let beneficiaryType = hasSalesTeam ? 'TEAM' : 'SOLO_SELLER';
+
+                // REGLA X-FISH: "Equipo Pablo" y "Vendedor Pablo" son la misma persona.
+                const normTeam = normalizeTextBasic(p.team);
+                const normSeller = normalizeTextBasic(p.seller);
+                if (normTeam.includes('pablo') || (!hasSalesTeam && normSeller.includes('pablo'))) {
+                    beneficiaryName = 'Pablo (Equipo / Vendedor Unificado)';
+                    beneficiaryType = 'SOLO_SELLER'; 
+                }
+
+                const gId = `${beneficiaryType}:::${beneficiaryName}`;
+
+                if (!gMap.has(gId)) {
+                    gMap.set(gId, { groupId: gId, beneficiaryName: beneficiaryName, beneficiaryType: beneficiaryType, sellersInvolved: new Set(), paymentsCount: 0, totalCollected: 0, totalCommission: 0, clientsMap: new Map() });
+                }
+                const g = gMap.get(gId);
+                g.sellersInvolved.add(p.seller);
+                g.paymentsCount++;
+                g.totalCollected += p.amount;
+
+                const cDisp = p.matchedMasterClient || p.paymentClient;
+                const nC = p.normClientKey || normalizeClientName(cDisp) || cDisp;
+                const cKey = `${gId}__${nC}`;
+
+                if (!g.clientsMap.has(cKey)) {
+                    g.clientsMap.set(cKey, { clientRateKey: cKey, normClient: nC, clientName: cDisp, sellers: new Set(), paymentsCount: 0, totalCollected: 0, rate: getClientCommissionRate(cKey), commissionAmount: 0, payments: [] });
+                }
+                const ce = g.clientsMap.get(cKey);
+                ce.sellers.add(p.seller);
+                ce.paymentsCount++;
+                ce.totalCollected += p.amount;
+                ce.payments.push(p);
             });
+
             gMap.forEach(g => {
                 let gc = 0;
                 g.clientsMap.forEach(ce => { ce.rate = getClientCommissionRate(ce.clientRateKey); ce.commissionAmount = ce.totalCollected * (ce.rate / 100); gc += ce.commissionAmount; });
@@ -1013,15 +1078,15 @@
                     <td class="py-3.5 px-4">${badge}</td>
                     <td class="py-3.5 px-4 text-center"><span class="bg-slate-200 text-xs font-bold px-2.5 py-1 rounded-full">${cArr.length} cli. / ${group.paymentsCount} cobros</span></td>
                     <td class="py-3.5 px-4 text-right font-mono font-bold">${formatCurrency(group.totalCollected)}</td>
-                    <td class="py-3.5 px-4 text-center"><input type="number" step="0.1" value="${Number(effR)}" onclick="event.stopPropagation()" onchange="setGroupAllClientsCommissionRate('${escapeJsString(group.groupId)}', this.value)" class="w-14 text-center font-bold text-xs text-indigo-700 border border-slate-300 rounded py-1"> %</td>
+                    <td class="py-3.5 px-4 text-center"><input type="number" step="0.1" value="${Number(effR)}" onclick="event.stopPropagation()" onchange="setGroupAllClientsCommissionRate('${escapeJsString(group.groupId)}', this.value)" class="w-14 text-center font-bold text-xs text-indigo-700 border border-slate-300 rounded py-1 outline-none"> %</td>
                     <td class="py-3.5 px-4 text-right font-mono font-black text-emerald-700">${formatCurrency(group.totalCommission)}</td>
-                    <td class="py-3.5 px-4 text-center" onclick="event.stopPropagation()">÷ <input type="number" min="1" value="${group.divisor}" onchange="handleGroupDivisorChange('${escapeJsString(group.groupId)}', this.value)" class="w-12 text-center font-bold text-xs border border-slate-300 rounded py-1"></td>
+                    <td class="py-3.5 px-4 text-center" onclick="event.stopPropagation()">÷ <input type="number" min="1" value="${group.divisor}" onchange="handleGroupDivisorChange('${escapeJsString(group.groupId)}', this.value)" class="w-12 text-center font-bold text-xs border border-slate-300 rounded py-1 outline-none"></td>
                     <td class="py-3.5 px-4 text-right">${divHtml}</td>`;
                 tbody.appendChild(trP);
 
                 if (isExp) {
                     const trC = document.createElement('tr');
-                    const rowsHtml = cArr.map(c => `<tr class="border-b border-slate-100"><td class="py-2 px-4 pl-10 font-semibold">${escapeHtml(c.clientName)}</td><td class="py-2 px-4 text-xs">${escapeHtml(Array.from(c.sellers).join(', '))}</td><td class="py-2 px-4 text-xs">${c.paymentsCount} cobro(s)</td><td class="py-2 px-4 text-right font-mono text-xs font-semibold">${formatCurrency(c.totalCollected)}</td><td class="py-2 px-4 text-center"><input type="number" step="0.1" value="${c.rate}" onchange="handleSingleClientRateInput('${escapeJsString(c.clientRateKey)}', this.value)" class="w-14 text-center font-bold text-xs border border-amber-400 bg-amber-50 rounded py-0.5"> %</td><td class="py-2 px-4 text-right font-mono font-bold text-emerald-700">${formatCurrency(c.commissionAmount)}</td><td class="py-2 px-4 text-right font-mono text-xs text-cyan-700">${group.divisor > 1 ? formatCurrency(c.commissionAmount / group.divisor) : '-'}</td></tr>`).join('');
+                    const rowsHtml = cArr.map(c => `<tr class="border-b border-slate-200/50"><td class="py-2 px-4 pl-10 font-semibold">${escapeHtml(c.clientName)}</td><td class="py-2 px-4 text-xs">${escapeHtml(Array.from(c.sellers).join(', '))}</td><td class="py-2 px-4 text-xs">${c.paymentsCount} cobro(s)</td><td class="py-2 px-4 text-right font-mono text-xs font-semibold">${formatCurrency(c.totalCollected)}</td><td class="py-2 px-4 text-center"><input type="number" step="0.1" value="${c.rate}" onchange="handleSingleClientRateInput('${escapeJsString(c.clientRateKey)}', this.value)" class="w-14 text-center font-bold text-xs border border-amber-400 bg-amber-50 rounded py-0.5 outline-none"> %</td><td class="py-2 px-4 text-right font-mono font-bold text-emerald-700">${formatCurrency(c.commissionAmount)}</td><td class="py-2 px-4 text-right font-mono text-xs text-cyan-700">${group.divisor > 1 ? formatCurrency(c.commissionAmount / group.divisor) : '-'}</td></tr>`).join('');
                     trC.innerHTML = `<td colspan="9" class="p-4 bg-indigo-950/5"><table class="w-full text-left bg-white rounded-xl overflow-hidden border border-slate-200"><thead class="bg-slate-100 text-[11px] uppercase"><tr><th class="py-2 px-4 pl-10">Cliente</th><th class="py-2 px-4">Vendedor</th><th class="py-2 px-4">Pagos</th><th class="py-2 px-4 text-right">Cobrado</th><th class="py-2 px-4 text-center">%</th><th class="py-2 px-4 text-right">Comisión</th><th class="py-2 px-4 text-right">C/U</th></tr></thead><tbody>${rowsHtml}</tbody></table></td>`;
                     tbody.appendChild(trC);
                 }
@@ -1080,9 +1145,9 @@
         function loadDemoSalesData() {
             loadSalesRowsIntoApp([
                 { "Nro Pedido": "SO-1001", "Cliente": "Distribuidora Austral S.R.L.", "Vendedor": "Martín Gómez", "Equipo de Ventas": "XFISH", "Estado": "Orden de venta", "Total Venta": 1450000 },
-                { "Nro Pedido": "SO-1002", "Cliente": "Supermercados Del Valle S.A.", "Vendedor": "Lucía Fernández", "Equipo de Ventas": "Grandes Cuentas CABA", "Estado": "Orden de venta", "Total Venta": 2890000 },
-                { "Nro Pedido": "SO-1007", "Cliente": "Frigorífico Pampa Húmeda S.A.", "Vendedor": "Carlos Ruiz", "Equipo de Ventas": "", "Estado": "Orden de venta", "Total Venta": 4100000 },
-                { "Nro Pedido": "SO-1010", "Cliente": "Mayorista El Sol SRL", "Vendedor": "Ana Pereyra", "Equipo de Ventas": "XFISH", "Estado": "Orden de venta", "Total Venta": 2120000 }
+                { "Nro Pedido": "SO-1002", "Cliente": "Supermercados Del Valle S.A.", "Vendedor": "Lucía Fernández", "Equipo de Ventas": "Grandes Cuentas", "Estado": "Orden de venta", "Total Venta": 2890000 },
+                { "Nro Pedido": "SO-1007", "Cliente": "Frigorífico Pampa", "Vendedor": "Pablo", "Equipo de Ventas": "Pablo", "Estado": "Orden de venta", "Total Venta": 4100000 },
+                { "Nro Pedido": "SO-1010", "Cliente": "Mayorista El Sol SRL", "Vendedor": "Pablo", "Equipo de Ventas": "", "Estado": "Orden de venta", "Total Venta": 2120000 }
             ], "Demo_Ventas.xlsx");
         }
         function loadDemoPaymentsData() {
@@ -1090,7 +1155,7 @@
             loadPaymentsRowsIntoApp([
                 { "Fecha Cobro": "2026-10-12", "Cliente Pagador": "Distribuidora Austral SRL", "Importe Recibido": 1450000 },
                 { "Fecha Cobro": "2026-10-13", "Cliente Pagador": "SUPERMERCADOS DEL VALLE SA", "Importe Recibido": 1500000 },
-                { "Fecha Cobro": "2026-10-16", "Cliente Pagador": "Frigorifico Pampa Humeda", "Importe Recibido": 2050000 },
+                { "Fecha Cobro": "2026-10-16", "Cliente Pagador": "Frigorifico Pampa", "Importe Recibido": 2050000 },
                 { "Fecha Cobro": "2026-10-18", "Cliente Pagador": "Mayorista El Sol S.R.L.", "Importe Recibido": 2120000 }
             ], "Demo_Pagos.xlsx");
         }
