@@ -726,7 +726,7 @@
                 textColor: color,
                 textScale: scale,
                 imgScale: imgScale,
-                topScale: 100, subScale: 100, botScale: 100, // Scales manuales en 100 para la vista global
+                topScale: 100, subScale: 100, botScale: 100,
                 top: showTop ? "TÍTULO DE PRODUCTO\nSEGUNDO RENGLÓN" : "",
                 sub: showSub ? "Subtítulo descriptivo" : "",
                 bot: showBot ? "COD: PRUEBA-001\nPRECIO: $99.999" : "",
@@ -892,6 +892,10 @@
                 canvas.height = img.height;
                 canvasW = img.width;
                 canvasH = img.height;
+                
+                // Forzar fondo blanco puro para evitar bordes negros en formato JPEG al hacer overlay
+                ctx.fillStyle = '#ffffff';
+                ctx.fillRect(0, 0, canvasW, canvasH);
 
                 const w = img.width * imgScale;
                 const h = img.height * imgScale;
@@ -1012,12 +1016,9 @@
                 mainEditorCanvas.height = canvasH;
             }
 
-            if (mode === 'margin') {
-                mainEditorCtx.fillStyle = '#ffffff';
-                mainEditorCtx.fillRect(0, 0, canvasW, canvasH);
-            } else {
-                mainEditorCtx.clearRect(0, 0, canvasW, canvasH);
-            }
+            // Forzar fondo blanco puro para evitar bordes negros en formato JPEG
+            mainEditorCtx.fillStyle = '#ffffff';
+            mainEditorCtx.fillRect(0, 0, canvasW, canvasH);
 
             const layers = [
                 {
