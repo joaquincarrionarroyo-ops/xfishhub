@@ -149,15 +149,15 @@
                     <div class="grid grid-cols-2 gap-4">
                         <div>
                             <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
-                                <span>Tamaño Texto</span><span id="val-global-scale" class="text-pink-600 font-bold">100%</span>
+                                <span>Tamaño Global Textos</span><span id="val-global-scale" class="text-pink-600 font-bold">100%</span>
                             </label>
                             <input type="range" id="global-scale" min="10" max="300" value="100">
                         </div>
                         <div>
                             <label class="text-[11px] font-semibold text-slate-600 flex justify-between mb-1 uppercase">
-                                <span>Posición Foto (Y)</span><span id="val-global-img-y" class="text-pink-600 font-bold">0px</span>
+                                <span>Tamaño Global Foto</span><span id="val-global-img-scale" class="text-pink-600 font-bold">100%</span>
                             </label>
-                            <input type="range" id="global-img-y" min="-400" max="400" value="0">
+                            <input type="range" id="global-img-scale" min="10" max="300" value="100">
                         </div>
                     </div>
 
@@ -179,6 +179,12 @@
                                 <span>Altura TEXTO ABAJO</span><span id="val-global-y-bot">0px</span>
                             </label>
                             <input type="range" id="global-y-bot" min="-500" max="500" value="0">
+                        </div>
+                        <div>
+                            <label class="text-[10px] font-bold text-slate-600 uppercase flex justify-between">
+                                <span>Altura FOTO</span><span id="val-global-img-y">0px</span>
+                            </label>
+                            <input type="range" id="global-img-y" min="-400" max="400" value="0">
                         </div>
                     </div>
                 </div>
@@ -413,7 +419,7 @@
             <!-- LADO DERECHO: STACK DE CAPAS -->
             <div class="w-full md:w-1/2 p-3 md:p-6 flex flex-col flex-grow overflow-hidden bg-white">
                 <div class="hidden md:flex justify-between items-center mb-3 pb-2 border-b border-slate-200">
-                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste de Capas & Posición (X / Y / Z)</h2>
+                    <h2 class="text-xl font-extrabold text-slate-800">Ajuste de Capas & Posición</h2>
                     <button onclick="closeModal()" class="text-slate-400 hover:text-rose-500 font-bold text-2xl">&times;</button>
                 </div>
 
@@ -426,6 +432,7 @@
                         </select>
                     </div>
 
+                    <!-- FOTO -->
                     <div class="bg-slate-50 p-2.5 md:p-3 rounded-xl border border-slate-200 space-y-1.5">
                         <div class="flex items-center justify-between">
                             <span class="text-xs font-bold text-purple-700 uppercase">🖼️ Capa Imagen Principal</span>
@@ -434,9 +441,10 @@
                                 <input type="number" id="z-img" min="1" max="10" value="1" class="w-12 py-0.5 px-1 bg-white border border-slate-300 rounded text-center text-xs text-slate-800 font-bold" oninput="scheduleRender(); updatePSLayersPanel();">
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
-                            <div><span>Posición X</span><input type="range" id="x-img" min="-600" max="600" value="0"></div>
-                            <div><span>Posición Y</span><input type="range" id="y-img" min="-600" max="600" value="0"></div>
+                        <div class="grid grid-cols-3 gap-2 text-[10px] font-bold text-slate-500 uppercase mt-2">
+                            <div><span>Mover X</span><input type="range" id="x-img" min="-600" max="600" value="0"></div>
+                            <div><span>Mover Y</span><input type="range" id="y-img" min="-600" max="600" value="0"></div>
+                            <div><span>Escala %</span><input type="range" id="scale-img" min="10" max="300" value="100"></div>
                         </div>
                     </div>
 
@@ -454,6 +462,7 @@
                         </div>
                     </div>
 
+                    <!-- TITULO -->
                     <div class="p-2.5 md:p-3 bg-blue-50/60 rounded-xl border border-blue-200 space-y-1.5">
                         <div class="flex items-center justify-between">
                             <label class="text-xs font-bold text-blue-700 uppercase">Título Principal</label>
@@ -463,12 +472,14 @@
                             </div>
                         </div>
                         <textarea id="txt-top" class="custom-input text-xs" rows="1" placeholder="Título..."></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
+                        <div class="grid grid-cols-3 gap-2 text-[10px] font-bold text-slate-500 uppercase mt-1">
                             <div><span>Mover X</span><input type="range" id="x-top" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-top" min="-600" max="600" value="0"></div>
+                            <div><span>Escala %</span><input type="range" id="scale-top" min="10" max="300" value="100"></div>
                         </div>
                     </div>
 
+                    <!-- SUBTITULO -->
                     <div class="p-2.5 md:p-3 bg-amber-50/60 rounded-xl border border-amber-200 space-y-1.5">
                         <div class="flex items-center justify-between">
                             <label class="text-xs font-bold text-amber-700 uppercase">Subtítulo</label>
@@ -478,12 +489,14 @@
                             </div>
                         </div>
                         <textarea id="txt-sub" class="custom-input text-xs" rows="1" placeholder="Subtítulo..."></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
+                        <div class="grid grid-cols-3 gap-2 text-[10px] font-bold text-slate-500 uppercase mt-1">
                             <div><span>Mover X</span><input type="range" id="x-sub" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-sub" min="-600" max="600" value="0"></div>
+                            <div><span>Escala %</span><input type="range" id="scale-sub" min="10" max="300" value="100"></div>
                         </div>
                     </div>
 
+                    <!-- TEXTO ABAJO -->
                     <div class="p-2.5 md:p-3 bg-emerald-50/60 rounded-xl border border-emerald-200 space-y-1.5">
                         <div class="flex items-center justify-between">
                             <label class="text-xs font-bold text-emerald-700 uppercase">Texto Abajo</label>
@@ -493,12 +506,14 @@
                             </div>
                         </div>
                         <textarea id="txt-bot" class="custom-input text-xs" rows="1" placeholder="Precio, código..."></textarea>
-                        <div class="grid grid-cols-2 gap-2 text-[10px] font-bold text-slate-500 uppercase">
+                        <div class="grid grid-cols-3 gap-2 text-[10px] font-bold text-slate-500 uppercase mt-1">
                             <div><span>Mover X</span><input type="range" id="x-bot" min="-600" max="600" value="0"></div>
                             <div><span>Mover Y</span><input type="range" id="y-bot" min="-600" max="600" value="0"></div>
+                            <div><span>Escala %</span><input type="range" id="scale-bot" min="10" max="300" value="100"></div>
                         </div>
                     </div>
 
+                    <!-- COLOR Y ESCALA GLOBAL TEXTOS (FALLBACK) -->
                     <div class="grid grid-cols-2 gap-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">
                         <div>
                             <label class="text-[10px] font-bold text-slate-600 uppercase mb-1 block">Color Textos</label>
@@ -506,7 +521,7 @@
                         </div>
                         <div>
                             <label class="text-[10px] font-bold text-slate-600 uppercase flex justify-between mb-1">
-                                <span>Escala Letra</span><span id="val-edit-scale" class="text-pink-600">100%</span>
+                                <span>Escala Base Letra</span><span id="val-edit-scale" class="text-pink-600">100%</span>
                             </label>
                             <input type="range" id="edit-scale" min="20" max="250" value="100">
                         </div>
@@ -682,6 +697,7 @@
             el.addEventListener('touchmove', fn, { passive: true });
         };
         updateVal('global-scale', '%');
+        updateVal('global-img-scale', '%');
         updateVal('global-img-y', 'px');
         updateVal('global-y-top', 'px');
         updateVal('global-y-sub', 'px');
@@ -694,6 +710,7 @@
             const mode = document.getElementById('global-mode')?.value || 'margin';
             const color = document.getElementById('global-color')?.value || '#000000';
             const scale = parseInt(document.getElementById('global-scale')?.value || 100);
+            const imgScale = parseInt(document.getElementById('global-img-scale')?.value || 100);
             const imgY = parseInt(document.getElementById('global-img-y')?.value || 0);
             const yTop = parseInt(document.getElementById('global-y-top')?.value || 0);
             const ySub = parseInt(document.getElementById('global-y-sub')?.value || 0);
@@ -708,6 +725,8 @@
                 mode: mode,
                 textColor: color,
                 textScale: scale,
+                imgScale: imgScale,
+                topScale: 100, subScale: 100, botScale: 100, // Scales manuales en 100 para la vista global
                 top: showTop ? "TÍTULO DE PRODUCTO\nSEGUNDO RENGLÓN" : "",
                 sub: showSub ? "Subtítulo descriptivo" : "",
                 bot: showBot ? "COD: PRUEBA-001\nPRECIO: $99.999" : "",
@@ -834,7 +853,13 @@
             const canvas = document.createElement('canvas');
             const ctx = canvas.getContext('2d');
             const img = config.imgObj;
+            
             const scaleFactor = (config.textScale || 100) / 100;
+            const imgScale = (config.imgScale || 100) / 100;
+            const topScale = (config.topScale || 100) / 100;
+            const subScale = (config.subScale || 100) / 100;
+            const botScale = (config.botScale || 100) / 100;
+
             const mode = config.mode || 'margin';
 
             let canvasW, canvasH, fontTop, fontSub, fontBot, startYTop, startYBot;
@@ -851,13 +876,15 @@
                 ctx.fillStyle = '#ffffff'; 
                 ctx.fillRect(0, 0, size, size);
 
-                const imgX = ((size - img.width) / 2) + (config.imgX || 0);
-                const imgY = ((size - img.height) / 2) + (config.imgY || 0);
-                ctx.drawImage(img, imgX, imgY, img.width, img.height);
+                const w = img.width * imgScale;
+                const h = img.height * imgScale;
+                const imgX = ((size - w) / 2) + (config.imgX || 0);
+                const imgY = ((size - h) / 2) + (config.imgY || 0);
+                ctx.drawImage(img, imgX, imgY, w, h);
 
-                fontTop = Math.round((margin * 0.35) * scaleFactor);
-                fontSub = Math.round(fontTop * 0.7);
-                fontBot = Math.round((margin * 0.45) * scaleFactor);
+                fontTop = Math.round((margin * 0.35) * scaleFactor * topScale);
+                fontSub = Math.round((margin * 0.35 * 0.7) * scaleFactor * subScale);
+                fontBot = Math.round((margin * 0.45) * scaleFactor * botScale);
                 startYTop = Math.round(margin * 0.45) + (config.yTop || 0);
                 startYBot = size - Math.round(margin * 0.35) + (config.yBot || 0);
             } else {
@@ -866,11 +893,13 @@
                 canvasW = img.width;
                 canvasH = img.height;
 
-                ctx.drawImage(img, (config.imgX || 0), (config.imgY || 0), img.width, img.height);
+                const w = img.width * imgScale;
+                const h = img.height * imgScale;
+                ctx.drawImage(img, (config.imgX || 0), (config.imgY || 0), w, h);
 
-                fontTop = Math.round((img.height * 0.08) * scaleFactor);
-                fontSub = Math.round(fontTop * 0.7);
-                fontBot = Math.round((img.height * 0.08) * scaleFactor);
+                fontTop = Math.round((img.height * 0.08) * scaleFactor * topScale);
+                fontSub = Math.round((img.height * 0.08 * 0.7) * scaleFactor * subScale);
+                fontBot = Math.round((img.height * 0.08) * scaleFactor * botScale);
                 startYTop = Math.round(img.height * 0.12) + (config.yTop || 0);
                 startYBot = Math.round(img.height * 0.88) + (config.yBot || 0);
             }
@@ -950,6 +979,11 @@
             const scaleFactor = (parseInt(document.getElementById('edit-scale')?.value || 100)) / 100;
             const textColor = document.getElementById('edit-color')?.value || '#000000';
 
+            const imgScale = (parseInt(document.getElementById('scale-img')?.value || 100)) / 100;
+            const topScale = (parseInt(document.getElementById('scale-top')?.value || 100)) / 100;
+            const subScale = (parseInt(document.getElementById('scale-sub')?.value || 100)) / 100;
+            const botScale = (parseInt(document.getElementById('scale-bot')?.value || 100)) / 100;
+
             let canvasW, canvasH, fontTop, fontSub, fontBot, startYTop, startYBot;
 
             if (mode === 'margin') {
@@ -958,17 +992,17 @@
                 const size = maxDim + (margin * 2);
                 canvasW = size;
                 canvasH = size;
-                fontTop = Math.round((margin * 0.35) * scaleFactor);
-                fontSub = Math.round(fontTop * 0.7);
-                fontBot = Math.round((margin * 0.45) * scaleFactor);
+                fontTop = Math.round((margin * 0.35) * scaleFactor * topScale);
+                fontSub = Math.round((margin * 0.35 * 0.7) * scaleFactor * subScale);
+                fontBot = Math.round((margin * 0.45) * scaleFactor * botScale);
                 startYTop = Math.round(margin * 0.45) + parseInt(document.getElementById('y-top')?.value || 0);
                 startYBot = size - Math.round(margin * 0.35) + parseInt(document.getElementById('y-bot')?.value || 0);
             } else {
                 canvasW = img.width;
                 canvasH = img.height;
-                fontTop = Math.round((img.height * 0.08) * scaleFactor);
-                fontSub = Math.round(fontTop * 0.7);
-                fontBot = Math.round((img.height * 0.08) * scaleFactor);
+                fontTop = Math.round((img.height * 0.08) * scaleFactor * topScale);
+                fontSub = Math.round((img.height * 0.08 * 0.7) * scaleFactor * subScale);
+                fontBot = Math.round((img.height * 0.08) * scaleFactor * botScale);
                 startYTop = Math.round(img.height * 0.12) + parseInt(document.getElementById('y-top')?.value || 0);
                 startYBot = Math.round(img.height * 0.88) + parseInt(document.getElementById('y-bot')?.value || 0);
             }
@@ -991,14 +1025,16 @@
                     z: parseInt(document.getElementById('z-img')?.value || 1),
                     render: () => {
                         if (!layerVisibility['image']) return;
+                        const w = img.width * imgScale;
+                        const h = img.height * imgScale;
                         if (mode === 'margin') {
-                            const x = ((canvasW - img.width) / 2) + parseInt(document.getElementById('x-img')?.value || 0);
-                            const y = ((canvasH - img.height) / 2) + parseInt(document.getElementById('y-img')?.value || 0);
-                            mainEditorCtx.drawImage(img, x, y, img.width, img.height);
+                            const x = ((canvasW - w) / 2) + parseInt(document.getElementById('x-img')?.value || 0);
+                            const y = ((canvasH - h) / 2) + parseInt(document.getElementById('y-img')?.value || 0);
+                            mainEditorCtx.drawImage(img, x, y, w, h);
                         } else {
                             const x = parseInt(document.getElementById('x-img')?.value || 0);
                             const y = parseInt(document.getElementById('y-img')?.value || 0);
-                            mainEditorCtx.drawImage(img, x, y, img.width, img.height);
+                            mainEditorCtx.drawImage(img, x, y, w, h);
                         }
                     }
                 },
@@ -1184,7 +1220,10 @@
             if (e.touches.length === 0) stopPaint(e);
         });
 
-        ['x-img', 'y-img', 'z-img', 'x-top', 'y-top', 'z-top', 'x-sub', 'y-sub', 'z-sub', 'x-bot', 'y-bot', 'z-bot',
+        ['x-img', 'y-img', 'z-img', 'scale-img', 
+         'x-top', 'y-top', 'z-top', 'scale-top',
+         'x-sub', 'y-sub', 'z-sub', 'scale-sub', 
+         'x-bot', 'y-bot', 'z-bot', 'scale-bot',
          'z-paint-under', 'z-paint-over', 'txt-top', 'txt-sub', 'txt-bot', 'edit-color', 'edit-scale'].forEach(id => {
             const el = document.getElementById(id);
             if (!el) return;
@@ -1212,6 +1251,11 @@
             document.getElementById('edit-color').value = item.textColor || "#000000";
             document.getElementById('edit-scale').value = item.textScale || 100;
             document.getElementById('val-edit-scale').textContent = (item.textScale || 100) + '%';
+
+            document.getElementById('scale-img').value = item.imgScale || 100;
+            document.getElementById('scale-top').value = item.topScale || 100;
+            document.getElementById('scale-sub').value = item.subScale || 100;
+            document.getElementById('scale-bot').value = item.botScale || 100;
 
             document.getElementById('x-img').value = item.xImg || 0;
             document.getElementById('y-img').value = item.yImg || 0;
@@ -1287,6 +1331,11 @@
             item.textColor = document.getElementById('edit-color').value;
             item.textScale = parseInt(document.getElementById('edit-scale').value);
 
+            item.imgScale = parseInt(document.getElementById('scale-img').value);
+            item.topScale = parseInt(document.getElementById('scale-top').value);
+            item.subScale = parseInt(document.getElementById('scale-sub').value);
+            item.botScale = parseInt(document.getElementById('scale-bot').value);
+
             item.xImg = parseInt(document.getElementById('x-img').value);
             item.yImg = parseInt(document.getElementById('y-img').value);
             item.zImg = parseInt(document.getElementById('z-img').value);
@@ -1348,6 +1397,8 @@
 
             const mode = document.querySelector('input[name="input-mode"]:checked')?.value || 'excel';
             const globalMode = document.getElementById('global-mode')?.value || 'margin';
+            const globalImgScale = parseInt(document.getElementById('global-img-scale')?.value || 100);
+            
             let dictExcel = {};
 
             if (mode === 'excel') {
@@ -1399,6 +1450,7 @@
                         top: top, sub: sub, bot: bot,
                         textColor: document.getElementById('global-color').value,
                         textScale: parseInt(document.getElementById('global-scale').value),
+                        imgScale: globalImgScale, topScale: 100, subScale: 100, botScale: 100,
                         xImg: 0, yImg: parseInt(document.getElementById('global-img-y').value), zImg: 1,
                         zPaintUnder: 2,
                         xTop: 0, yTop: parseInt(document.getElementById('global-y-top').value), zTop: 3,
@@ -1412,6 +1464,7 @@
                         mode: item.mode,
                         textColor: item.textColor,
                         textScale: item.textScale,
+                        imgScale: item.imgScale, topScale: item.topScale, subScale: item.subScale, botScale: item.botScale,
                         top: item.top, sub: item.sub, bot: item.bot,
                         imgX: item.xImg, imgY: item.yImg,
                         xTop: item.xTop, yTop: item.yTop,
@@ -1530,7 +1583,7 @@
                 const esActiva = m.id === mesaActivaId;
                 const btn = document.createElement('button');
                 btn.className = `px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 shrink-0 ${esActiva ? 'bg-pink-600 text-white shadow' : 'bg-slate-200 text-slate-700 hover:bg-slate-300'}`;
-                btn.innerHTML = `<span>${m.nombre}</span> ${mesasTrabajo.length > 1 ? `<span onclick="eliminarMesa(\${m.id}, event)" class="hover:text-red-300 ml-1 font-bold">×</span>` : ''}`;
+                btn.innerHTML = `<span>${m.nombre}</span> ${mesasTrabajo.length > 1 ? `<span onclick="eliminarMesa(${m.id}, event)" class="hover:text-red-300 ml-1 font-bold">×</span>` : ''}`;
                 btn.onclick = () => { 
                     mesaActivaId = m.id; 
                     elementoSeleccionadoIdx = -1; 
