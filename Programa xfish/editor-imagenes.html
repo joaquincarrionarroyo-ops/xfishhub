@@ -1435,6 +1435,8 @@
                         top = dictExcel[nameNoExt].top;
                         sub = dictExcel[nameNoExt].sub;
                         bot = dictExcel[nameNoExt].bot;
+                    } else {
+                        continue; // <--- Agregás esto acá
                     }
                 } else {
                     top = document.getElementById(`man-top-${i}`)?.value || "";
