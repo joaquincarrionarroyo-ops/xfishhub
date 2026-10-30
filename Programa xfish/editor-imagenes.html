@@ -1096,7 +1096,9 @@
                         mainEditorCtx.textAlign = 'center';
                         mainEditorCtx.textBaseline = 'middle';
                         mainEditorCtx.font = `normal ${fontBot}px ${fontFamily}`;
-                        let lines = getLines(mainEditorCtx, text, canvasW * 0.88);
+                        // Agrega COD automáticamente al previsualizar en el editor:
+                        let textoFinal = text.toUpperCase().startsWith("COD") ? text : "COD: " + text;
+                        let lines = getLines(mainEditorCtx, textoFinal, canvasW * 0.88);
                         let lh = fontBot * 1.25;
                         let posX = (canvasW / 2) + parseInt(document.getElementById('x-bot')?.value || 0);
                         let botBaseY = startYBot - ((lines.length - 1) * lh * 0.5);
