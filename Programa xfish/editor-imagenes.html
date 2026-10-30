@@ -934,15 +934,18 @@
                 });
             }
 
-            if (config.bot) {
+                if (config.bot) {
                 ctx.font = `normal ${fontBot}px ${fontFamily}`;
-                let bLines = getLines(ctx, config.bot, canvasW * 0.88);
+                // Agrega COD automáticamente al pintar la imagen si no lo tiene:
+                let textoFinal = config.bot.toUpperCase().startsWith("COD") ? config.bot : "COD: " + config.bot;
+                let bLines = getLines(ctx, textoFinal, canvasW * 0.88);
                 let lhBot = fontBot * 1.25;
                 let botY = startYBot - ((bLines.length - 1) * lhBot * 0.5);
                 bLines.forEach(l => {
                     ctx.fillText(l, (canvasW / 2) + (config.xBot || 0), botY);
                     botY += lhBot;
                 });
+            }
             }
 
             return canvas.toDataURL('image/jpeg', 0.95);
