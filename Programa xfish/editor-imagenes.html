@@ -936,10 +936,8 @@
 
                 if (config.bot) {
                 ctx.font = `normal ${fontBot}px ${fontFamily}`;
-                // Convertimos a texto sí o sí con String() para que no choque si es un número puro
                 let textoConvertido = String(config.bot);
                 let textoFinal = textoConvertido.toUpperCase().startsWith("COD") ? textoConvertido : "COD: " + textoConvertido;
-                
                 let bLines = getLines(ctx, textoFinal, canvasW * 0.88);
                 let lhBot = fontBot * 1.25;
                 let botY = startYBot - ((bLines.length - 1) * lhBot * 0.5);
